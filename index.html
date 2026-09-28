@@ -7,10 +7,11 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg">
 <link rel="stylesheet" href="style.css">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; media-src 'self' blob:; connect-src 'self'; worker-src 'self'; font-src 'self'">
 <title>OsRa — Our Story</title>
 </head>
 <body>
-<header class="topbar"><div class="brand"><b>OsRa</b><div><small>Our Story</small><strong>رانيا ♥ أسامة</strong></div></div><div><button id="searchBtn" class="round">⌕</button><button id="installBtn" class="round" hidden>＋</button></div></header>
+<header class="topbar"><div class="brand"><b>OsRa</b><div><small>Our Story</small><strong>رانيا ♥ أسامة</strong></div></div><div><button id="searchBtn" class="round" title="بحث">⌕</button><button id="soundBtn" class="round" title="صوت قلب الورق">🔇</button><button id="installBtn" class="round" hidden title="تثبيت">＋</button></div></header>
 <main class="stage">
   <div class="book-shadow"></div>
   <section id="book" class="book" aria-live="polite">
@@ -27,7 +28,7 @@
   <button data-section="dreams">✦<small>أحلامنا</small></button>
   <button data-section="spiritual">☼<small>روحياتنا</small></button>
   <button data-section="messages">✉<small>رسائلنا</small></button>
-  <button data-section="settings">⚙<small>المزيد</small></button>
+  <button data-section="settings">⚙<small>المزيد</small></button><button data-section="about">♥<small>عن OsRa</small></button>
 </nav>
 <div id="toast" class="toast"></div>
 <dialog id="modal" class="modal"><button id="modalClose" class="modal-close">×</button><div id="modalBody"></div></dialog>
