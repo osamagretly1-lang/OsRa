@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#5f3a58">
+  <meta name="description" content="OsRa — Our Story — رانيا ♥ أسامة — قصتنا وصداقتنا">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+  <title>OsRa — Our Story</title>
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">O<span>s</span>R<span>a</span></div>
+        <div>
+          <div class="eyebrow">Our Story</div>
+          <div class="brand-sub">رانيا ♥ أسامة</div>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button class="icon-btn" id="quickSearchBtn" aria-label="بحث">⌕</button>
+        <button class="icon-btn" id="installBtn" aria-label="تثبيت" hidden>＋</button>
+      </div>
+    </header>
+
+    <main class="book-stage">
+      <div class="book-shadow"></div>
+      <section class="book" aria-live="polite">
+        <div class="page under-page" id="underPage"></div>
+        <article class="page main-page" id="mainPage"></article>
+        <div class="page flip-page" id="flipPage" aria-hidden="true"></div>
+      </section>
+    </main>
+
+    <nav class="section-nav" aria-label="أقسام OsRa">
+      <button data-section="home"><span>⌂</span><small>الرئيسية</small></button>
+      <button data-section="memories"><span>♡</span><small>ذكرياتنا</small></button>
+      <button data-section="story"><span>◴</span><small>قصتنا</small></button>
+      <button data-section="dreams"><span>✦</span><small>أحلامنا</small></button>
+      <button data-section="spiritual"><span>☼</span><small>روحياتنا</small></button>
+      <button data-section="messages"><span>✉</span><small>رسائلنا</small></button>
+      <button data-section="settings"><span>⚙</span><small>الإعدادات</small></button>
+      <button data-section="closing"><span>❦</span><small>الخاتمة</small></button>
+    </nav>
+
+    <div id="toast" class="toast" role="status"></div>
+
+    <dialog id="modal" class="modal">
+      <div id="modalBody"></div>
+      <button class="modal-close" id="modalClose" aria-label="إغلاق">×</button>
+    </dialog>
+
+    <dialog id="lightbox" class="lightbox">
+      <div class="lightbox-head">
+        <button id="lbClose" class="icon-btn">×</button>
+        <div id="lbCaption"></div>
+        <div class="lightbox-nav">
+          <button id="lbPrev" class="icon-btn">›</button>
+          <button id="lbNext" class="icon-btn">‹</button>
+        </div>
+      </div>
+      <div class="lightbox-image-wrap">
+        <img id="lbImage" alt="">
+        <div id="lbLoading" class="spinner" hidden></div>
+      </div>
+    </dialog>
+  </div>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
