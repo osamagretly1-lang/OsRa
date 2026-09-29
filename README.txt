@@ -10,3 +10,6 @@ OsRa v4
 
 اختبار الصور:
 Chrome حديث على Android عبر HTTPS. ابدأ بـ50–200 صورة قبل 2000.
+
+
+OsRa repair bundle: restores the About/dedication page and paper-flip sound while retaining thumbnail-size hardening.
