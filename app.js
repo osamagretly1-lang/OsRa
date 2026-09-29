@@ -1,8 +1,9 @@
 const DB='OsRaDB', VER=1, THUMB_VERSION=3, THUMB_MAX_BYTES=128*1024;
+const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 const DEFAULT={settings:{startDate:'',engagementDate:'',birthdayRania:'',osamaPhone:'',raniaPhone:'',whatsappUrl:'',libraryName:'',soundEnabled:false},memories:[],events:[],dreams:[],verses:[],prayers:[],messages:[],excludedPhotos:[]};
 let db,state=structuredClone(DEFAULT),libraryHandle=null,photos=new Map(),section='home',busy=false,installEvent=null,soundOn=false,audioCtx=null,lb={ids:[],i:0,url:null},currentMemoryId=null,selectedPhotos=new Set(),calendarDate=today(),calendarCursor=null;
 const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const id=p=>p+'-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8), today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+const id=p=>p+'-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);
 const allPhotos=()=>[...photos.values()].filter(p=>!p.excluded);
 function toast(m){const t=$('#toast');if(!t)return;t.textContent=m;t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('show'),2800)}
 function dbOpen(){return new Promise((ok,no)=>{const r=indexedDB.open(DB,VER);r.onupgradeneeded=()=>{const d=r.result;if(!d.objectStoreNames.contains('state'))d.createObjectStore('state',{keyPath:'key'});if(!d.objectStoreNames.contains('photos'))d.createObjectStore('photos',{keyPath:'id'});if(!d.objectStoreNames.contains('library'))d.createObjectStore('library',{keyPath:'key'})};r.onsuccess=()=>{db=r.result;ok()};r.onerror=()=>no(r.error)})}
