@@ -1,4 +1,4 @@
-OsRa v19 — Complete safe build
+OsRa v25 — Complete safe build
 
 مبنية فوق OsRa REPAIR v6 ثم تمت مراجعة وإصلاح v7 قبل إعادة البناء.
 
@@ -12,7 +12,7 @@ OsRa v19 — Complete safe build
 - النسخة الاحتياطية تشمل بيانات الذكريات والنطاقات والاستبعاد وcapturedAt والبصمة ومعلومات الفهرسة، والاسترجاع يعيد بيانات الفهرس دون حذف سجلات الصور الحالية.
 - زر صوت قلب الورق محفوظ، وحالته تحفظ محليًا.
 - عن OsRa محفوظة مع الإهداء الكامل.
-- Service Worker v8: تحديث موثوق للملفات الأساسية مع network-first، وتسجيله مع updateViaCache:none وupdate() لتقليل بقاء النسخة القديمة.
+- Service Worker v23: تحديث موثوق للملفات الأساسية مع network-first، وتسجيله مع updateViaCache:none وupdate() لتقليل بقاء النسخة القديمة.
 
 الخصوصية:
 - لا توجد مكتبات خارجية أو CDN أو Analytics.
@@ -30,3 +30,9 @@ OsRa v19 additions:
 - Manual album ordering (move up/down) plus optional ordering by detail completeness.
 - Automatic cleanup only for empty auto-generated albums; user-edited/text-rich memories are protected.
 - Romantic heart-gate transition retained and enhanced.
+
+
+Video handling v25: indexes common video extensions including MP4, WebM, M4V, MOV, OGV, 3GP/3G2 and additional formats for external playback. Internal browser playback is attempted first; if unsupported, OsRa offers the device share sheet or opens the original local file without uploading it.
+
+
+v25: selection-order management replaces move arrows; details-first ordering remains.
