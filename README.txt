@@ -17,3 +17,6 @@ OsRa v8 — Complete stable build
 الخصوصية:
 - لا توجد مكتبات خارجية أو CDN أو Analytics.
 - الصور الأصلية لا تُرفع إلى GitHub؛ القراءة تتم من مجلد محلي تختاره أنت، والمعاينات تبقى داخل تخزين الموقع المحلي.
+
+
+OsRa v14: bulk album/photo organization, safe automatic cleanup of only pure auto-generated empty albums, daily file-backup attempt, and non-destructive safeguards.
