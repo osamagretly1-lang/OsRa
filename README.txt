@@ -1,4 +1,4 @@
-OsRa v25 — Complete safe build
+OsRa v23 — Complete safe build
 
 مبنية فوق OsRa REPAIR v6 ثم تمت مراجعة وإصلاح v7 قبل إعادة البناء.
 
@@ -32,7 +32,4 @@ OsRa v19 additions:
 - Romantic heart-gate transition retained and enhanced.
 
 
-Video handling v25: indexes common video extensions including MP4, WebM, M4V, MOV, OGV, 3GP/3G2 and additional formats for external playback. Internal browser playback is attempted first; if unsupported, OsRa offers the device share sheet or opens the original local file without uploading it.
-
-
-v25: selection-order management replaces move arrows; details-first ordering remains.
+OsRa v26 Recovery Safe: مبني من v23 المكتملة مع تحسينات الفيديو، ترتيب التحديد بالأرقام للصور والألبومات، زر تثبيت ترتيب التحديد، استعادة صوت قلب الورق، واسترجاع محلي آمن.

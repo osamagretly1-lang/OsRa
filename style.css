@@ -39,4 +39,10 @@
 /* OsRa v20 video controls */
 .video-tools{position:absolute;z-index:8;left:50%;bottom:16px;transform:translateX(-50%);display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px;width:min(940px,96vw);padding:8px 10px;border-radius:16px;background:rgba(20,12,18,.72);backdrop-filter:blur(12px);color:#fff;font-size:11px}.video-tools label{display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.08);padding:5px 7px;border-radius:10px}.video-tools select,.video-tools input{max-width:95px}.video-tools .round{width:34px;height:34px}.lb-frame video{transition:transform .25s ease,filter .2s ease;transform-origin:center center}.video-placeholder{background-position:center!important;background-size:cover!important;background-repeat:no-repeat!important;padding:8px;border-radius:12px}.video-placeholder .video-symbol{display:grid;place-items:center;border-radius:50%;width:62px;height:62px;background:#fff;box-shadow:0 10px 25px rgba(55,32,46,.15);font-size:24px}@media(max-width:620px){.video-tools{bottom:8px;gap:4px;padding:6px}.video-tools label{font-size:9px}.video-tools input{max-width:70px}.video-tools .round{width:30px;height:30px}}
 
-.selection-badge{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 6px;margin-inline-start:5px;border-radius:999px;background:var(--rose);color:#fff;font-size:11px;font-weight:800;box-shadow:0 3px 9px rgba(108,70,100,.22)}.photo-item-footer .icon-btn{display:none!important}.photo-item:has(.photo-select:checked){transform:translateY(-2px);box-shadow:0 10px 24px rgba(55,32,46,.12)}
+
+/* v26 selection/recovery UI */
+.romantic-card-cover{position:relative}
+.album-selection-number{position:absolute;top:10px;right:10px;z-index:5;display:grid;place-items:center;min-width:34px;height:34px;padding:0 8px;border-radius:999px;background:rgba(255,255,255,.94);color:var(--ink);font-weight:900;box-shadow:0 5px 16px rgba(0,0,0,.14);border:1px solid var(--line)}
+.selection-number{font-size:13px;font-weight:900}
+.selection-badge{display:inline-grid;place-items:center;min-width:24px;height:24px;padding:0 5px;margin-inline-start:4px;border-radius:999px;background:rgba(255,255,255,.95);font-weight:900}
+.recovery-card{border:1px solid rgba(160,72,116,.25);background:linear-gradient(135deg,rgba(255,247,251,.95),rgba(250,242,248,.88))}
