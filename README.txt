@@ -19,4 +19,4 @@ OsRa v8 — Complete stable build
 - الصور الأصلية لا تُرفع إلى GitHub؛ القراءة تتم من مجلد محلي تختاره أنت، والمعاينات تبقى داخل تخزين الموقع المحلي.
 
 
-OsRa v14: bulk album/photo organization, safe automatic cleanup of only pure auto-generated empty albums, daily file-backup attempt, and non-destructive safeguards.
+OsRa v15 UI addition: romantic album photo viewer, thumbnail strip, swipe navigation, and optional slideshow. Existing data/indexing logic remains unchanged from v13.
