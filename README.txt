@@ -1,4 +1,4 @@
-OsRa v8 — Complete stable build
+OsRa v19 — Complete safe build
 
 مبنية فوق OsRa REPAIR v6 ثم تمت مراجعة وإصلاح v7 قبل إعادة البناء.
 
@@ -20,3 +20,13 @@ OsRa v8 — Complete stable build
 
 
 OsRa v15 UI addition: romantic album photo viewer, thumbnail strip, swipe navigation, and optional slideshow. Existing data/indexing logic remains unchanged from v13.
+
+
+OsRa v19 additions:
+- Local contentKey for cross-device media matching without relying on file modification time.
+- Backup import/merge preserves existing local OsRa entries and prepares the media manifest for re-linking after the original photos/videos are supplied.
+- Full restore keeps a pre-restore safety snapshot.
+- Daily video selection from visible chosen albums only.
+- Manual album ordering (move up/down) plus optional ordering by detail completeness.
+- Automatic cleanup only for empty auto-generated albums; user-edited/text-rich memories are protected.
+- Romantic heart-gate transition retained and enhanced.
