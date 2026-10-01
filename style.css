@@ -33,3 +33,6 @@
 .selection-badge{display:inline-grid;place-items:center;min-width:24px;height:24px;padding:0 5px;margin-inline-start:4px;border-radius:999px;background:rgba(255,255,255,.95);font-weight:900}
 .recovery-card{border:1px solid rgba(160,72,116,.25);background:linear-gradient(135deg,rgba(255,247,251,.95),rgba(250,242,248,.88))}
 .scan-progress-card{margin:0 0 14px;border:1px solid rgba(108,70,100,.24);background:linear-gradient(135deg,rgba(255,249,244,.98),rgba(247,238,244,.92))}.scan-progress-card h3{margin:0 0 7px;color:var(--rose)}.scan-progress-card .meta{display:block;margin:4px 0;word-break:break-word}.scan-progress-card .actions{margin-top:10px}
+.sources-panel{margin:12px 0}.source-row{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}.source-row:first-of-type{border-top:0}.source-row.active{background:rgba(108,70,100,.07);border-radius:12px;padding:10px}.source-info{min-width:0;display:flex;flex-direction:column;gap:3px}.source-info b{overflow-wrap:anywhere}.source-info small{color:var(--muted)}.source-row .actions{margin:0;flex-wrap:wrap;justify-content:flex-end}
+@media(max-width:640px){.source-row{align-items:flex-start;flex-direction:column}.source-row .actions{width:100%;justify-content:flex-start}}
+
