@@ -1,4 +1,4 @@
-OsRa v29 — PHOTOS ONLY — STABLE
+OsRa v30 — PHOTOS ONLY — STABLE
 
 هذه النسخة مخصصة للنسخة الأساسية المستقرة.
 - الصور والذكريات وباقي وظائف OsRa محفوظة.
@@ -13,4 +13,4 @@ OsRa v29 — PHOTOS ONLY — STABLE
 تحسين جودة الصور: THUMB_VERSION=4، المعاينات حتى 1024px وبجودة WebP عالية، مع حد أقصى 512KB للمعاينة. الصور الأصلية لا تُضغط وتظل هي المستخدمة عند فتح الصورة كاملة مع صلاحية المكتبة.
 
 
-v29 image behavior: optimized local thumbnails for speed; on opening a photo, the thumbnail appears immediately and is replaced by the original photo from the linked local folder. Originals are never compressed, uploaded, deleted, or copied into OsRa.
+v30 image behavior: optimized local thumbnails for speed; on opening a photo, the thumbnail appears immediately and is replaced by the original photo from the linked local folder. Originals are never compressed, uploaded, deleted, or copied into OsRa.

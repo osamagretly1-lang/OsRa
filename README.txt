@@ -39,4 +39,4 @@ OsRa v19 additions:
 OsRa v26 Recovery Safe: مبني من v23 المكتملة مع تحسينات الفيديو، ترتيب التحديد بالأرقام للصور والألبومات، زر تثبيت ترتيب التحديد، استعادة صوت قلب الورق، واسترجاع محلي آمن.
 
 
-v29 image behavior: optimized local thumbnails for speed; on opening a photo, the thumbnail appears immediately and is replaced by the original photo from the linked local folder. Originals are never compressed, uploaded, deleted, or copied into OsRa.
+v30 image behavior: optimized local thumbnails for speed; on opening a photo, the thumbnail appears immediately and is replaced by the original photo from the linked local folder. Originals are never compressed, uploaded, deleted, or copied into OsRa.
