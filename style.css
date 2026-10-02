@@ -96,19 +96,16 @@ button,input,textarea,select{font:inherit}button{cursor:pointer}.topbar{position
 .book .current::before,.book .current::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:20;border-radius:inherit;opacity:0}
 .book .current::before{background:linear-gradient(90deg,rgba(36,23,29,.36),transparent 13%,transparent 55%,rgba(255,255,255,.22) 82%,rgba(32,20,26,.16));mix-blend-mode:multiply;transform-origin:0 50%}
 .book .current::after{background:linear-gradient(104deg,transparent 34%,rgba(255,255,255,.5) 48%,transparent 60%);mix-blend-mode:screen}
-.book.turn-next .current{animation:realBookTurnNext 920ms cubic-bezier(.12,.72,.16,1) forwards}
-.book.turn-prev .current{transform-origin:100% 50%;animation:realBookTurnPrev 920ms cubic-bezier(.12,.72,.16,1) forwards}
-.book.turn-next .current::before,.book.turn-next .current::after,.book.turn-prev .current::before,.book.turn-prev .current::after{animation:pageLight 920ms ease both}
-@keyframes realBookTurnNext{0%{transform:rotateY(0) rotateZ(0) translateZ(0) skewY(0);box-shadow:var(--shadow)}20%{transform:rotateY(-24deg) rotateZ(-.3deg) translateZ(3px) skewY(-.3deg);box-shadow:-7px 14px 25px rgba(41,26,34,.18)}46%{transform:rotateY(-86deg) rotateZ(-.9deg) translateZ(4px) skewY(-1deg);box-shadow:-32px 22px 44px rgba(41,26,34,.29)}68%{transform:rotateY(-134deg) rotateZ(-.65deg) translateZ(2px) skewY(-.6deg);box-shadow:-19px 17px 31px rgba(41,26,34,.2)}86%{transform:rotateY(-170deg) rotateZ(-.2deg) translateZ(0)}100%{transform:rotateY(-180deg) rotateZ(0) translateZ(0) skewY(0);box-shadow:0 0 rgba(0,0,0,0)}}
-@keyframes realBookTurnPrev{0%{transform:rotateY(0) rotateZ(0) translateZ(0) skewY(0);box-shadow:var(--shadow)}20%{transform:rotateY(24deg) rotateZ(.3deg) translateZ(3px) skewY(.3deg);box-shadow:7px 14px 25px rgba(41,26,34,.18)}46%{transform:rotateY(86deg) rotateZ(.9deg) translateZ(4px) skewY(1deg);box-shadow:32px 22px 44px rgba(41,26,34,.29)}68%{transform:rotateY(134deg) rotateZ(.65deg) translateZ(2px) skewY(.6deg);box-shadow:19px 17px 31px rgba(41,26,34,.2)}86%{transform:rotateY(170deg) rotateZ(.2deg) translateZ(0)}100%{transform:rotateY(180deg) rotateZ(0) translateZ(0) skewY(0);box-shadow:0 0 rgba(0,0,0,0)}}
-@keyframes pageLight{0%{opacity:0}24%{opacity:.55}48%{opacity:.95}72%{opacity:.28}100%{opacity:0}}
+.book.turn-next .current{animation:realBookTurnNext 760ms cubic-bezier(.12,.72,.16,1) forwards}
+.book.turn-prev .current{transform-origin:100% 50%;animation:realBookTurnPrev 760ms cubic-bezier(.12,.72,.16,1) forwards}
+.book.turn-next .current::before,.book.turn-next .current::after,.book.turn-prev .current::before,.book.turn-prev .current::after{animation:pageLight 760ms ease both}
+@keyframes realBookTurnNext{0%{transform:rotateY(0) translateZ(0)}24%{transform:rotateY(-28deg) translateZ(2px)}52%{transform:rotateY(-88deg) translateZ(3px)}78%{transform:rotateY(-148deg) translateZ(1px)}100%{transform:rotateY(-180deg) translateZ(0)}}
+@keyframes realBookTurnPrev{0%{transform:rotateY(0) translateZ(0)}24%{transform:rotateY(28deg) translateZ(2px)}52%{transform:rotateY(88deg) translateZ(3px)}78%{transform:rotateY(148deg) translateZ(1px)}100%{transform:rotateY(180deg) translateZ(0)}}
+@keyframes pageLight{0%{opacity:0}28%{opacity:.45}52%{opacity:.82}74%{opacity:.18}100%{opacity:0}}
 
 /* One album per physical-looking page. */
 .memories-book-page .album-order-bar .order-row{display:flex;align-items:center;justify-content:space-between;gap:8px}.album-book-count{font-size:12px;color:var(--muted);padding:4px 8px;border-radius:999px;background:rgba(108,70,100,.07)}
 .memories-book-controls{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px auto;max-width:900px}.book-control-center{text-align:center;color:var(--muted);font-size:12px}.book-control-center span,.book-control-center strong{display:block}.book-control-center strong{color:var(--rose);font-size:14px;margin-top:3px}.memories-book-controls .round{margin:0;width:42px;height:42px;background:rgba(255,255,255,.7);box-shadow:0 8px 18px rgba(48,30,40,.08)}.memories-book-controls .round:disabled{opacity:.28;cursor:not-allowed}
-.album-book-stage{position:relative;min-height:520px;perspective:2400px;transform-style:preserve-3d;margin:0 auto 18px}.album-book-stage::before{content:"";position:absolute;inset:4px 8px;background:linear-gradient(90deg,rgba(72,48,57,.11),transparent 7%,transparent 93%,rgba(72,48,57,.11));border-radius:20px;box-shadow:0 15px 35px rgba(49,31,41,.12);transform:translateZ(-10px)}.album-underlay,.album-leaf{position:absolute;inset:0}.album-underlay{z-index:1}.album-leaf{z-index:2;transform-origin:0 50%;transform-style:preserve-3d}.album-book-stage.turn-next .album-leaf{animation:albumTurnNext 880ms cubic-bezier(.12,.72,.16,1) forwards}.album-book-stage.turn-prev .album-leaf{transform-origin:100% 50%;animation:albumTurnPrev 880ms cubic-bezier(.12,.72,.16,1) forwards}.album-book-stage.turn-next .album-leaf::after,.album-book-stage.turn-prev .album-leaf::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:19px;background:linear-gradient(90deg,rgba(41,27,34,.28),transparent 18%,transparent 62%,rgba(255,255,255,.28));opacity:0;animation:albumShade 880ms ease both}.album-book-stage .memory-card{min-height:500px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 18px 45px rgba(55,32,46,.13)}
-@keyframes albumTurnNext{0%{transform:rotateY(0) rotateZ(0) skewY(0);box-shadow:0 18px 45px rgba(55,32,46,.13)}45%{transform:rotateY(-92deg) rotateZ(-1deg) skewY(-1deg);box-shadow:-28px 20px 42px rgba(55,32,46,.27)}75%{transform:rotateY(-150deg) rotateZ(-.4deg);box-shadow:-14px 14px 30px rgba(55,32,46,.18)}100%{transform:rotateY(-180deg) rotateZ(0) skewY(0);box-shadow:0 0 rgba(0,0,0,0)}}
-@keyframes albumTurnPrev{0%{transform:rotateY(0) rotateZ(0) skewY(0)}45%{transform:rotateY(92deg) rotateZ(1deg) skewY(1deg);box-shadow:28px 20px 42px rgba(55,32,46,.27)}75%{transform:rotateY(150deg) rotateZ(.4deg);box-shadow:14px 14px 30px rgba(55,32,46,.18)}100%{transform:rotateY(180deg) rotateZ(0) skewY(0);box-shadow:0 0 rgba(0,0,0,0)}}@keyframes albumShade{0%{opacity:0}42%{opacity:.72}62%{opacity:.3}100%{opacity:0}}
 @media(max-width:750px){.album-book-stage{min-height:490px}.album-book-stage .memory-card{min-height:470px}}
 @media(prefers-reduced-motion:reduce){.book.turn-next .current,.book.turn-prev .current,.album-book-stage.turn-next .album-leaf,.album-book-stage.turn-prev .album-leaf{animation-duration:.001ms!important}}
 
@@ -120,18 +117,8 @@ button,input,textarea,select{font:inherit}button{cursor:pointer}.topbar{position
 .book-shadow{filter:blur(12px);opacity:.78}
 .book{will-change:auto}
 .book .current,.book .back,.book .flip{backface-visibility:hidden;-webkit-backface-visibility:hidden}
-.book.turn-next .current,.book.turn-prev .current{animation-duration:780ms!important}
-@keyframes realBookTurnNext{0%{transform:rotateY(0) translateZ(0)}28%{transform:rotateY(-38deg) translateZ(2px)}55%{transform:rotateY(-92deg) translateZ(3px)}78%{transform:rotateY(-148deg) translateZ(1px)}100%{transform:rotateY(-180deg) translateZ(0)}}
-@keyframes realBookTurnPrev{0%{transform:rotateY(0) translateZ(0)}28%{transform:rotateY(38deg) translateZ(2px)}55%{transform:rotateY(92deg) translateZ(3px)}78%{transform:rotateY(148deg) translateZ(1px)}100%{transform:rotateY(180deg) translateZ(0)}}
-@keyframes pageLight{0%{opacity:0}28%{opacity:.45}52%{opacity:.82}74%{opacity:.18}100%{opacity:0}}
 .book .current{box-shadow:var(--shadow)}
 .book.turn-next .current,.book.turn-prev .current{box-shadow:0 16px 34px rgba(55,32,46,.18)!important;filter:none!important}
-.album-book-stage{perspective:2000px}
-.album-book-stage .album-leaf{will-change:transform}
-@keyframes albumTurnNext{0%{transform:rotateY(0) translateZ(0)}32%{transform:rotateY(-42deg) translateZ(2px)}56%{transform:rotateY(-94deg) translateZ(3px)}80%{transform:rotateY(-148deg) translateZ(1px)}100%{transform:rotateY(-180deg) translateZ(0)}}
-@keyframes albumTurnPrev{0%{transform:rotateY(0) translateZ(0)}32%{transform:rotateY(42deg) translateZ(2px)}56%{transform:rotateY(94deg) translateZ(3px)}80%{transform:rotateY(148deg) translateZ(1px)}100%{transform:rotateY(180deg) translateZ(0)}}
-@keyframes albumShade{0%{opacity:0}42%{opacity:.5}64%{opacity:.18}100%{opacity:0}}
-.album-book-stage .memory-card{box-shadow:0 14px 30px rgba(55,32,46,.11)}
 .album-mini-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0 18px}
 .album-mini-card{display:flex;align-items:stretch;gap:9px;padding:8px;min-width:0;background:rgba(255,250,244,.86)}
 .album-mini-cover{width:112px;min-width:112px;height:112px;border-radius:14px;overflow:hidden;background:linear-gradient(145deg,#efe1d7,#e9d9df);position:relative}
@@ -162,8 +149,8 @@ button,input,textarea,select{font:inherit}button{cursor:pointer}.topbar{position
 
 /* Final lightbox cleanup: no decorative dot/line/heart or overlay can cover the photograph. */
 .lb-frame,.lb-frame::before,.lb-frame::after{background:transparent!important;border:0!important;outline:0!important;box-shadow:none!important}.lb-frame img{background:transparent!important;border:0!important;outline:0!important;box-shadow:none!important;filter:none!important}.lb-heart,.lb-photo-shadow{display:none!important}
-/* Page navigation: animation and timer use the exact same 760ms so the page never snaps back before content swap. */
-.book.turn-next .current,.book.turn-prev .current{animation-duration:760ms!important}.book .back{z-index:2;transform:translateZ(-1px);backface-visibility:hidden;-webkit-backface-visibility:hidden}.book .current{z-index:4;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+/* Page navigation: the JS swap is synchronized to the canonical 760ms turn. */
+.book .back{z-index:2;transform:translateZ(-1px);backface-visibility:hidden;-webkit-backface-visibility:hidden}.book .current{z-index:4;backface-visibility:hidden;-webkit-backface-visibility:hidden}
 @media(prefers-reduced-motion:reduce){.book.turn-next .current,.book.turn-prev .current{animation-duration:.001ms!important}}
 
 /* Remove the empty status pill from the large-photo viewer; show it only when there is real status text. */
@@ -173,28 +160,13 @@ button,input,textarea,select{font:inherit}button{cursor:pointer}.topbar{position
 /* RTL page-turn stability: both directions pivot from the right-hand spine, eliminating the snap/flicker on forward navigation. */
 .book{overflow:hidden}
 .book.turn-next .current{transform-origin:100% 50%!important}
-@keyframes realBookTurnNext{0%{transform:rotateY(0) translateZ(0)}24%{transform:rotateY(-28deg) translateZ(2px)}52%{transform:rotateY(-88deg) translateZ(3px)}78%{transform:rotateY(-142deg) translateZ(1px)}100%{transform:rotateY(-180deg) translateZ(0)}}
 .book.turn-prev .current{transform-origin:100% 50%!important}
 
 /* Quick selection: normal swipes remain scroll gestures; long-press starts continuous selection. */
 .drag-select-active{touch-action:pan-y!important;user-select:none}.drag-select-active .photo-item{user-select:none}.drag-select-active .photo-number,.drag-select-active .selection-number,.drag-select-active .album-selection-number{display:none!important}
-.album-book-stage{backface-visibility:hidden;-webkit-backface-visibility:hidden}
 
-/* Final no-flash album turn: the stage never gets rebuilt, resized or faded during a flip. */
-.album-book-stage{overflow:visible;contain:layout paint;min-height:520px}
-.album-book-stage .album-underlay,.album-book-stage .album-leaf{height:100%;min-height:520px;will-change:transform}
-.album-book-stage .memory-card{height:100%;min-height:500px}
-.album-book-stage.turn-next,.album-book-stage.turn-prev{opacity:1!important;visibility:visible!important}
-.album-book-stage.turn-next .album-underlay,.album-book-stage.turn-prev .album-underlay{visibility:visible;opacity:1}
-.album-book-stage .album-leaf{backface-visibility:hidden;-webkit-backface-visibility:hidden}
-@media(max-width:750px){.album-book-stage{min-height:490px}.album-book-stage .album-underlay,.album-book-stage .album-leaf{min-height:490px}.album-book-stage .memory-card{min-height:470px}}
 /* Quick-select keeps vertical scrolling native. Continuous selection starts only after a hold. */
 .drag-select-active{touch-action:pan-y!important;overscroll-behavior-y:auto!important}
-
-/* Album pages use the same stable outer-book turn as the main sections. The inner album stage is visual content only. */
-.album-book-stage{perspective:none;transform-style:flat;backface-visibility:visible;-webkit-backface-visibility:visible}
-.album-book-stage .album-leaf,.album-book-stage .album-underlay{transform:none!important;animation:none!important;will-change:auto!important}
-.album-book-stage::before{display:none}
 
 /* Final photo-turn synchronization: exactly the same 760ms physical book motion. */
 .lb-flip.play-next .lb-photo-sheet,.lb-flip.play-prev .lb-photo-sheet{animation-duration:760ms!important}
@@ -205,47 +177,18 @@ button,input,textarea,select{font:inherit}button{cursor:pointer}.topbar{position
 
 /* Final: photo viewer uses direct image-to-image navigation, not a page-turn effect. */
 .lb-flip,.lb-photo-sheet,.lb-flip-face{display:none!important;animation:none!important;transform:none!important}
-
-/* Stable album page turn restored: flip only the album leaf, not the whole OsRa page. */
-.album-book-stage{position:relative;min-height:520px;perspective:2400px!important;transform-style:preserve-3d!important;backface-visibility:visible!important;-webkit-backface-visibility:visible!important;overflow:visible;contain:none!important;margin:0 auto 18px}
-.album-book-stage::before{display:block!important;content:"";position:absolute;inset:4px 8px;background:linear-gradient(90deg,rgba(72,48,57,.11),transparent 7%,transparent 93%,rgba(72,48,57,.11));border-radius:20px;box-shadow:0 15px 35px rgba(49,31,41,.12);transform:translateZ(-10px)}
-.album-book-stage .album-underlay,.album-book-stage .album-leaf{position:absolute;inset:0;height:auto;min-height:520px;will-change:transform!important;transform-style:preserve-3d!important;backface-visibility:hidden!important;-webkit-backface-visibility:hidden!important}
-.album-book-stage .album-underlay{z-index:1;transform:none!important;animation:none!important;opacity:1!important;visibility:visible!important}
-.album-book-stage .album-leaf{z-index:2;transform-origin:0 50%;transform-style:preserve-3d!important}
-.album-book-stage.turn-next .album-leaf{animation:albumTurnNext 880ms cubic-bezier(.12,.72,.16,1) forwards!important}
-.album-book-stage.turn-prev .album-leaf{transform-origin:100% 50%;animation:albumTurnPrev 880ms cubic-bezier(.12,.72,.16,1) forwards!important}
-.album-book-stage.turn-next .album-leaf::after,.album-book-stage.turn-prev .album-leaf::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:19px;background:linear-gradient(90deg,rgba(41,27,34,.28),transparent 18%,transparent 62%,rgba(255,255,255,.28));opacity:0;animation:albumShade 880ms ease both}
-.album-book-stage .memory-card{min-height:500px;height:auto;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 14px 30px rgba(55,32,46,.11)}
-@keyframes albumTurnNext{0%{transform:rotateY(0) rotateZ(0) skewY(0)}45%{transform:rotateY(-92deg) rotateZ(-1deg) skewY(-1deg);box-shadow:-28px 20px 42px rgba(55,32,46,.27)}75%{transform:rotateY(-150deg) rotateZ(-.4deg);box-shadow:-14px 14px 30px rgba(55,32,46,.18)}100%{transform:rotateY(-180deg) rotateZ(0) skewY(0);box-shadow:0 0 rgba(0,0,0,0)}}
-@keyframes albumTurnPrev{0%{transform:rotateY(0) rotateZ(0) skewY(0)}45%{transform:rotateY(92deg) rotateZ(1deg) skewY(1deg);box-shadow:28px 20px 42px rgba(55,32,46,.27)}75%{transform:rotateY(150deg) rotateZ(.4deg);box-shadow:14px 14px 30px rgba(55,32,46,.18)}100%{transform:rotateY(180deg) rotateZ(0) skewY(0);box-shadow:0 0 rgba(0,0,0,0)}}
-@keyframes albumShade{0%{opacity:0}42%{opacity:.72}62%{opacity:.3}100%{opacity:0}}
-@media(max-width:750px){.album-book-stage{min-height:490px}.album-book-stage .album-underlay,.album-book-stage .album-leaf{min-height:490px}.album-book-stage .memory-card{min-height:470px}}
-@media(prefers-reduced-motion:reduce){.album-book-stage.turn-next .album-leaf,.album-book-stage.turn-prev .album-leaf{animation-duration:.001ms!important}}
-
-/* Album-only page turn: use the exact same physical page-turn system as the main book.
-   Only the album leaf is animated; the surrounding OsRa page remains fixed. */
-.album-book-stage{position:relative;perspective:2600px!important;transform-style:preserve-3d!important;isolation:isolate!important;overflow:visible;contain:none!important}
-.album-book-stage::before{display:block!important;content:"";position:absolute;inset:4px 8px;background:linear-gradient(90deg,rgba(70,45,52,.15),transparent 7%,transparent 93%,rgba(70,45,52,.13)),repeating-linear-gradient(0deg,rgba(86,60,69,.06) 0 1px,transparent 1px 3px);border-radius:20px;box-shadow:0 12px 26px rgba(42,27,35,.15),inset 0 0 0 1px rgba(255,255,255,.4);transform:translateZ(-12px)}
-.album-book-stage .album-underlay,.album-book-stage .album-leaf{position:absolute;inset:0;min-height:520px;will-change:transform;transform-style:preserve-3d!important;backface-visibility:hidden!important;-webkit-backface-visibility:hidden!important}
-.album-book-stage .album-underlay{z-index:1;transform:translateZ(-10px)!important;animation:none!important;opacity:1!important;visibility:visible!important}
-.album-book-stage .album-leaf{z-index:4;transform-origin:0 50%;transform-style:preserve-3d!important}
-.album-book-stage .album-leaf::before,.album-book-stage .album-leaf::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:20;border-radius:inherit;opacity:0}
+/* OsRa v31 — canonical album page turn. The album leaf reuses the main book's exact physical turn. */
+.album-book-stage{position:relative;min-height:520px;margin:0 auto 18px;perspective:2600px;transform-style:preserve-3d;isolation:isolate;overflow:visible}
+.album-book-stage::before{content:"";position:absolute;inset:1.4% 1.5%;z-index:0;border-radius:20px;background:linear-gradient(90deg,rgba(70,45,52,.15),transparent 7%,transparent 93%,rgba(70,45,52,.13)),repeating-linear-gradient(0deg,rgba(86,60,69,.06) 0 1px,transparent 1px 3px);box-shadow:0 12px 26px rgba(42,27,35,.15),inset 0 0 0 1px rgba(255,255,255,.4);transform:translateZ(-12px)}
+.album-book-stage .album-underlay,.album-book-stage .album-leaf{position:absolute;inset:0;min-height:520px;transform-style:preserve-3d;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.album-book-stage .album-underlay{z-index:1;transform:translateZ(-10px);opacity:1;visibility:visible;background:var(--paper)}
+.album-book-stage .album-leaf{z-index:4;transform-origin:0 50%;will-change:transform}
+.album-book-stage .album-leaf .memory-card{min-height:500px;background:var(--paper)!important;opacity:1;backface-visibility:hidden;-webkit-backface-visibility:hidden;border:1px solid rgba(88,61,74,.16);border-inline-end:2px solid rgba(88,61,74,.20);box-shadow:var(--shadow),inset -8px 0 20px rgba(40,26,32,.05),inset 1px 0 rgba(255,255,255,.8)!important}
+.album-book-stage .album-leaf::before,.album-book-stage .album-leaf::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:20;border-radius:18px;opacity:0}
 .album-book-stage .album-leaf::before{background:linear-gradient(90deg,rgba(36,23,29,.36),transparent 13%,transparent 55%,rgba(255,255,255,.22) 82%,rgba(32,20,26,.16));mix-blend-mode:multiply;transform-origin:0 50%}
 .album-book-stage .album-leaf::after{background:linear-gradient(104deg,transparent 34%,rgba(255,255,255,.5) 48%,transparent 60%);mix-blend-mode:screen}
-.album-book-stage.turn-next .album-leaf{animation:realBookTurnNext 920ms cubic-bezier(.12,.72,.16,1) forwards!important}
-.album-book-stage.turn-prev .album-leaf{transform-origin:100% 50%;animation:realBookTurnPrev 920ms cubic-bezier(.12,.72,.16,1) forwards!important}
-.album-book-stage.turn-next .album-leaf::before,.album-book-stage.turn-next .album-leaf::after,.album-book-stage.turn-prev .album-leaf::before,.album-book-stage.turn-prev .album-leaf::after{animation:pageLight 920ms ease both!important}
-@media(max-width:750px){.album-book-stage{perspective:2600px!important}.album-book-stage .album-underlay,.album-book-stage .album-leaf{min-height:490px}}
-@media(prefers-reduced-motion:reduce){.album-book-stage.turn-next .album-leaf,.album-book-stage.turn-prev .album-leaf{animation-duration:.001ms!important}.album-book-stage.turn-next .album-leaf::before,.album-book-stage.turn-next .album-leaf::after,.album-book-stage.turn-prev .album-leaf::before,.album-book-stage.turn-prev .album-leaf::after{animation-duration:.001ms!important}}
-
-
-/* FINAL USER REQUEST: realistic opaque album paper, exact main-book turn, album-only. */
-.album-book-stage{perspective:2600px!important;transform-style:preserve-3d!important;isolation:isolate!important;overflow:visible!important;contain:none!important}
-.album-book-stage .album-underlay{z-index:1!important;transform:translateZ(-10px)!important;opacity:1!important;visibility:visible!important;background:var(--paper)!important}
-.album-book-stage .album-leaf{z-index:4!important;transform-origin:100% 50%!important;transform-style:preserve-3d!important;backface-visibility:hidden!important;-webkit-backface-visibility:hidden!important}
-.album-book-stage .album-leaf .memory-card{background:var(--paper)!important;opacity:1!important;backface-visibility:hidden!important;-webkit-backface-visibility:hidden!important;box-shadow:var(--shadow),inset -8px 0 20px rgba(40,26,32,.05),inset 1px 0 rgba(255,255,255,.8)!important}
-.album-book-stage.turn-next .album-leaf{animation:realBookTurnNext 920ms cubic-bezier(.12,.72,.16,1) forwards!important}
-.album-book-stage.turn-prev .album-leaf{animation:realBookTurnPrev 920ms cubic-bezier(.12,.72,.16,1) forwards!important}
-.album-book-stage.turn-next .album-leaf::before,.album-book-stage.turn-next .album-leaf::after,.album-book-stage.turn-prev .album-leaf::before,.album-book-stage.turn-prev .album-leaf::after{animation:pageLight 920ms ease both!important}
-.album-book-stage .album-leaf::before{background:linear-gradient(90deg,rgba(36,23,29,.36),transparent 13%,transparent 55%,rgba(255,255,255,.22) 82%,rgba(32,20,26,.16))!important;mix-blend-mode:multiply!important}
-.album-book-stage .album-leaf::after{background:linear-gradient(104deg,transparent 34%,rgba(255,255,255,.5) 48%,transparent 60%)!important;mix-blend-mode:screen!important}
+.album-book-stage.turn-next .album-leaf{animation:realBookTurnNext 760ms cubic-bezier(.12,.72,.16,1) forwards}
+.album-book-stage.turn-prev .album-leaf{transform-origin:100% 50%;animation:realBookTurnPrev 760ms cubic-bezier(.12,.72,.16,1) forwards}
+.album-book-stage.turn-next .album-leaf::before,.album-book-stage.turn-next .album-leaf::after,.album-book-stage.turn-prev .album-leaf::before,.album-book-stage.turn-prev .album-leaf::after{animation:pageLight 760ms ease both}
+@media(max-width:750px){.album-book-stage{min-height:490px;perspective:2200px}.album-book-stage .album-underlay,.album-book-stage .album-leaf{min-height:490px}.album-book-stage .album-leaf .memory-card{min-height:470px}}
+@media(prefers-reduced-motion:reduce){.album-book-stage.turn-next .album-leaf,.album-book-stage.turn-prev .album-leaf,.album-book-stage.turn-next .album-leaf::before,.album-book-stage.turn-next .album-leaf::after,.album-book-stage.turn-prev .album-leaf::before,.album-book-stage.turn-prev .album-leaf::after{animation-duration:.001ms!important}}
