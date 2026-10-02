@@ -11,6 +11,18 @@
 <title>OsRa — Our Story</title>
 </head>
 <body>
+<div id="bootSplash" class="boot-splash" role="status" aria-live="polite" aria-label="جارٍ فتح OsRa">
+  <div class="boot-book" aria-hidden="true">
+    <div class="boot-sheet boot-sheet-back"></div>
+    <div class="boot-sheet boot-sheet-front">
+      <img src="icon.svg" alt="" class="boot-logo">
+    </div>
+  </div>
+  <div class="boot-title">OsRa</div>
+  <div class="boot-subtitle">رانيا ♥ أسامة</div>
+  <div class="boot-progress" aria-hidden="true"><i></i></div>
+  <div class="boot-loading">جارٍ فتح صفحات قصتنا<span class="boot-dots">…</span></div>
+</div>
 <header class="topbar"><div class="brand"><b>OsRa</b><div><small>Our Story</small><strong>رانيا ♥ أسامة</strong></div></div><div><button id="searchBtn" class="round" title="بحث">⌕</button><button id="soundBtn" class="round" title="صوت قلب الورق">🔇</button><button id="installBtn" class="round" hidden title="تثبيت">＋</button></div></header>
 <main class="stage">
   <div class="book-shadow"></div>
@@ -19,7 +31,7 @@
     <article id="currentPage" class="page current"></article>
     <div id="flipPage" class="page flip"></div>
   </section>
-  <div class="hint">اسحب الصفحة ← أو → أو اضغط على الأقسام</div>
+  <div class="hint">اسحب الورقة ← أو → أو اضغط على الأقسام • كل ألبوم له صفحة خاصة</div>
 </main>
 <nav id="nav" class="nav">
   <button data-section="home">⌂<small>البداية</small></button>
@@ -33,7 +45,7 @@
 </nav>
 <div id="toast" class="toast"></div>
 <dialog id="modal" class="modal"><button id="modalClose" class="modal-close">×</button><div id="modalBody"></div></dialog>
-<dialog id="lightbox" class="lightbox"><div class="lbtop"><button id="lbClose" class="round dark" title="إغلاق">×</button><div class="lbtitle-wrap"><span id="lbTitle"></span><small id="lbMeta"></small></div><span id="lbCounter" class="lb-counter"></span><div class="lb-controls"><button id="lbZoomOut" class="round dark" title="تصغير">−</button><button id="lbZoomReset" class="round dark" title="الحجم الطبيعي">1:1</button><button id="lbZoomIn" class="round dark" title="تكبير">＋</button><button id="lbPlay" class="round dark" title="عرض تلقائي">▶</button><button id="lbPrev" class="round dark" title="السابق">‹</button><button id="lbNext" class="round dark" title="التالي">›</button></div></div><div class="lbbody"><div class="lb-frame"><div class="lb-photo-shadow"></div><img id="lbImage" alt=""><span class="lb-heart">♥</span></div><div id="lbStatus" class="lb-status">جارٍ فتح الصورة…</div></div><div id="lbStrip" class="lb-strip"></div></dialog>
-<script src="app.js?v=30-final-photos-ui-fix-3" defer></script>
+<dialog id="lightbox" class="lightbox"><div class="lbtop"><button id="lbClose" class="round dark" title="إغلاق">×</button><div class="lbtitle-wrap"><span id="lbTitle"></span><small id="lbMeta"></small></div><span id="lbCounter" class="lb-counter"></span><div class="lb-controls"><button id="lbZoomOut" class="round dark" title="تصغير">−</button><button id="lbZoomReset" class="round dark" title="الحجم الطبيعي">1:1</button><button id="lbZoomIn" class="round dark" title="تكبير">＋</button><button id="lbPlay" class="round dark" title="عرض تلقائي">▶</button><button id="lbPrev" class="round dark" title="السابق">‹</button><button id="lbNext" class="round dark" title="التالي">›</button></div></div><div class="lbbody"><div id="lbFrame" class="lb-frame"><div class="lb-photo-shadow"></div><img id="lbImage" alt=""><div id="lbFlip" class="lb-flip" hidden aria-hidden="true"><div class="lb-flip-sheet"><div class="lb-flip-face lb-flip-front"><img alt=""></div><div class="lb-flip-face lb-flip-back"><img alt=""></div></div></div><span class="lb-heart">♥</span></div><div id="lbStatus" class="lb-status">جارٍ فتح الصورة…</div></div><div id="lbStrip" class="lb-strip"></div></dialog>
+<script src="app.js?v=30-final-photos-master-9" defer></script>
 </body>
 </html>
