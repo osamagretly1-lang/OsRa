@@ -85,7 +85,7 @@ button,input,textarea,select{font:inherit}button{cursor:pointer}.topbar{position
 .lb-flip-back{transform:rotateY(180deg)}
 .lb-flip.play-next .lb-photo-sheet{transform-origin:100% 50%;animation:realBookTurnNext 760ms cubic-bezier(.12,.72,.16,1) forwards}
 .lb-flip.play-prev .lb-photo-sheet{transform-origin:100% 50%;animation:realBookTurnPrev 760ms cubic-bezier(.12,.72,.16,1) forwards}
-.lb-flip:not([hidden]){display:none!important}
+.lb-flip:not([hidden]){display:block!important}
 .lb-flip[hidden]{display:none!important}
 
 /* Final light-weight book model: the current sheet physically turns over the real next page. */
@@ -202,3 +202,22 @@ button,input,textarea,select{font:inherit}button{cursor:pointer}.topbar{position
 
 /* Final photo navigation: stable direct change, no page-flip overlay or paper sound. */
 #lbFlip{display:none!important} #lbImage{transition:opacity .12s ease!important;will-change:auto!important}
+
+/* Final: photo viewer uses direct image-to-image navigation, not a page-turn effect. */
+.lb-flip,.lb-photo-sheet,.lb-flip-face{display:none!important;animation:none!important;transform:none!important}
+
+/* Stable album page turn restored: flip only the album leaf, not the whole OsRa page. */
+.album-book-stage{position:relative;min-height:520px;perspective:2400px!important;transform-style:preserve-3d!important;backface-visibility:visible!important;-webkit-backface-visibility:visible!important;overflow:visible;contain:none!important;margin:0 auto 18px}
+.album-book-stage::before{display:block!important;content:"";position:absolute;inset:4px 8px;background:linear-gradient(90deg,rgba(72,48,57,.11),transparent 7%,transparent 93%,rgba(72,48,57,.11));border-radius:20px;box-shadow:0 15px 35px rgba(49,31,41,.12);transform:translateZ(-10px)}
+.album-book-stage .album-underlay,.album-book-stage .album-leaf{position:absolute;inset:0;height:auto;min-height:520px;will-change:transform!important;transform-style:preserve-3d!important;backface-visibility:hidden!important;-webkit-backface-visibility:hidden!important}
+.album-book-stage .album-underlay{z-index:1;transform:none!important;animation:none!important;opacity:1!important;visibility:visible!important}
+.album-book-stage .album-leaf{z-index:2;transform-origin:0 50%;transform-style:preserve-3d!important}
+.album-book-stage.turn-next .album-leaf{animation:albumTurnNext 880ms cubic-bezier(.12,.72,.16,1) forwards!important}
+.album-book-stage.turn-prev .album-leaf{transform-origin:100% 50%;animation:albumTurnPrev 880ms cubic-bezier(.12,.72,.16,1) forwards!important}
+.album-book-stage.turn-next .album-leaf::after,.album-book-stage.turn-prev .album-leaf::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:19px;background:linear-gradient(90deg,rgba(41,27,34,.28),transparent 18%,transparent 62%,rgba(255,255,255,.28));opacity:0;animation:albumShade 880ms ease both}
+.album-book-stage .memory-card{min-height:500px;height:auto;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 14px 30px rgba(55,32,46,.11)}
+@keyframes albumTurnNext{0%{transform:rotateY(0) rotateZ(0) skewY(0)}45%{transform:rotateY(-92deg) rotateZ(-1deg) skewY(-1deg);box-shadow:-28px 20px 42px rgba(55,32,46,.27)}75%{transform:rotateY(-150deg) rotateZ(-.4deg);box-shadow:-14px 14px 30px rgba(55,32,46,.18)}100%{transform:rotateY(-180deg) rotateZ(0) skewY(0);box-shadow:0 0 rgba(0,0,0,0)}}
+@keyframes albumTurnPrev{0%{transform:rotateY(0) rotateZ(0) skewY(0)}45%{transform:rotateY(92deg) rotateZ(1deg) skewY(1deg);box-shadow:28px 20px 42px rgba(55,32,46,.27)}75%{transform:rotateY(150deg) rotateZ(.4deg);box-shadow:14px 14px 30px rgba(55,32,46,.18)}100%{transform:rotateY(180deg) rotateZ(0) skewY(0);box-shadow:0 0 rgba(0,0,0,0)}}
+@keyframes albumShade{0%{opacity:0}42%{opacity:.72}62%{opacity:.3}100%{opacity:0}}
+@media(max-width:750px){.album-book-stage{min-height:490px}.album-book-stage .album-underlay,.album-book-stage .album-leaf{min-height:490px}.album-book-stage .memory-card{min-height:470px}}
+@media(prefers-reduced-motion:reduce){.album-book-stage.turn-next .album-leaf,.album-book-stage.turn-prev .album-leaf{animation-duration:.001ms!important}}
