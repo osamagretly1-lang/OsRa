@@ -158,3 +158,12 @@ button,input,textarea,select{font:inherit}button{cursor:pointer}.topbar{position
 @keyframes bootFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
 @media(max-width:750px){.album-mini-grid{grid-template-columns:1fr}.album-mini-cover{width:96px;min-width:96px;height:96px}}
 @media(prefers-reduced-motion:reduce){.boot-book,.boot-sheet-front,.boot-progress i,.boot-dots{animation:none!important}.book.turn-next .current,.book.turn-prev .current,.album-book-stage.turn-next .album-leaf,.album-book-stage.turn-prev .album-leaf,.lb-flip.play-next .lb-flip-sheet,.lb-flip.play-prev .lb-flip-sheet{animation-duration:.001ms!important}}
+
+/* Stable photo viewer: no 3D overlay over the real photo. */
+.lb-frame{overflow:hidden;contain:paint}
+.lb-frame img{transition:opacity .16s ease,transform .16s ease;box-shadow:0 14px 30px rgba(0,0,0,.24)!important;filter:none!important}
+.lb-frame img.photo-slide-next{animation:photoSlideNext .22s ease both}.lb-frame img.photo-slide-prev{animation:photoSlidePrev .22s ease both}
+@keyframes photoSlideNext{0%{opacity:.55;transform:translate3d(18px,0,0) scale(1)}100%{opacity:1;transform:translate3d(0,0,0) scale(1)}}
+@keyframes photoSlidePrev{0%{opacity:.55;transform:translate3d(-18px,0,0) scale(1)}100%{opacity:1;transform:translate3d(0,0,0) scale(1)}}
+.lb-heart,.lb-flip{display:none!important}
+@media(prefers-reduced-motion:reduce){.lb-frame img.photo-slide-next,.lb-frame img.photo-slide-prev{animation:none!important}}
