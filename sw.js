@@ -1,5 +1,5 @@
-const CACHE='OsRa-v30-final-photos-master-16';
-const APP=['./','./index.html','./style.css','./app.js?v=30-final-photos-master-16','./manifest.json','./icon.svg','./icon-192.png','./icon-512.png'];
+const CACHE='OsRa-v30-final-photos-master-18';
+const APP=['./','./index.html','./style.css','./app.js?v=30-final-photos-master-18','./manifest.json','./icon.svg','./icon-192.png','./icon-512.png'];
 const SHELL=new Set(APP.map(x=>new URL(x,self.location.href).pathname));
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(APP)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('OsRa-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
