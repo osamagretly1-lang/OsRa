@@ -237,3 +237,15 @@ button,input,textarea,select{font:inherit}button{cursor:pointer}.topbar{position
 .album-book-stage.turn-next .album-leaf::before,.album-book-stage.turn-next .album-leaf::after,.album-book-stage.turn-prev .album-leaf::before,.album-book-stage.turn-prev .album-leaf::after{animation:pageLight 920ms ease both!important}
 @media(max-width:750px){.album-book-stage{perspective:2600px!important}.album-book-stage .album-underlay,.album-book-stage .album-leaf{min-height:490px}}
 @media(prefers-reduced-motion:reduce){.album-book-stage.turn-next .album-leaf,.album-book-stage.turn-prev .album-leaf{animation-duration:.001ms!important}.album-book-stage.turn-next .album-leaf::before,.album-book-stage.turn-next .album-leaf::after,.album-book-stage.turn-prev .album-leaf::before,.album-book-stage.turn-prev .album-leaf::after{animation-duration:.001ms!important}}
+
+
+/* FINAL USER REQUEST: realistic opaque album paper, exact main-book turn, album-only. */
+.album-book-stage{perspective:2600px!important;transform-style:preserve-3d!important;isolation:isolate!important;overflow:visible!important;contain:none!important}
+.album-book-stage .album-underlay{z-index:1!important;transform:translateZ(-10px)!important;opacity:1!important;visibility:visible!important;background:var(--paper)!important}
+.album-book-stage .album-leaf{z-index:4!important;transform-origin:100% 50%!important;transform-style:preserve-3d!important;backface-visibility:hidden!important;-webkit-backface-visibility:hidden!important}
+.album-book-stage .album-leaf .memory-card{background:var(--paper)!important;opacity:1!important;backface-visibility:hidden!important;-webkit-backface-visibility:hidden!important;box-shadow:var(--shadow),inset -8px 0 20px rgba(40,26,32,.05),inset 1px 0 rgba(255,255,255,.8)!important}
+.album-book-stage.turn-next .album-leaf{animation:realBookTurnNext 920ms cubic-bezier(.12,.72,.16,1) forwards!important}
+.album-book-stage.turn-prev .album-leaf{animation:realBookTurnPrev 920ms cubic-bezier(.12,.72,.16,1) forwards!important}
+.album-book-stage.turn-next .album-leaf::before,.album-book-stage.turn-next .album-leaf::after,.album-book-stage.turn-prev .album-leaf::before,.album-book-stage.turn-prev .album-leaf::after{animation:pageLight 920ms ease both!important}
+.album-book-stage .album-leaf::before{background:linear-gradient(90deg,rgba(36,23,29,.36),transparent 13%,transparent 55%,rgba(255,255,255,.22) 82%,rgba(32,20,26,.16))!important;mix-blend-mode:multiply!important}
+.album-book-stage .album-leaf::after{background:linear-gradient(104deg,transparent 34%,rgba(255,255,255,.5) 48%,transparent 60%)!important;mix-blend-mode:screen!important}
