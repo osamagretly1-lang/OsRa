@@ -85,7 +85,7 @@ button,input,textarea,select{font:inherit}button{cursor:pointer}.topbar{position
 .lb-flip-back{transform:rotateY(180deg)}
 .lb-flip.play-next .lb-photo-sheet{transform-origin:100% 50%;animation:realBookTurnNext 760ms cubic-bezier(.12,.72,.16,1) forwards}
 .lb-flip.play-prev .lb-photo-sheet{transform-origin:100% 50%;animation:realBookTurnPrev 760ms cubic-bezier(.12,.72,.16,1) forwards}
-.lb-flip:not([hidden]){display:block!important}
+.lb-flip:not([hidden]){display:none!important}
 .lb-flip[hidden]{display:none!important}
 
 /* Final light-weight book model: the current sheet physically turns over the real next page. */
@@ -199,3 +199,6 @@ button,input,textarea,select{font:inherit}button{cursor:pointer}.topbar{position
 /* Final photo-turn synchronization: exactly the same 760ms physical book motion. */
 .lb-flip.play-next .lb-photo-sheet,.lb-flip.play-prev .lb-photo-sheet{animation-duration:760ms!important}
 @media(prefers-reduced-motion:reduce){.lb-flip.play-next .lb-photo-sheet,.lb-flip.play-prev .lb-photo-sheet{animation-duration:.001ms!important;animation:none!important}}
+
+/* Final photo navigation: stable direct change, no page-flip overlay or paper sound. */
+#lbFlip{display:none!important} #lbImage{transition:opacity .12s ease!important;will-change:auto!important}
