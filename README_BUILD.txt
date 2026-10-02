@@ -30,3 +30,8 @@ OsRa — FINAL PHOTOS ONLY — RELEASE
 - «ربط الأصول في كل المجلدات» يبحث داخل المجلدات المرتبطة فقط ويطابق سجلات النسخة الاحتياطية دون إضافة صور جديدة.
 - «كشف التكرارات» يعرض الصور فعليًا ويطلب اختيارك؛ لا يحذف الأصل من الهاتف ولا يحذف تلقائيًا.
 - الصور المصغرة 320px/WebP بنسبة 78% وبحد 160KB، والأصل المحلي هو المستخدم للعرض والمشاركة.
+
+
+OsRa FINAL PHOTOS ONLY — 3D Album Flip patch (2026-10-02)
+- Added 3D page-turn sheet inside the photo viewer only.
+- No IndexedDB schema/data format change.

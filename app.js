@@ -396,7 +396,63 @@ async function scan(root=libraryHandle,fromPicker=false,options={}){
 }
 async function openPhoto(pid){const p=photos.get(pid);if(!isPhotoRecord(p))return;const link=photoLocations(p).find(l=>sources.some(s=>s.id===l.sourceId&&s.handle));if(!link){toast('اربط مجلدًا يحتوي على الأصل لهذه الصورة أولًا.');return}const m=state.memories.find(x=>x.photoIds?.includes(pid));lb.ids=m?photoFor(m).map(x=>x.id):[pid];lb.i=Math.max(0,lb.ids.indexOf(pid));lb.slideIds=null;stopSlideshow();resetLbZoom();romanticHeartTransition('open');$('#lightbox').showModal();await showPhoto()}
 function cleanupLbFlip(){const el=$('#lbFlip');if(el){el.classList.remove('play-next','play-prev');el.hidden=true}for(const u of lb.flipUrls.splice(0)){try{URL.revokeObjectURL(u)}catch{}}lb.flipBusy=false;if(lb.flipTimer){clearTimeout(lb.flipTimer);lb.flipTimer=null}}
-async function playLbFlip(nextIndex,dir){if(lb.flipBusy||nextIndex<0||nextIndex>=lb.ids.length||nextIndex===lb.i)return;const target=photos.get(lb.ids[nextIndex]),img=$('#lbImage');if(!isPhotoRecord(target)||!img)return;lb.flipBusy=true;let nextUrl=null;try{nextUrl=await getOriginalUrlForPhoto(target);const token=++lb.loadToken;const oldUrl=lb.url;lb.i=nextIndex;updateLbMeta();resetLbZoom();if(token!==lb.loadToken){URL.revokeObjectURL(nextUrl);return}img.style.opacity='1';img.hidden=false;img.src=nextUrl;lb.url=nextUrl;if(oldUrl&&oldUrl!==nextUrl){try{URL.revokeObjectURL(oldUrl)}catch{}}nextUrl=null;$('#lbStatus').textContent='';cleanupLbFlip();lb.flipBusy=false}catch(e){if(nextUrl)try{URL.revokeObjectURL(nextUrl)}catch{}lb.flipBusy=false;$('#lbStatus').textContent='';toast('تعذر فتح الصورة التالية. احتفظت بالصورة الحالية.')}}
+async function playLbFlip(nextIndex,dir){
+ if(lb.flipBusy||nextIndex<0||nextIndex>=lb.ids.length||nextIndex===lb.i)return;
+ const target=photos.get(lb.ids[nextIndex]),img=$('#lbImage'),flip=$('#lbFlip'),front=$('#lbFlipFront'),back=$('#lbFlipBack');
+ if(!isPhotoRecord(target)||!img)return;
+ // Safe fallback for an incomplete/old cached DOM: change directly rather than breaking navigation.
+ if(!flip||!front||!back){lb.i=nextIndex;await showPhoto();return}
+ lb.flipBusy=true;
+ let nextUrl=null;
+ let timer=null;
+ const oldUrl=lb.url;
+ const currentUrl=img.currentSrc||img.src||oldUrl||'';
+ if(!currentUrl){lb.i=nextIndex;await showPhoto();return}
+ try{
+  nextUrl=await getOriginalUrlForPhoto(target);
+  // Keep the current image visible under the physical sheet; only the target is preloaded.
+  front.src=currentUrl;
+  back.src=nextUrl;
+  flip.hidden=false;
+  flip.classList.remove('play-next','play-prev');
+  void flip.offsetWidth;
+  flip.classList.add(dir>0?'play-next':'play-prev');
+  paperSound(820);
+  timer=setTimeout(()=>{
+   try{
+    // Commit the target only after the sheet has physically crossed over.
+    lb.i=nextIndex;
+    resetLbZoom();
+    img.hidden=false;
+    img.src=nextUrl;
+    lb.url=nextUrl;
+    nextUrl=null;
+    updateLbMeta();
+    flip.classList.remove('play-next','play-prev');
+    flip.hidden=true;
+    front.removeAttribute('src');
+    back.removeAttribute('src');
+    if(oldUrl&&oldUrl!==lb.url){try{URL.revokeObjectURL(oldUrl)}catch{}}
+    lb.flipBusy=false;
+    lb.flipTimer=null;
+   }catch(e){
+    console.error(e);
+    lb.flipBusy=false;
+   }
+  },820);
+  lb.flipTimer=timer;
+ }catch(e){
+  if(timer)clearTimeout(timer);
+  if(nextUrl)try{URL.revokeObjectURL(nextUrl)}catch{}
+  flip.classList.remove('play-next','play-prev');
+  flip.hidden=true;
+  front.removeAttribute('src');
+  back.removeAttribute('src');
+  lb.flipBusy=false;
+  $('#lbStatus').textContent='';
+  toast('تعذر فتح الصورة التالية. احتفظت بالصورة الحالية.');
+ }
+}
 function stopSlideshow(){if(lb.timer){clearInterval(lb.timer);lb.timer=null}lb.slideIds=null;const b=$('#lbPlay');if(b)b.textContent='▶ عرض الصور'}
 function toggleSlideshow(){const imageIds=lb.ids;if(imageIds.length<2){toast('العرض التلقائي يحتاج صورتين على الأقل.');return}if(lb.timer){stopSlideshow();toast('توقف العرض التلقائي.');return}lb.slideIds=imageIds;lb.timer=setInterval(async()=>{if(!$('#lightbox')?.open){stopSlideshow();return}const ni=(lb.i+1)%lb.ids.length;await playLbFlip(ni,1)},4200);$('#lbPlay').textContent='⏸ إيقاف العرض';toast('بدأ عرض الصور بهدوء ♥')}
 function renderLbStrip(){const wrap=$('#lbStrip');if(!wrap)return;const total=lb.ids.length,half=20,start=Math.max(0,Math.min(lb.i-half,Math.max(0,total-(half*2+1)))),end=Math.min(total,start+half*2+1);wrap.innerHTML=lb.ids.slice(start,end).map((id,local)=>{const idx=start+local,p=photos.get(id);return `<button class="lb-thumb ${idx===lb.i?'active':''}" data-lb-index="${idx}"><img data-thumb="${id}" alt="${esc(p?.name||'')}"><span>${idx+1}</span></button>`}).join('');hydrate()}
