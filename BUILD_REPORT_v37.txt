@@ -1,0 +1,21 @@
+OsRa v37 — Original Linking Fixed
+
+Core fix:
+- Selecting a new folder now performs a MATCH-ONLY pass first.
+- Existing OsRa photo records are linked to originals by contentKey (SHA-256 over size + first/last 64KB), independent of filename/path.
+- No photo record or album is created during the match-only pass.
+- Unmatched files remain outside OsRa unless the user explicitly chooses to scan that source and add new images.
+- Existing linked sources are handled with the same match-first logic.
+
+Safety / UX:
+- Removed the automatic "local safety backup found" recovery card from the UI.
+- Local safety snapshots still run silently and the explicit Restore Safety action remains available.
+- Automatic file-backup updates are silent.
+- Home page contains no linking/scanning tools; those remain in Settings.
+- Database schema/version remains VER=2.
+- Service worker cache bumped to v37.
+
+Validation:
+- Node syntax check: app.js PASS.
+- Node syntax check: sw.js PASS.
+- Targeted matching test: PASS (2 renamed/moved registered originals linked, 0 new records in match-only; unmatched file only added in explicit add phase).
