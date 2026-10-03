@@ -1,0 +1,40 @@
+OsRa v45 — SMART CROSS-DEVICE BACKUP
+
+مبنية مباشرة فوق v44 مع تدقيق النسخ الاحتياطي والربط بين الأجهزة.
+
+1) النسخة الاحتياطية العابرة للهاتف تحتوي على:
+- جميع إعدادات OsRa.
+- الذكريات والأحداث والأحلام والآيات والصلوات والرسائل.
+- excludedPhotos.
+- photoManifest لكل سجل صورة، مع album والترتيب وعلاقات memoryRefs داخل linkIndex.
+- sourceLinks والمراجع القديمة.
+- contentKey + matchKey + fingerprint + size + metadata.
+- الـthumb المخزن لكل صورة عندما يكون موجودًا، بدون الصور الأصلية.
+
+2) الاسترجاع:
+- يعيد سجلات الصور الموجودة في النسخة فقط.
+- يعيد الـthumbs إلى مخزن المعاينات.
+- لا ينشئ ألبومات أو ذكريات جديدة أثناء الاسترجاع.
+- لا يحذف الصور الأصلية من الجهاز.
+
+3) الربط على الهاتف الآخر:
+- يبحث داخل المجلدات التي يمنحها المستخدم فقط.
+- يطابق بالمفاتيح القوية ويشترط التطابق الفريد.
+- اختلاف المسار أو lastModified لا يكسر التطابق إذا ثبت المحتوى.
+- عند الالتباس لا يخمّن ولا يربط صورة خاطئة.
+- وضع matchOnly لا يضيف صورًا جديدة ولا ينشئ ألبومات/ذكريات جديدة.
+
+4) الأداء:
+- لا يقرأ الصور الأصلية أثناء إنشاء النسخة.
+- لا يعيد حساب بصمات أثناء التصدير.
+- يضم الـthumbs المخزنة فقط وبشكل تدريجي مع yielding لتقليل تجمّد الواجهة.
+- البحث في المجلدات يتم على دفعات مع إمكانية الإلغاء والاستكمال.
+
+الصور الأصلية لا تدخل ملف النسخة ولا تُرفع إلى أي خادم.
+
+
+v46 file-transfer change:
+- Exported backup files now use the .osra extension and application/octet-stream MIME type so WhatsApp/Android treats them as downloadable document files instead of ordinary JSON/text files.
+- Existing .json backups remain importable.
+- Restore and merge import accept both .osra and .json.
+- The backup contents remain local; no original photos are uploaded.

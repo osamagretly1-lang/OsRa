@@ -1,4 +1,4 @@
-const APP_VERSION='45-smart-cross-device';
+const APP_VERSION='46-osra-backup-file';
 const DB='OsRaDB', VER=2, THUMB_VERSION=6, THUMB_MAX_BYTES=160*1024;
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 const DEFAULT={settings:{startDate:'',engagementDate:'',birthdayRania:'',osamaPhone:'',raniaPhone:'',whatsappUrl:'',libraryName:'',soundEnabled:false,dailyAlbumIds:null,albumOrderMode:'manual',albumMiniView:false,countdowns:[]},memories:[],events:[],dreams:[],verses:[],prayers:[],messages:[],excludedPhotos:[]};
@@ -210,11 +210,11 @@ async function backupPayloadForExport(){
 }
 function downloadBackupFile(payload){
   try{
-    const blob=new Blob([JSON.stringify(payload)],{type:'application/json;charset=utf-8'});
+    const blob=new Blob([JSON.stringify(payload)],{type:'application/octet-stream'});
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a');
     a.href=url;
-    a.download=`OsRa_Backup_${today()}.json`;
+    a.download=`OsRa_Backup_${today()}.osra`;
     a.style.display='none';
     document.body.appendChild(a);
     a.click();
@@ -656,7 +656,7 @@ function dailyClearAll(){document.querySelectorAll('.daily-album-select').forEac
 async function saveDailyAlbums(){const ids=[...document.querySelectorAll('.daily-album-select:checked')].map(x=>x.dataset.memory).filter(Boolean);state.settings.dailyAlbumIds=ids;await save();closeModal();toast(ids.length?`تم تحديد ${ids.length} ألبوم لصورة اليوم.`:'تم تعطيل صورة اليوم حتى تختار ألبومات.');renderNoAnim()}
 function romanticHeartTransition(kind='open'){const layer=document.createElement('div');layer.className='heart-burst heart-gate '+(kind==='close'?'is-closing':'');const left=document.createElement('div'),right=document.createElement('div'),spark=document.createElement('div');left.className='heart-half heart-half-left';right.className='heart-half heart-half-right';left.innerHTML='♥';right.innerHTML='♥';spark.className='heart-spark';spark.textContent='✦';layer.append(left,right,spark);for(let i=0;i<8;i++){const h=document.createElement('span');h.textContent=['·','♥','✦','·'][i%4];h.className='burst-heart side-'+(i%2?'right':'left');h.style.setProperty('--i',i);h.style.setProperty('--delay',`${i*22}ms`);layer.appendChild(h)}document.body.appendChild(layer);setTimeout(()=>layer.remove(),1350)}
 
-async function chooseBackup(){if(!window.showSaveFilePicker){toast('اختيار مكان ثابت غير مدعوم في هذا المتصفح؛ استخدم Chrome حديث على Android وسيظهر التنزيل العادي كبديل.');return false}try{const h=await window.showSaveFilePicker({suggestedName:`OsRa_Backup_${today()}.json`,types:[{description:'OsRa Backup',accept:{'application/json':['.json']}}],excludeAcceptAllOption:false});backupFileHandle=h;const text=JSON.stringify(await backupPayloadForExport());const w=await h.createWritable();await w.write(text);await w.close();backupMeta={lastSavedAt:Date.now(),lastAutoFileAt:Date.now()};await put('library',{key:'backup',handle:h,name:h.name,lastSavedAt:backupMeta.lastSavedAt,lastAutoFileAt:backupMeta.lastAutoFileAt});toast('تم تحديد مكان النسخة وحفظها بنجاح.');renderNoAnim();return true}catch(e){if(e?.name==='AbortError')toast('تم إلغاء اختيار مكان النسخة الاحتياطية.');else{console.error(e);toast('تعذر حفظ النسخة في الملف المحدد.')}return false}}
+async function chooseBackup(){if(!window.showSaveFilePicker){toast('اختيار مكان ثابت غير مدعوم في هذا المتصفح؛ استخدم Chrome حديث على Android وسيظهر التنزيل العادي كبديل.');return false}try{const h=await window.showSaveFilePicker({suggestedName:`OsRa_Backup_${today()}.osra`,types:[{description:'OsRa Backup File',accept:{'application/octet-stream':['.osra']}}],excludeAcceptAllOption:false});backupFileHandle=h;const text=JSON.stringify(await backupPayloadForExport());const w=await h.createWritable();await w.write(text);await w.close();backupMeta={lastSavedAt:Date.now(),lastAutoFileAt:Date.now()};await put('library',{key:'backup',handle:h,name:h.name,lastSavedAt:backupMeta.lastSavedAt,lastAutoFileAt:backupMeta.lastAutoFileAt});toast('تم تحديد مكان النسخة وحفظها بنجاح.');renderNoAnim();return true}catch(e){if(e?.name==='AbortError')toast('تم إلغاء اختيار مكان النسخة الاحتياطية.');else{console.error(e);toast('تعذر حفظ النسخة في الملف المحدد.')}return false}}
 async function replacePhotoSnapshot(manifest){
  const list=Array.isArray(manifest)?manifest:[],old=new Map(photos),rebuilt=new Map(),keepThumbIds=new Set(list.map(x=>x.id));
  await new Promise((resolve,reject)=>{const tx=db.transaction(['photos','thumbs'],'readwrite'),st=tx.objectStore('photos'),ts=tx.objectStore('thumbs');for(const id of old.keys())if(!keepThumbIds.has(id))ts.delete(id);st.clear();for(const p0 of list){const p=old.get(p0.id)||{},blob=p0.thumb?base64ToBlob(p0.thumb):null,merged={...p0,excluded:false,layoutLocked:!!p0.layoutLocked,thumbBlob:null,thumbVersion:p0.thumbVersion||THUMB_VERSION};merged.sourceLinks=Array.isArray(p0.sourceLinks)?p0.sourceLinks:normalizePhotoLinks(merged);delete merged.thumb;delete merged.thumbBlob;st.put(merged);if(blob)ts.put({id:merged.id,blob,version:merged.thumbVersion});rebuilt.set(merged.id,merged)}tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error||new Error('photo snapshot restore failed'));tx.onabort=()=>reject(tx.error||new Error('photo snapshot restore aborted'))});
@@ -712,14 +712,14 @@ async function mergeBackupPayload(x){
  if(idRemap.size){for(const m of state.memories){if(!Array.isArray(m.photoIds))continue;m.photoIds=[...new Set(m.photoIds.map(pid=>idRemap.get(pid)||pid))]}}
  normalizeState();await saveMainExact();toast('تم دمج النسخة الاحتياطية مع حفظ الذكريات والألبومات والمعاينات. اربط/أضف مجلدات الصور ثم استخدم «ربط الأصول في كل المجلدات» لبحث الأصول داخل المجلدات المسموح بها دون إضافة صور جديدة.');renderNoAnim();
 }
-function restoreMerge(){const i=document.createElement('input');i.type='file';i.accept='.json,application/json';i.onchange=async()=>{try{const f=i.files?.[0];if(!f)return;const x=JSON.parse(await f.text());validateBackupPayload(x);const stamp=x.exportedAt?new Date(x.exportedAt):null;const when=stamp&&!isNaN(stamp)?stamp.toLocaleString('ar-EG'):'وقت غير معروف';const n=Array.isArray(x.photoManifest)?x.photoManifest.length:0;if(!confirm(`دمج نسخة OsRa المحفوظة في:
+function restoreMerge(){const i=document.createElement('input');i.type='file';i.accept='.osra,.json,application/octet-stream,application/json';i.onchange=async()=>{try{const f=i.files?.[0];if(!f)return;const x=JSON.parse(await f.text());validateBackupPayload(x);const stamp=x.exportedAt?new Date(x.exportedAt):null;const when=stamp&&!isNaN(stamp)?stamp.toLocaleString('ar-EG'):'وقت غير معروف';const n=Array.isArray(x.photoManifest)?x.photoManifest.length:0;if(!confirm(`دمج نسخة OsRa المحفوظة في:
 ${when}
 
 سيتم الاحتفاظ بكل ما هو موجود على هذا الجهاز، وإضافة/تحديث بيانات النسخة فقط.
 سجلات الصور: ${n}
 
 لن تُحذف الصور الأصلية من الجهاز.`))return;await mergeBackupPayload(x)}catch(e){console.error(e);toast('ملف النسخة الاحتياطية غير صالح أو تالف.')}};i.click()}
-function restore(){const i=document.createElement('input');i.type='file';i.accept='.json,application/json';i.onchange=async()=>{try{const f=i.files?.[0];if(!f)return;const x=JSON.parse(await f.text());validateBackupPayload(x);const stamp=x.exportedAt?new Date(x.exportedAt):null;const when=stamp&&!isNaN(stamp)?stamp.toLocaleString('ar-EG'):'وقت غير معروف';const photoCount=Array.isArray(x.photoManifest)?x.photoManifest.length:0;if(!confirm(`استرجاع نسخة OsRa المحفوظة في:\n${when}
+function restore(){const i=document.createElement('input');i.type='file';i.accept='.osra,.json,application/octet-stream,application/json';i.onchange=async()=>{try{const f=i.files?.[0];if(!f)return;const x=JSON.parse(await f.text());validateBackupPayload(x);const stamp=x.exportedAt?new Date(x.exportedAt):null;const when=stamp&&!isNaN(stamp)?stamp.toLocaleString('ar-EG'):'وقت غير معروف';const photoCount=Array.isArray(x.photoManifest)?x.photoManifest.length:0;if(!confirm(`استرجاع نسخة OsRa المحفوظة في:\n${when}
 
 الذكريات: ${x.memories.length}
 سجلات الصور في تلك اللحظة: ${photoCount}
