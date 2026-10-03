@@ -1,0 +1,29 @@
+{
+  "build": "OsRa v36 Final Technical",
+  "checks": {
+    "home_clean": true,
+    "settings_maintenance_present": true,
+    "photos_only": true,
+    "missing_original_safe": true,
+    "db_version_preserved": true,
+    "client_cache_v36": true,
+    "sw_cache_v36": true,
+    "startup_no_auto_scan": true,
+    "startup_resume_manual_state": true,
+    "file_index.html": true,
+    "file_app.js": true,
+    "file_style.css": true,
+    "file_manifest.json": true,
+    "file_sw.js": true,
+    "file_icon.svg": true,
+    "file_icon-192.png": true,
+    "file_icon-512.png": true
+  },
+  "sha256": {
+    "index.html": "cd6226ab156a0057f3c6316546c9b9e319b470121cc580dd90ef030e72d91bcd",
+    "app.js": "0eeac624106cb1455f34dbced374d86f9fa2d2c1d3a8e00cef1a3108b9e10bc4",
+    "style.css": "23f7a2eb4c4e15e47344470c564f9345163871a9d87a9b09b35e79da6aee5917",
+    "manifest.json": "c2f32b5814e2574cd198d1e7f096362bc10a3f674cec90a26e2705a853068c7d",
+    "sw.js": "bbc32cf1e2889129c7b5683ab5d00285ebe906b317e9988ab4f9d97c9a6ae765"
+  }
+}
