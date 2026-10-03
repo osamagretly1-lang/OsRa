@@ -1,0 +1,21 @@
+OsRa v38 — Fast Original Linking
+
+Changes from v37:
+1) The phone-to-phone original-linking path keeps the same contentKey algorithm (SHA-256 over file size + first/last 64 KiB), so the matching criterion is not weakened.
+2) Linking no longer reads full JPEG EXIF data or rebuilds thumbnails for already-registered photos. Existing capturedAt/thumb data are preserved.
+3) Up to 4 contentKey jobs are prefetched concurrently per folder while the current result is processed, so matching starts early and continues progressively.
+4) Photo metadata changes from linking are written in IndexedDB batches instead of one transaction per photo. Progress checkpoints flush the pending batch before being persisted.
+5) Existing-path + unchanged metadata is still a fast path and avoids contentKey work.
+6) The recovery/safety announcement card is not rendered. Safety snapshots remain available only from Settings.
+7) App/Service Worker cache identifiers updated to v38.
+
+Validation performed:
+- node --check app.js: PASS
+- node --check sw.js: PASS
+- V38_LINKING_TEST.mjs: PASS (2 same-content files matched across different paths/names; 1 changed file rejected)
+- ZIP integrity test (unzip -t): PASS
+
+Important:
+- Linking remains conservative: unmatched files are not added in match-only mode.
+- No database schema/version change: IndexedDB VER=2 remains unchanged.
+- This environment cannot emulate Android's real File System Access permission picker end-to-end; Android/Chrome device testing is still the final practical check.
