@@ -1,4 +1,4 @@
-const CACHE='OsRa-v32-clean-album-book-02';
+const CACHE='OsRa-v33-clean-album-book-02';
 const APP=['./','./index.html','./style.css','./app.js?v=32-clean-album-book-02','./manifest.json','./icon.svg','./icon-192.png','./icon-512.png'];
 const SHELL=new Set(APP.map(x=>new URL(x,self.location.href).pathname));
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(APP)).then(()=>self.skipWaiting())));

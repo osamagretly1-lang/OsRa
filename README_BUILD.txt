@@ -1,8 +1,8 @@
-OsRa — v32 CLEAN STABLE ALBUM BOOK TURN — PHOTOS ONLY
+OsRa — v33 CLEAN STABLE ALBUM BOOK TURN — PHOTOS ONLY
 
 هذه النسخة مبنية مباشرة من v31 النظيفة، مع إعادة بناء مسار قلب الألبوم ليكون ثابتًا من نفس نموذج صفحة الكتاب الرئيسية، دون إضافة Animation ثانية متعارضة. لا توجد ترقية لقاعدة البيانات ولا حذف للبيانات.
 
-تم في v32:
+تم في v33:
 - الألبوم له طبقتان ثابتتان: album-leaf للصفحة الحالية وalbum-underlay للصفحة التالية/السابقة، على نفس منطق current/back في الكتاب الرئيسي.
 - نفس keyframes الفعلية للكتاب الرئيسي: realBookTurnNext وrealBookTurnPrev وpageLight.
 - نفس perspective النهائي 2600px، ونفس نقطة الدوران اليمنى 100% 50%، ونفس 760ms والمنحنى.
@@ -12,7 +12,7 @@ OsRa — v32 CLEAN STABLE ALBUM BOOK TURN — PHOTOS ONLY
 - الصفحة التالية تُجهز في underlay فقط؛ الصور الكبيرة/عارض الصور لم يتغيرا.
 - ورقة الألبوم معتمة بمزيج ورق صلب + border/sombra داخلية وسُمك بصري خفيف.
 - لا توجد مراجع video في app.js، وإصدار IndexedDB لم يتغير (VER=2).
-- cache/service-worker bumped إلى v32 فقط لمنع تحميل ملفات v31 القديمة.
+- cache/service-worker bumped إلى v33 فقط لمنع تحميل ملفات v31 القديمة.
 
 الفحوصات المطلوبة:
 - JS syntax
