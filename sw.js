@@ -1,4 +1,4 @@
-const CACHE='OsRa-v38-final-fast-original-linking';
+const CACHE='OsRa-v39-final-fast-original-linking';
 const APP=['./','./index.html','./style.css','./app.js?v=38-final-fast-original-linking','./manifest.json','./icon.svg','./icon-192.png','./icon-512.png'];
 const SHELL=new Set(APP.map(x=>new URL(x,self.location.href).pathname));
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(APP)).then(()=>self.skipWaiting())));

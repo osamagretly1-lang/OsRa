@@ -1,0 +1,19 @@
+OsRa v39 — Smart Backup / Cross-Device Linking
+
+Changes:
+1) Backup schema upgraded to 2 and keeps backward-readable top-level app/state/photoManifest fields.
+2) Added an explicit device-independent linkIndex containing contentKey, fingerprint, size, stable photo id, album/memory references, and historical source links.
+3) contentKey remains SHA-256 over file size + first/last 64 KiB; it intentionally excludes lastModified so phone-to-phone copies remain matchable.
+4) Added sourceIndex so historical source IDs/names are preserved for future reconciliation.
+5) Added linking stats to the backup for audit/diagnostics.
+6) Existing full restore and merge flows remain compatible because photoManifest is still present.
+7) Service Worker cache identifier updated to v39.
+
+Validation:
+- node --check app.js: PASS
+- node --check sw.js: PASS
+- v38 linking test retained: PASS (same-content cross-path/name match + different-content rejection)
+- backup schema static validation: PASS
+- ZIP integrity: PASS
+
+No IndexedDB schema/version change: VER=2.
