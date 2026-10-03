@@ -1,4 +1,4 @@
-const APP_VERSION='42-strong-audited-linking';
+const APP_VERSION='45-smart-cross-device';
 const DB='OsRaDB', VER=2, THUMB_VERSION=6, THUMB_MAX_BYTES=160*1024;
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 const DEFAULT={settings:{startDate:'',engagementDate:'',birthdayRania:'',osamaPhone:'',raniaPhone:'',whatsappUrl:'',libraryName:'',soundEnabled:false,dailyAlbumIds:null,albumOrderMode:'manual',albumMiniView:false,countdowns:[]},memories:[],events:[],dreams:[],verses:[],prayers:[],messages:[],excludedPhotos:[]};
@@ -39,13 +39,29 @@ async function findOriginalFile(p,ask=true){
   try{
    if(!(await ensureSourcePermission(source,ask)))continue;
    const fh=await resolve(source.handle,link.relPath),f=await fh.getFile();
-   const expectedSize=Number(link.size??p.size??0),expectedModified=Number(link.lastModified??p.lastModified??0),expectedMatchKey=link.matchKey||p.matchKey||'';
+   const expectedSize=Number(link.size??p.size??0),expectedModified=Number(link.lastModified??p.lastModified??0),expectedMatchKey=link.matchKey||p.matchKey||'',expectedContentKey=link.contentKey||p.contentKey||'';
    const hasSize=expectedSize>0,hasModified=expectedModified>0;
-   if((hasSize&&Number(f.size)!==expectedSize)||(hasModified&&Number(f.lastModified)!==expectedModified)){
+   if(hasSize&&Number(f.size)!==expectedSize){
+    console.warn('original size mismatch',p?.id,link.relPath);
+    continue;
+   }
+   let strongVerified=false;
+   if(expectedMatchKey){
+    const mk=await matchKey(f);
+    if(mk!==expectedMatchKey){console.warn('original strong match-key mismatch',p?.id,link.relPath);continue}
+    strongVerified=true;
+   }
+   if(expectedContentKey){
+    const ck=await contentKey(f);
+    if(ck!==expectedContentKey){console.warn('original content-key mismatch',p?.id,link.relPath);continue}
+    strongVerified=true;
+   }
+   // تاريخ تعديل الملف قد يتغير عند نقل الصورة بين هاتفين. لا نرفض الأصل
+   // إذا أثبتت مفاتيح المحتوى أنه نفس الملف فعلًا.
+   if(!strongVerified&&hasModified&&Number(f.lastModified)!==expectedModified){
     console.warn('original changed since last verified link',p?.id,link.relPath);
     continue;
    }
-   if(expectedMatchKey){const mk=await matchKey(f);if(mk!==expectedMatchKey){console.warn('original strong match-key mismatch',p?.id,link.relPath);continue}}
    return {file:f,source,link};
   }
   catch(e){permissionCache.delete(source.id);console.warn('original link unavailable',p?.id,link,e)}
@@ -157,7 +173,7 @@ async function load(){
  // لا نكتب scanProgresses كل مرة عند بدء التطبيق؛ لا توجد فائدة من عملية كتابة إضافية.
 }
 
-async function blobToBase64(blob){if(!blob)return null;const buf=await blob.arrayBuffer(),bytes=new Uint8Array(buf);let out='';const chunk=0x8000;for(let i=0;i<bytes.length;i+=chunk){let part='';for(let j=i;j<Math.min(i+chunk,bytes.length);j++)part+=String.fromCharCode(bytes[j]);out+=btoa(part)}return out}
+async function blobToBase64(blob){if(!blob)return null;const buf=await blob.arrayBuffer(),bytes=new Uint8Array(buf),parts=[],chunk=0x8000;for(let i=0;i<bytes.length;i+=chunk){let part='';for(let j=i;j<Math.min(i+chunk,bytes.length);j++)part+=String.fromCharCode(bytes[j]);parts.push(part)}return btoa(parts.join(''))}
 function base64ToBlob(x){if(!x?.data)return null;try{const bin=atob(x.data),bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);return new Blob([bytes],{type:x.type||'image/webp'})}catch{return null}}
 function buildSmartLinkIndex(){
  const memoriesByPhoto=new Map();
@@ -168,27 +184,53 @@ function buildSmartLinkIndex(){
   const refs=memoriesByPhoto.get(p.id)||[];
   entries.push({id:p.id,name:p.name||'',size:Number(p.size)||0,contentKey:p.contentKey||'',fingerprint:p.fingerprint||'',matchKey:p.matchKey||'',capturedAt:p.capturedAt||'',album:p.album||'',manualAlbum:!!p.manualAlbum,autoAlbum:p.autoAlbum!==false,layoutLocked:!!p.layoutLocked,memoryRefs:refs,sourceLinks:photoLocations(p).map(l=>({sourceId:l.sourceId||'',relPath:l.relPath||'',name:l.name||p.name||'',size:Number(l.size)||0,lastModified:Number(l.lastModified)||0,contentKey:l.contentKey||p.contentKey||'',fingerprint:l.fingerprint||p.fingerprint||'',matchKey:l.matchKey||p.matchKey||''}))});
  }
- return {version:2,algorithm:'sha256-size-8x16k-even',legacyAlgorithm:'sha256-size-head64k-tail64k',entries};
+ return {version:4,algorithm:'sha256-size-8x16k-even-unique-v3',legacyAlgorithm:'sha256-size-head64k-tail64k',entries};
 }
 async function backupPayloadForExport(){
- const payload=backupPayload();
- const list=payload.photoManifest||[],batchSize=24;
- for(let i=0;i<list.length;i+=batchSize){
-  const batch=list.slice(i,i+batchSize);
-  for(const m of batch){
-   const p=photos.get(m.id);
-   if(p&&!m.matchKey){try{const hit=await findOriginalFile(p,false);if(hit){m.matchKey=await matchKey(hit.file)}}catch{}}
-   }
-  for(const m of batch){const b=await getThumbBlob(m.id);if(!b)continue;const data=await blobToBase64(b);if(data)m.thumb={type:b.type||'image/webp',data}}
-  if(i+batchSize<list.length)await new Promise(r=>setTimeout(r,0));
- }
- return payload;
+  // نسخة النقل بين الأجهزة: كل بيانات OsRa + مفاتيح الربط + المعاينات الصغيرة فقط.
+  // لا نقرأ الأصول الأصلية ولا نحسب أي بصمات جديدة أثناء التصدير.
+  const payload=backupPayload();
+  const out=payload.photoManifest;
+  let thumbCount=0,thumbBytes=0;
+  for(let i=0;i<out.length;i++){
+    const p=out[i];
+    try{
+      const blob=await getThumbBlob(p.id);
+      if(blob && blob.size>0){
+        p.thumb={data:await blobToBase64(blob),type:blob.type||'image/webp',size:blob.size,version:p.thumbVersion||THUMB_VERSION};
+        thumbCount++;thumbBytes+=blob.size;
+      }
+    }catch(e){console.warn('backup thumb skipped',p.id,e)}
+    if((i+1)%12===0)await new Promise(r=>setTimeout(r,0));
+  }
+  payload.linking.thumbnailsIncluded=thumbCount;
+  payload.linking.thumbnailBytes=thumbBytes;
+  payload.linking.thumbnailPolicy='stored-thumbnails-only';
+  return payload;
+}
+function downloadBackupFile(payload){
+  try{
+    const blob=new Blob([JSON.stringify(payload)],{type:'application/json;charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=`OsRa_Backup_${today()}.json`;
+    a.style.display='none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(()=>{a.remove();URL.revokeObjectURL(url)},5000);
+    return true;
+  }catch(e){
+    console.error('backup download failed',e);
+    toast('تعذر إنشاء ملف النسخة الاحتياطية.');
+    return false;
+  }
 }
 function backupPayload(){
  const photosOut=[...photos.values()].map(p=>({id:p.id,relPath:p.relPath,name:p.name,album:p.album,manualAlbum:!!p.manualAlbum,autoAlbum:p.autoAlbum!==false,layoutLocked:!!p.layoutLocked,sourceId:p.sourceId||'',sourceLinks:photoLocations(p),mediaType:'image',mimeType:p.mimeType||'',excluded:false,size:p.size,lastModified:p.lastModified,addedAt:p.addedAt,capturedAt:p.capturedAt||'',fingerprint:p.fingerprint||'',contentKey:p.contentKey||'',matchKey:p.matchKey||''}));
  const linkIndex=buildSmartLinkIndex();
  const sourceIndex=(sources||[]).map(s=>({id:s.id||'',name:s.name||'',asAlbum:!!s.asAlbum,mergeIntoMemoryId:s.mergeIntoMemoryId||''}));
- return {app:'OsRa',version:28,backupSchema:2,exportedAt:new Date().toISOString(),backupPurpose:'full-local-cross-device',linking:{algorithm:linkIndex.algorithm,legacyAlgorithm:linkIndex.legacyAlgorithm,entryCount:linkIndex.entries.length,withContentKey:linkIndex.entries.filter(x=>x.contentKey).length,withFingerprint:linkIndex.entries.filter(x=>x.fingerprint).length,withMatchKey:linkIndex.entries.filter(x=>x.matchKey).length,activeOriginalLinks:linkIndex.entries.filter(x=>x.sourceLinks?.length).length},sourceIndex,settings:structuredClone(state.settings),memories:structuredClone(state.memories),events:structuredClone(state.events),dreams:structuredClone(state.dreams),verses:structuredClone(state.verses),prayers:structuredClone(state.prayers),messages:structuredClone(state.messages),excludedPhotos:structuredClone(state.excludedPhotos),photoManifest:photosOut,linkIndex};
+ return {app:'OsRa',version:30,backupSchema:4,exportedAt:new Date().toISOString(),backupPurpose:'full-local-cross-device',linking:{algorithm:linkIndex.algorithm,legacyAlgorithm:linkIndex.legacyAlgorithm,entryCount:linkIndex.entries.length,withContentKey:linkIndex.entries.filter(x=>x.contentKey).length,withFingerprint:linkIndex.entries.filter(x=>x.fingerprint).length,withMatchKey:linkIndex.entries.filter(x=>x.matchKey).length,activeOriginalLinks:linkIndex.entries.filter(x=>x.sourceLinks?.length).length},sourceIndex,settings:structuredClone(state.settings),memories:structuredClone(state.memories),events:structuredClone(state.events),dreams:structuredClone(state.dreams),verses:structuredClone(state.verses),prayers:structuredClone(state.prayers),messages:structuredClone(state.messages),excludedPhotos:structuredClone(state.excludedPhotos),photoManifest:photosOut,linkIndex};
 }
 async function saveSafetySnapshot(){try{await put('state',{key:'safetyBackup',value:backupPayload()})}catch(e){console.warn('safety backup failed',e)}}
 function scheduleSafetySnapshot(){clearTimeout(safetyTimer);safetyTimer=setTimeout(()=>saveSafetySnapshot(),1200)}
@@ -484,9 +526,15 @@ async function scan(root=libraryHandle,fromPicker=false,options={}){
    const nameSizeCandidates=byNameSize.get(`${String(name).toLocaleLowerCase()}|${Number(f.size)}`)||[];
    if(!mk)mk=await matchKey(f);
    let matchCandidates=(byMatchKey.get(mk)||[]).filter(x=>!x.excluded),contentCandidates=[];
-   if(!matchCandidates.length){ck=ck||await contentKey(f);contentCandidates=(byContentKey.get(ck)||[]).filter(x=>!x.excluded)}
-   if(!p&&matchCandidates.length)p=pickCanonicalPhoto(matchCandidates);
-   if(!p&&contentCandidates.length)p=pickCanonicalPhoto(contentCandidates);
+   // المطابقة القوية لا تُقبل تلقائيًا إلا عندما يكون المرشح فريدًا.
+   // عند وجود أكثر من سجل بنفس المفتاح، نستخدم contentKey لتفريقها بدل
+   // اختيار سجل عشوائي والحفاظ بالتالي على ألبومات وصور خاطئة.
+   if(matchCandidates.length!==1){
+    ck=ck||await contentKey(f);
+    contentCandidates=(byContentKey.get(ck)||[]).filter(x=>!x.excluded);
+   }
+   if(!p&&matchCandidates.length===1)p=matchCandidates[0];
+   if(!p&&contentCandidates.length===1)p=contentCandidates[0];
    if(!p&&nameSizeCandidates.length===1&&((mk&&nameSizeCandidates[0].matchKey===mk)||(ck&&nameSizeCandidates[0].contentKey===ck)))p=nameSizeCandidates[0];
    const excludedHere=!reindexMode&&isExcluded(rel,f.size,f.lastModified,'',ck,source.id,mk);
    if(excludedHere){excluded++;await markCompleted(rel);if(count%12===0)await new Promise(r=>setTimeout(r,0));continue}
@@ -494,8 +542,9 @@ async function scan(root=libraryHandle,fromPicker=false,options={}){
    if(p)matched++;
    let restored=null;
    if(!p){
-    let fpCand=[];if(!matchCandidates.length&&!contentCandidates.length){fp=await fingerprint(f);fpCand=(byFingerprint.get(fp)||[]).filter(x=>!x.excluded)}
-    const same=matchCandidates.length?matchCandidates:(contentCandidates.length?contentCandidates:(fpCand.length===1?fpCand:[]));
+    let fpCand=[];
+    if(matchCandidates.length!==1&&contentCandidates.length!==1){fp=await fingerprint(f);fpCand=(byFingerprint.get(fp)||[]).filter(x=>!x.excluded)}
+    const same=matchCandidates.length===1?matchCandidates:(contentCandidates.length===1?contentCandidates:(fpCand.length===1?fpCand:[]));
     if(same.length){p=pickCanonicalPhoto(same);if(reindexMode)restored=takeReindexMatch(ck,fp,mk);if(restored)mergeRestoredPlacement(p,restored);const oldLinked=hasOriginalLink(p),addedLink=addPhotoLink(p,source,f,rel,fp,mk,ck);p.name=p.name||name;p.fingerprint=p.fingerprint||fp;p.matchKey=p.matchKey||mk;p.contentKey=p.contentKey||ck;p.lastModified=p.lastModified||f.lastModified;p.size=p.size||f.size;p.mediaType='image';p.mimeType=mimeType;/* أثناء الربط لا نعيد إنشاء المعاينة ولا نقرأ EXIF؛ السجل القديم يحتفظ بهما. هذا المسار هو الذي يعمل عند النقل من هاتف إلى هاتف. */if(source.mergeIntoMemoryId){for(const mem of state.memories){if(mem.id!==source.mergeIntoMemoryId&&mem.autoAlbum!==false&&mem.photoIds?.includes(p.id))mem.photoIds=(mem.photoIds||[]).filter(x=>x!==p.id)}}if(!p.manualAlbum&&!p.layoutLocked&&!matchOnly){if(source.mergeIntoMemoryId)ensurePhotoMemory(p,source);else ensureMemory(scanAlbumName(source,rel),p.id,source.id)}queueMetaWrite(p);photos.set(p.id,p);byPath.set(key,p);moved+=addedLink?1:0;if(!oldLinked&&hasOriginalLink(p))updated++;if(reindexMode){removeExcludedMatch(ck,fp,rel,source.id,mk);await persistReindexPool()}}
    }
    if(!p&&matchOnly){await markCompleted(rel);if(count%12===0)await new Promise(r=>setTimeout(r,0));continue}
@@ -507,7 +556,7 @@ async function scan(root=libraryHandle,fromPicker=false,options={}){
  try{
   await walk(root);await flushMetaWrites();
   if(!resumeFound){await persistScanProgress({status:'paused',sourceId:source.id,libraryName:sourceLabel(source),lastRelPath:'',lastCompletedRelPath:'',processed:0,count:0,added:0,updated:0,moved:0,excluded:0,startedAt:Date.now()});toast('نقطة التوقف القديمة لم تعد موجودة؛ بدأ فحص كامل لهذا المجلد فقط.');scanLock=false;await clearScanProgress(source.id);return await scan(root,false,{source,fresh:true,reindex:reindexMode,matchOnly})}
-  if(reindexMode)await persistReindexPool();let linked=0;for(const p of photos.values()){if(!isPhotoRecord(p)||!p.album)continue;const has=state.memories.some(m=>(m.photoIds||[]).includes(p.id));if(!has){ensurePhotoMemory(p,source);linked++}}const removed=cleanupEmptyAutoAlbums();await save();await persistScanProgress({status:'done',sourceId:source.id,libraryName:sourceLabel(source),lastRelPath:scanCheckpoint.lastCompletedRelPath||'',lastCompletedRelPath:scanCheckpoint.lastCompletedRelPath||'',processed:count,count,added,updated,moved,excluded,matched,linked,removed,startedAt,finishedAt:Date.now()});if(matchOnly){const unmatched=Math.max(0,count-matched-excluded);toast(`اكتمل البحث في «${sourceLabel(source)}»: تم العثور على أصل وربطه لـ ${matched} من ${count} صورة${unmatched?'، و'+unmatched+' صورة لم تكن مسجلة في OsRa':'، ولم تُضف أي صورة جديدة إلى الفهرس'}.`);renderNoAnim(true);return {done:true,count,matched,unmatched,excluded,added,updated,moved,linked};}toast(`تم فحص «${sourceLabel(source)}»: ${count} صورة، ${added} جديدة، ${updated} محدثة${moved?'، '+moved+' أصول إضافية رُبطت':''}${linked?'، وربط '+linked+' صور بألبوماتها':''}${removed?'، وتنظيف '+removed+' ألبوم آلي':''}.`);renderNoAnim(true);return {done:true,count,matched,unmatched:Math.max(0,count-matched-excluded),excluded,added,updated,moved,linked};
+  if(reindexMode)await persistReindexPool();let linked=0;if(!matchOnly){for(const p of photos.values()){if(!isPhotoRecord(p)||!p.album)continue;const has=state.memories.some(m=>(m.photoIds||[]).includes(p.id));if(!has){ensurePhotoMemory(p,source);linked++}}}const removed=matchOnly?0:cleanupEmptyAutoAlbums();await save();await persistScanProgress({status:'done',sourceId:source.id,libraryName:sourceLabel(source),lastRelPath:scanCheckpoint.lastCompletedRelPath||'',lastCompletedRelPath:scanCheckpoint.lastCompletedRelPath||'',processed:count,count,added,updated,moved,excluded,matched,linked,removed,startedAt,finishedAt:Date.now()});if(matchOnly){const unmatched=Math.max(0,count-matched-excluded);toast(`اكتمل البحث في «${sourceLabel(source)}»: تم العثور على أصل وربطه لـ ${matched} من ${count} صورة${unmatched?'، و'+unmatched+' صورة لم تكن مسجلة في OsRa':'، ولم تُضف أي صورة جديدة إلى الفهرس'}.`);renderNoAnim(true);return {done:true,count,matched,unmatched,excluded,added,updated,moved,linked};}toast(`تم فحص «${sourceLabel(source)}»: ${count} صورة، ${added} جديدة، ${updated} محدثة${moved?'، '+moved+' أصول إضافية رُبطت':''}${linked?'، وربط '+linked+' صور بألبوماتها':''}${removed?'، وتنظيف '+removed+' ألبوم آلي':''}.`);renderNoAnim(true);return {done:true,count,matched,unmatched:Math.max(0,count-matched-excluded),excluded,added,updated,moved,linked};
  }catch(e){
   if(e?.name==='ScanStopped'){
    if(scanCancelRequested){await saveMainExact();scheduleSafetySnapshot();if(reindexMode)await persistReindexPool();await clearScanProgress(source.id);scanCheckpoint=null;scanCancelRequested=false;toast(`تم إلغاء فحص «${sourceLabel(source)}» بالكامل. تم الاحتفاظ بكل ما تم حفظه قبل الإلغاء.`);renderNoAnim(true);return {cancelled:true};}
@@ -607,7 +656,7 @@ function dailyClearAll(){document.querySelectorAll('.daily-album-select').forEac
 async function saveDailyAlbums(){const ids=[...document.querySelectorAll('.daily-album-select:checked')].map(x=>x.dataset.memory).filter(Boolean);state.settings.dailyAlbumIds=ids;await save();closeModal();toast(ids.length?`تم تحديد ${ids.length} ألبوم لصورة اليوم.`:'تم تعطيل صورة اليوم حتى تختار ألبومات.');renderNoAnim()}
 function romanticHeartTransition(kind='open'){const layer=document.createElement('div');layer.className='heart-burst heart-gate '+(kind==='close'?'is-closing':'');const left=document.createElement('div'),right=document.createElement('div'),spark=document.createElement('div');left.className='heart-half heart-half-left';right.className='heart-half heart-half-right';left.innerHTML='♥';right.innerHTML='♥';spark.className='heart-spark';spark.textContent='✦';layer.append(left,right,spark);for(let i=0;i<8;i++){const h=document.createElement('span');h.textContent=['·','♥','✦','·'][i%4];h.className='burst-heart side-'+(i%2?'right':'left');h.style.setProperty('--i',i);h.style.setProperty('--delay',`${i*22}ms`);layer.appendChild(h)}document.body.appendChild(layer);setTimeout(()=>layer.remove(),1350)}
 
-async function chooseBackup(){if(!window.showSaveFilePicker){toast('اختيار مكان ثابت غير مدعوم في هذا المتصفح؛ استخدم Chrome حديث على Android وسيظهر التنزيل العادي كبديل.');return false}try{const h=await window.showSaveFilePicker({suggestedName:`OsRa_Backup_${today()}.json`,types:[{description:'OsRa Backup',accept:{'application/json':['.json']}}],excludeAcceptAllOption:false});backupFileHandle=h;const text=JSON.stringify(await backupPayloadForExport(),null,2);const w=await h.createWritable();await w.write(text);await w.close();backupMeta={lastSavedAt:Date.now(),lastAutoFileAt:Date.now()};await put('library',{key:'backup',handle:h,name:h.name,lastSavedAt:backupMeta.lastSavedAt,lastAutoFileAt:backupMeta.lastAutoFileAt});toast('تم تحديد مكان النسخة وحفظها بنجاح.');renderNoAnim();return true}catch(e){if(e?.name==='AbortError')toast('تم إلغاء اختيار مكان النسخة الاحتياطية.');else{console.error(e);toast('تعذر حفظ النسخة في الملف المحدد.')}return false}}
+async function chooseBackup(){if(!window.showSaveFilePicker){toast('اختيار مكان ثابت غير مدعوم في هذا المتصفح؛ استخدم Chrome حديث على Android وسيظهر التنزيل العادي كبديل.');return false}try{const h=await window.showSaveFilePicker({suggestedName:`OsRa_Backup_${today()}.json`,types:[{description:'OsRa Backup',accept:{'application/json':['.json']}}],excludeAcceptAllOption:false});backupFileHandle=h;const text=JSON.stringify(await backupPayloadForExport());const w=await h.createWritable();await w.write(text);await w.close();backupMeta={lastSavedAt:Date.now(),lastAutoFileAt:Date.now()};await put('library',{key:'backup',handle:h,name:h.name,lastSavedAt:backupMeta.lastSavedAt,lastAutoFileAt:backupMeta.lastAutoFileAt});toast('تم تحديد مكان النسخة وحفظها بنجاح.');renderNoAnim();return true}catch(e){if(e?.name==='AbortError')toast('تم إلغاء اختيار مكان النسخة الاحتياطية.');else{console.error(e);toast('تعذر حفظ النسخة في الملف المحدد.')}return false}}
 async function replacePhotoSnapshot(manifest){
  const list=Array.isArray(manifest)?manifest:[],old=new Map(photos),rebuilt=new Map(),keepThumbIds=new Set(list.map(x=>x.id));
  await new Promise((resolve,reject)=>{const tx=db.transaction(['photos','thumbs'],'readwrite'),st=tx.objectStore('photos'),ts=tx.objectStore('thumbs');for(const id of old.keys())if(!keepThumbIds.has(id))ts.delete(id);st.clear();for(const p0 of list){const p=old.get(p0.id)||{},blob=p0.thumb?base64ToBlob(p0.thumb):null,merged={...p0,excluded:false,layoutLocked:!!p0.layoutLocked,thumbBlob:null,thumbVersion:p0.thumbVersion||THUMB_VERSION};merged.sourceLinks=Array.isArray(p0.sourceLinks)?p0.sourceLinks:normalizePhotoLinks(merged);delete merged.thumb;delete merged.thumbBlob;st.put(merged);if(blob)ts.put({id:merged.id,blob,version:merged.thumbVersion});rebuilt.set(merged.id,merged)}tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error||new Error('photo snapshot restore failed'));tx.onabort=()=>reject(tx.error||new Error('photo snapshot restore aborted'))});
@@ -617,8 +666,20 @@ function applyBackupPayload(x){validateBackupPayload(x);const incoming=x||{},arr
 async function restoreLocalRecovery(){if(!recoveryCandidate)return;if(scanLock){toast('أوقف الفحص الحالي قبل الاسترجاع ثم أعد المحاولة.');return}if(!confirm(`استعادة نسخة الأمان المحلية بتاريخ ${recoveryLabel(recoveryCandidate)}؟\nلن تُحذف الصور الأصلية من الجهاز.`))return;try{clearTimeout(safetyTimer);await clearScanProgress();await snapshotBeforeRestore();const x=structuredClone(recoveryCandidate);applyBackupPayload(x);if(Array.isArray(x.photoManifest))await replacePhotoSnapshot(x.photoManifest);await saveMainExact();soundOn=!!state.settings.soundEnabled;recoveryCandidate=null;updateSoundButton();toast('تمت استعادة بيانات OsRa من النسخة المحلية.');renderNoAnim()}catch(e){console.error(e);toast('تعذرت استعادة النسخة المحلية.')}}
 async function saveMainExact(){await put('state',{key:'main',value:state})}
 async function snapshotBeforeRestore(){await put('state',{key:'preRestoreBackup',value:backupPayload(),savedAt:Date.now()})}
-async function writeBackupToHandle(forcePrompt=false){if(!backupFileHandle)return false;try{let q=await backupFileHandle.queryPermission({mode:'readwrite'});if(q!=='granted'&&forcePrompt)q=await backupFileHandle.requestPermission({mode:'readwrite'});if(q!=='granted')return false;const w=await backupFileHandle.createWritable();await w.write(JSON.stringify(await backupPayloadForExport(),null,2));await w.close();backupMeta.lastSavedAt=Date.now();backupMeta.lastAutoFileAt=Date.now();await put('library',{key:'backup',handle:backupFileHandle,name:backupFileHandle.name,lastSavedAt:backupMeta.lastSavedAt,lastAutoFileAt:backupMeta.lastAutoFileAt});return true}catch(e){console.warn('file backup failed',e);return false}}
-async function backup(){if(window.showSaveFilePicker){if(await writeBackupToHandle(true)){toast('تم تحديث النسخة الاحتياطية في مكانها المحفوظ.');renderNoAnim();return}if(await chooseBackup())return}const payload=await backupPayloadForExport(),a=document.createElement('a'),u=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));a.href=u;a.download='OsRa_Backup_'+today()+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);toast('تم تنزيل ملف النسخة الاحتياطية.')}
+async function writeBackupToHandle(forcePrompt=false){if(!backupFileHandle)return false;try{let q=await backupFileHandle.queryPermission({mode:'readwrite'});if(q!=='granted'&&forcePrompt)q=await backupFileHandle.requestPermission({mode:'readwrite'});if(q!=='granted')return false;const w=await backupFileHandle.createWritable();await w.write(JSON.stringify(await backupPayloadForExport()));await w.close();backupMeta.lastSavedAt=Date.now();backupMeta.lastAutoFileAt=Date.now();await put('library',{key:'backup',handle:backupFileHandle,name:backupFileHandle.name,lastSavedAt:backupMeta.lastSavedAt,lastAutoFileAt:backupMeta.lastAutoFileAt});return true}catch(e){console.warn('file backup failed',e);return false}}
+async function backup(){
+  try{
+    if(window.showSaveFilePicker){
+      if(await writeBackupToHandle(true)){toast('تم تحديث النسخة الاحتياطية في مكانها المحفوظ.');renderNoAnim();return}
+      if(await chooseBackup())return;
+    }
+    const payload=await backupPayloadForExport();
+    if(downloadBackupFile(payload))toast('تم تنزيل ملف النسخة الاحتياطية.');
+  }catch(e){
+    console.error('backup failed',e);
+    toast('فشل إنشاء النسخة الاحتياطية. لم يتم حذف أو تغيير بيانات OsRa.');
+  }
+}
 async function maybeAutoFileBackup(){if(!backupFileHandle)return;const week=7*24*60*60*1000;if(Date.now()-(backupMeta.lastAutoFileAt||0)<week)return;await writeBackupToHandle(false);}
 async function restoreSafety(){try{if(scanLock){toast('أوقف الفحص الحالي قبل الاسترجاع ثم أعد المحاولة.');return}const s=await get('state','safetyBackup');if(!s?.value){toast('لا توجد نسخة أمان محلية بعد.');return}if(!confirm('استرجاع آخر نسخة أمان محلية؟\nسيعود OsRa إلى تلك اللحظة، ولن تُحذف الصور الأصلية من الجهاز.'))return;clearTimeout(safetyTimer);await clearScanProgress();const x=s.value;validateBackupPayload(x);await snapshotBeforeRestore();applyBackupPayload(x);if(Array.isArray(x.photoManifest))await replacePhotoSnapshot(x.photoManifest);await saveMainExact();soundOn=!!state.settings.soundEnabled;updateSoundButton();toast('تم استرجاع نسخة الأمان المحلية بالكامل.');renderNoAnim()}catch(e){console.error(e);toast('تعذر استرجاع نسخة الأمان المحلية.')}}
 async function mergeBackupPayload(x){
@@ -635,9 +696,9 @@ async function mergeBackupPayload(x){
   let target=photos.get(p0.id)||null;
   if(target&&p0.matchKey&&target.matchKey&&target.matchKey!==p0.matchKey)target=null;
   if(target&&p0.contentKey&&target.contentKey&&target.contentKey!==p0.contentKey)target=null;
-  if(!target&&p0.matchKey){const c=byMatch.get(p0.matchKey)||[];target=c.length?pickCanonicalPhoto(c):null}
-  if(!target&&p0.contentKey){const c=byContent.get(p0.contentKey)||[];target=c.length?pickCanonicalPhoto(c):null}
-  if(!target&&p0.fingerprint){const c=(byFingerprint.get(p0.fingerprint)||[]);if(c.length===1)target=c[0]}
+  if(!target&&p0.matchKey){const c=(byMatch.get(p0.matchKey)||[]).filter(x=>!x.excluded);if(c.length===1)target=c[0]}
+  if(!target&&p0.contentKey){const c=(byContent.get(p0.contentKey)||[]).filter(x=>!x.excluded);if(c.length===1)target=c[0]}
+  if(!target&&p0.fingerprint){const c=(byFingerprint.get(p0.fingerprint)||[]).filter(x=>!x.excluded);if(c.length===1)target=c[0]}
   let finalId=target?.id||p0.id;
   if(!target&&photos.has(finalId)){finalId=id('ph')}
   const old=target||{};
