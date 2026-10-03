@@ -1,0 +1,21 @@
+OsRa v42 — Strong audited backup + cross-device original linking
+
+Verified:
+- app.js and sw.js pass node --check.
+- ZIP integrity passes unzip -t.
+- All data-action values have matching handlers.
+- Backup payload includes settings, memories, events, dreams, verses, prayers, messages, excludedPhotos, photo manifest and link index.
+- Backup export retains thumbnails and processes them in small batches to reduce peak memory pressure.
+- Local safety backup remains silent; scan checkpoints save main state without rebuilding a full safety snapshot on every batch.
+- Full restore creates a pre-restore snapshot before replacement.
+- Merge restore matches photo records by ID, then strong match key, then legacy content key, then unique fingerprint.
+- Cross-device linking does not rely on old folder paths. It scans the selected/linked folders and links only records that match; unmatched files are not auto-added in match-only mode.
+- Strong match key: SHA-256 over file size plus eight evenly distributed 16 KiB samples (128 KiB total sampled), while retaining the legacy size+head+tail key for compatibility.
+- When a strong match key is present, opening an original re-verifies the file before showing the full-resolution original.
+- No IndexedDB schema version change. No video feature added.
+- Service-worker cache and app.js query string both bumped to v42 to prevent stale JS.
+
+Important limitation:
+The strong key is a high-accuracy sampled signature, not a full-file SHA-256. The old legacy key remains as fallback for older records/backups that do not yet have the strong key.
+
+Automated browser/Android end-to-end folder-picker testing was not available in this build environment.

@@ -1,0 +1,5 @@
+OsRa v40 — Backup Critical Fix
+
+Fixed root backup export bug: buildSmartLinkIndex is synchronous and backupPayload now receives the actual index object.
+Verified app.js syntax with Node.
+Backup export/restore paths reviewed. No IndexedDB schema change.
