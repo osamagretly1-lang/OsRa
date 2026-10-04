@@ -1,4 +1,4 @@
-const APP_VERSION='51-no-full-delete';
+const APP_VERSION='52-backup-fixed';
 const DB='OsRaDB', DB_VERSION=2, THUMB_VERSION=6, THUMB_MAX_BYTES=160*1024;
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 const DEFAULT={settings:{startDate:'',engagementDate:'',birthdayRania:'',osamaPhone:'',raniaPhone:'',whatsappUrl:'',libraryName:'',soundEnabled:false,dailyAlbumIds:null,albumOrderMode:'manual',albumMiniView:false,countdowns:[]},memories:[],events:[],dreams:[],verses:[],prayers:[],messages:[],excludedPhotos:[]};
@@ -64,7 +64,12 @@ async function findOriginalFile(p,ask=true){
    }
    return {file:f,source,link};
   }
-  catch(e){permissionCache.delete(source.id);console.warn('original link unavailable',p?.id,link,e)}
+  catch(e){
+    // لا نمسح صلاحية المجلد بسبب ملف مفقود/مسار قديم/خطأ عابر.
+    // نمسحها فقط عندما يخبرنا المتصفح أن الإذن نفسه لم يعد صالحًا.
+    if(e?.name==='NotAllowedError'||e?.name==='SecurityError')permissionCache.delete(source.id);
+    console.warn('original link unavailable',p?.id,link,e)
+  }
  }
  return null;
 }
@@ -156,7 +161,17 @@ async function load(){
  if(Array.isArray(sr?.items))sources=sr.items.filter(x=>x?.handle).map((x,i)=>({id:x.id||`src-legacy-${i}`,name:x.name||x.handle.name||'مجلد الصور',handle:x.handle,asAlbum:!!x.asAlbum,mergeIntoMemoryId:x.mergeIntoMemoryId||'',createdAt:x.createdAt||Date.now()}));
  if(!sources.length&&main?.handle){sources=[{id:'src-main',name:main.name||main.handle.name||'مكتبة الصور',handle:main.handle,asAlbum:false,createdAt:Date.now()}];await persistSources()}
  activeSourceId=(ar?.sourceId&&sources.some(x=>x.id===ar.sourceId)?ar.sourceId:sources[0]?.id)||null;const active=activeSource();libraryHandle=active?.handle||main?.handle||null;if(active)state.settings.libraryName=sources[0]?.name||active.name||'';
- if(b?.handle){backupFileHandle=b.handle;backupMeta={lastSavedAt:+b.lastSavedAt||0,lastAutoFileAt:+b.lastAutoFileAt||0}}
+ if(b?.handle){
+    const backupName=String(b.name||b.handle.name||'');
+    // النسخ القديمة .osra تبقى للاستيراد، لكن لا نعيد استخدامها كملف الحفظ الجديد.
+    // أول حفظ بعد التحديث ينشئ ملف .txt جديد، وبعدها يُحفظ عليه دون طلب إذن متكرر.
+    if(!/\.osra$/i.test(backupName)){
+      backupFileHandle=b.handle;
+      backupMeta={lastSavedAt:+b.lastSavedAt||0,lastAutoFileAt:+b.lastAutoFileAt||0};
+    }else{
+      backupFileHandle=null;
+    }
+  }
  photos=new Map();thumbCache.clear();let migratedData=false;const migratedExcluded=[...state.excludedPhotos];
  for(const x of rawPhotos){
   if(x?.excluded){migratedData=true;const memoryRefs=state.memories.filter(m=>Array.isArray(m.photoIds)&&m.photoIds.includes(x.id)).map(m=>({memoryId:m.id,index:m.photoIds.indexOf(x.id)}));migratedExcluded.push({id:x.id,key:exclusionKey(x.relPath,x.size,x.lastModified,x.fingerprint||''),relPath:x.relPath,sourceId:x.sourceId||'',sourceLinks:normalizePhotoLinks(x),size:x.size,lastModified:x.lastModified,name:x.name||'',fingerprint:x.fingerprint||'',contentKey:x.contentKey||'',matchKey:x.matchKey||'',album:x.album||'',manualAlbum:!!x.manualAlbum,autoAlbum:x.autoAlbum!==false,layoutLocked:!!x.layoutLocked,addedAt:x.addedAt||Date.now(),capturedAt:x.capturedAt||'',memoryRefs:Array.isArray(x.memoryRefs)&&x.memoryRefs.length?x.memoryRefs:memoryRefs});try{await deletePhotoRecord(x.id)}catch{}for(const m of state.memories)if(Array.isArray(m.photoIds)&&m.photoIds.includes(x.id))m.photoIds=m.photoIds.filter(pid=>pid!==x.id);continue}
@@ -173,7 +188,21 @@ async function load(){
  // لا نكتب scanProgresses كل مرة عند بدء التطبيق؛ لا توجد فائدة من عملية كتابة إضافية.
 }
 
-async function blobToBase64(blob){if(!blob)return null;const buf=await blob.arrayBuffer(),bytes=new Uint8Array(buf),parts=[],chunk=0x8000;for(let i=0;i<bytes.length;i+=chunk){let part='';for(let j=i;j<Math.min(i+chunk,bytes.length);j++)part+=String.fromCharCode(bytes[j]);parts.push(part)}return btoa(parts.join(''))}
+async function blobToBase64(blob){
+  if(!blob)return null;
+  return await new Promise((resolve,reject)=>{
+    try{
+      const r=new FileReader();
+      r.onerror=()=>reject(r.error||new Error('thumbnail read failed'));
+      r.onload=()=>{
+        const s=String(r.result||'');
+        const i=s.indexOf(',');
+        resolve(i>=0?s.slice(i+1):null);
+      };
+      r.readAsDataURL(blob);
+    }catch(e){reject(e)}
+  });
+}
 function base64ToBlob(x){if(!x?.data)return null;try{const bin=atob(x.data),bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);return new Blob([bytes],{type:x.type||'image/webp'})}catch{return null}}
 function buildSmartLinkIndex(){
  const memoriesByPhoto=new Map();
@@ -201,7 +230,7 @@ async function backupPayloadForExport(){
         thumbCount++;thumbBytes+=blob.size;
       }
     }catch(e){console.warn('backup thumb skipped',p.id,e)}
-    if((i+1)%12===0)await new Promise(r=>setTimeout(r,0));
+    if((i+1)%48===0)await new Promise(r=>setTimeout(r,0));
   }
   payload.linking.thumbnailsIncluded=thumbCount;
   payload.linking.thumbnailBytes=thumbBytes;
@@ -212,11 +241,12 @@ function downloadBackupFile(payloadOrText){
   try{
     const text=typeof payloadOrText==='string'?payloadOrText:JSON.stringify(payloadOrText);
     if(!text||text.length<20)throw new Error('empty backup payload');
-    const blob=new Blob([text],{type:'application/octet-stream'});
+    const blob=new Blob([text],{type:'text/plain;charset=utf-8'});
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a');
     a.href=url;
-    const stamp=new Date();const pad=n=>String(n).padStart(2,'0');a.download=`OsRa_Backup_${stamp.getFullYear()}-${pad(stamp.getMonth()+1)}-${pad(stamp.getDate())}_${pad(stamp.getHours())}-${pad(stamp.getMinutes())}-${pad(stamp.getSeconds())}.osra`;
+    const stamp=new Date();const pad=n=>String(n).padStart(2,'0');
+    a.download=`OsRa_Backup_${stamp.getFullYear()}-${pad(stamp.getMonth()+1)}-${pad(stamp.getDate())}_${pad(stamp.getHours())}-${pad(stamp.getMinutes())}-${pad(stamp.getSeconds())}.txt`;
     a.rel='noopener';
     a.style.display='none';
     document.body.appendChild(a);
@@ -233,7 +263,7 @@ function backupPayload(){
  const photosOut=[...photos.values()].map(p=>({id:p.id,relPath:p.relPath,name:p.name,album:p.album,manualAlbum:!!p.manualAlbum,autoAlbum:p.autoAlbum!==false,layoutLocked:!!p.layoutLocked,sourceId:p.sourceId||'',sourceLinks:photoLocations(p),mediaType:'image',mimeType:p.mimeType||'',excluded:false,size:p.size,lastModified:p.lastModified,addedAt:p.addedAt,capturedAt:p.capturedAt||'',fingerprint:p.fingerprint||'',contentKey:p.contentKey||'',matchKey:p.matchKey||''}));
  const linkIndex=buildSmartLinkIndex();
  const sourceIndex=(sources||[]).map(s=>({id:s.id||'',name:s.name||'',asAlbum:!!s.asAlbum,mergeIntoMemoryId:s.mergeIntoMemoryId||''}));
- return {app:'OsRa',version:30,backupSchema:4,exportedAt:new Date().toISOString(),backupPurpose:'full-local-cross-device',linking:{algorithm:linkIndex.algorithm,legacyAlgorithm:linkIndex.legacyAlgorithm,entryCount:linkIndex.entries.length,withContentKey:linkIndex.entries.filter(x=>x.contentKey).length,withFingerprint:linkIndex.entries.filter(x=>x.fingerprint).length,withMatchKey:linkIndex.entries.filter(x=>x.matchKey).length,activeOriginalLinks:linkIndex.entries.filter(x=>x.sourceLinks?.length).length},sourceIndex,settings:structuredClone(state.settings),memories:structuredClone(state.memories),events:structuredClone(state.events),dreams:structuredClone(state.dreams),verses:structuredClone(state.verses),prayers:structuredClone(state.prayers),messages:structuredClone(state.messages),excludedPhotos:structuredClone(state.excludedPhotos),photoManifest:photosOut,linkIndex};
+ return {app:'OsRa',version:30,backupSchema:5,backupFormat:'OsRa-Text-JSON-v1',exportedAt:new Date().toISOString(),backupPurpose:'full-local-cross-device',linking:{algorithm:linkIndex.algorithm,legacyAlgorithm:linkIndex.legacyAlgorithm,entryCount:linkIndex.entries.length,withContentKey:linkIndex.entries.filter(x=>x.contentKey).length,withFingerprint:linkIndex.entries.filter(x=>x.fingerprint).length,withMatchKey:linkIndex.entries.filter(x=>x.matchKey).length,activeOriginalLinks:linkIndex.entries.filter(x=>x.sourceLinks?.length).length},sourceIndex,settings:structuredClone(state.settings),memories:structuredClone(state.memories),events:structuredClone(state.events),dreams:structuredClone(state.dreams),verses:structuredClone(state.verses),prayers:structuredClone(state.prayers),messages:structuredClone(state.messages),excludedPhotos:structuredClone(state.excludedPhotos),photoManifest:photosOut,linkIndex};
 }
 async function saveSafetySnapshot(){try{await put('state',{key:'safetyBackup',value:backupPayload()})}catch(e){console.warn('safety backup failed',e)}}
 function scheduleSafetySnapshot(){clearTimeout(safetyTimer);safetyTimer=setTimeout(()=>saveSafetySnapshot(),1200)}
@@ -659,7 +689,7 @@ function dailyClearAll(){document.querySelectorAll('.daily-album-select').forEac
 async function saveDailyAlbums(){const ids=[...document.querySelectorAll('.daily-album-select:checked')].map(x=>x.dataset.memory).filter(Boolean);state.settings.dailyAlbumIds=ids;await save();closeModal();toast(ids.length?`تم تحديد ${ids.length} ألبوم لصورة اليوم.`:'تم تعطيل صورة اليوم حتى تختار ألبومات.');renderNoAnim()}
 function romanticHeartTransition(kind='open'){const layer=document.createElement('div');layer.className='heart-burst heart-gate '+(kind==='close'?'is-closing':'');const left=document.createElement('div'),right=document.createElement('div'),spark=document.createElement('div');left.className='heart-half heart-half-left';right.className='heart-half heart-half-right';left.innerHTML='♥';right.innerHTML='♥';spark.className='heart-spark';spark.textContent='✦';layer.append(left,right,spark);for(let i=0;i<8;i++){const h=document.createElement('span');h.textContent=['·','♥','✦','·'][i%4];h.className='burst-heart side-'+(i%2?'right':'left');h.style.setProperty('--i',i);h.style.setProperty('--delay',`${i*22}ms`);layer.appendChild(h)}document.body.appendChild(layer);setTimeout(()=>layer.remove(),1350)}
 
-async function chooseBackup(){if(!window.showSaveFilePicker){toast('اختيار مكان ثابت غير مدعوم في هذا المتصفح؛ استخدم Chrome حديث على Android وسيظهر التنزيل العادي كبديل.');return false}try{const h=await window.showSaveFilePicker({suggestedName:`OsRa_Backup_${today()}.osra`,types:[{description:'OsRa Backup File',accept:{'application/octet-stream':['.osra']}}],excludeAcceptAllOption:false});const text=JSON.stringify(await backupPayloadForExport());if(!text||text.length<20)throw new Error('empty backup payload');const w=await h.createWritable();await w.write(text);await w.close();const check=await h.getFile();if(!check||check.size<20)throw new Error('backup file is empty after write');backupFileHandle=h;backupMeta={lastSavedAt:Date.now(),lastAutoFileAt:Date.now()};await put('library',{key:'backup',handle:h,name:h.name,lastSavedAt:backupMeta.lastSavedAt,lastAutoFileAt:backupMeta.lastAutoFileAt});toast('تم تحديد مكان النسخة وحفظها بنجاح.');renderNoAnim();return true}catch(e){if(e?.name==='AbortError')toast('تم إلغاء اختيار مكان النسخة الاحتياطية.');else{console.error(e);toast('تعذر حفظ النسخة في الملف المحدد.')}return false}}
+async function chooseBackup(){if(!window.showSaveFilePicker){toast('اختيار مكان ثابت غير مدعوم في هذا المتصفح؛ استخدم Chrome حديث على Android وسيظهر التنزيل العادي كبديل.');return false}try{const h=await window.showSaveFilePicker({suggestedName:`OsRa_Backup_${today()}.txt`,types:[{description:'OsRa Backup Text',accept:{'text/plain':['.txt']}}],excludeAcceptAllOption:false});const text=JSON.stringify(await backupPayloadForExport());if(!text||text.length<20)throw new Error('empty backup payload');const w=await h.createWritable();await w.write(text);await w.close();const check=await h.getFile();if(!check||check.size<20)throw new Error('backup file is empty after write');backupFileHandle=h;backupMeta={lastSavedAt:Date.now(),lastAutoFileAt:Date.now()};await put('library',{key:'backup',handle:h,name:h.name,lastSavedAt:backupMeta.lastSavedAt,lastAutoFileAt:backupMeta.lastAutoFileAt});toast('تم تحديد مكان النسخة وحفظها بنجاح.');renderNoAnim();return true}catch(e){if(e?.name==='AbortError')toast('تم إلغاء اختيار مكان النسخة الاحتياطية.');else{console.error(e);toast('تعذر حفظ النسخة في الملف المحدد.')}return false}}
 async function replacePhotoSnapshot(manifest,extraThumbs=[]){
  const list=Array.isArray(manifest)?manifest:[],old=new Map(photos),rebuilt=new Map(),keepThumbIds=new Set(list.map(x=>x.id));
  const extraMap=new Map((Array.isArray(extraThumbs)?extraThumbs:[]).filter(x=>x?.id&&x.blob).map(x=>[x.id,x.blob]));
@@ -684,13 +714,14 @@ async function snapshotBeforeRestore(){
 async function writeBackupToHandle(forcePrompt=false,text=''){if(!backupFileHandle)return false;try{let q=await backupFileHandle.queryPermission({mode:'readwrite'});if(q!=='granted'&&forcePrompt)q=await backupFileHandle.requestPermission({mode:'readwrite'});if(q!=='granted')return false;const out=text||JSON.stringify(await backupPayloadForExport());if(!out||out.length<20)throw new Error('empty backup payload');const w=await backupFileHandle.createWritable();await w.write(out);await w.close();const check=await backupFileHandle.getFile();if(!check||check.size<20)throw new Error('backup file is empty after write');backupMeta.lastSavedAt=Date.now();backupMeta.lastAutoFileAt=Date.now();await put('library',{key:'backup',handle:backupFileHandle,name:backupFileHandle.name,lastSavedAt:backupMeta.lastSavedAt,lastAutoFileAt:backupMeta.lastAutoFileAt});return true}catch(e){console.warn('file backup failed',e);return false}}
 async function backup(){
   try{
-    // المسار المحفوظ: نطلب إذن الكتابة مباشرة من ضغطة المستخدم، قبل أي await آخر.
-    // لو كان الإذن سليمًا نحدّث نفس الملف. ولو لم يعد صالحًا لا نفتح Picker بعد await؛
-    // نطلب من المستخدم إعادة تحديد مكان الملف عبر الزر المخصص، حتى لا يظهر كأن الحفظ نجح وهو لم يفعل.
     if(backupFileHandle){
-      let granted=false;
-      try{granted=(await backupFileHandle.requestPermission({mode:'readwrite'}))==='granted'}catch(e){console.warn('backup handle permission failed',e)}
-      if(granted){
+      // الإذن لا يُطلب في كل مرة. نكتفي بالاستعلام، ونطلبه فقط إذا كان المتصفح قد فقده.
+      let q='prompt';
+      try{q=await backupFileHandle.queryPermission({mode:'readwrite'})}catch{}
+      if(q!=='granted'){
+        try{q=await backupFileHandle.requestPermission({mode:'readwrite'})}catch(e){console.warn('backup handle permission failed',e);q='denied'}
+      }
+      if(q==='granted'){
         const text=JSON.stringify(await backupPayloadForExport());
         if(!text||text.length<20)throw new Error('empty backup payload');
         const w=await backupFileHandle.createWritable();
@@ -702,17 +733,18 @@ async function backup(){
         await put('library',{key:'backup',handle:backupFileHandle,name:backupFileHandle.name,lastSavedAt:backupMeta.lastSavedAt,lastAutoFileAt:backupMeta.lastAutoFileAt});
         toast('تم تحديث النسخة الاحتياطية في مكانها المحفوظ.');renderNoAnim();return;
       }
-      toast('لم يعد إذن ملف النسخة الاحتياطية صالحًا. اضغط «تحديد مكان الحفظ» مرة واحدة ثم احفظ.');
+      toast('إذن ملف النسخة الاحتياطية غير متاح. حدّد مكان حفظ جديد مرة واحدة.');
+      backupFileHandle=null;
       return;
     }
 
-    // أول حفظ: افتح File System Access Picker مباشرة من ضغطة المستخدم، قبل توليد النسخة.
+    // أول حفظ بصيغة نصية معروفة: WhatsApp والتطبيقات الأخرى تتعامل معها كملف نصي.
     if(window.showSaveFilePicker){
       let h;
       try{
         h=await window.showSaveFilePicker({
-          suggestedName:`OsRa_Backup_${today()}.osra`,
-          types:[{description:'OsRa Backup File',accept:{'application/octet-stream':['.osra']}}],
+          suggestedName:`OsRa_Backup_${today()}.txt`,
+          types:[{description:'OsRa Backup Text',accept:{'text/plain':['.txt']}}],
           excludeAcceptAllOption:false
         });
       }catch(e){
@@ -732,9 +764,8 @@ async function backup(){
       return;
     }
 
-    // متصفح قديم بلا Picker: نحاول التنزيل التقليدي، لكن لا نحدّث تاريخ آخر حفظ إلا عند نجاح إنشاء التنزيل.
     const payload=await backupPayloadForExport(),text=JSON.stringify(payload);
-    if(downloadBackupFile(text))toast('تم تجهيز ملف النسخة الاحتياطية للتنزيل.');
+    if(downloadBackupFile(text))toast('تم تجهيز ملف النسخة الاحتياطية النصي للتنزيل.');
   }catch(e){
     console.error('backup failed',e);
     toast('فشل حفظ النسخة الاحتياطية. بيانات OsRa لم تتغير.');
@@ -772,14 +803,14 @@ async function mergeBackupPayload(x){
  if(idRemap.size){for(const m of state.memories){if(!Array.isArray(m.photoIds))continue;m.photoIds=[...new Set(m.photoIds.map(pid=>idRemap.get(pid)||pid))]}}
  normalizeState();await saveMainExact();toast('تم دمج النسخة الاحتياطية مع حفظ الذكريات والألبومات والمعاينات. اربط/أضف مجلدات الصور ثم استخدم «ربط الأصول في كل المجلدات» لبحث الأصول داخل المجلدات المسموح بها دون إضافة صور جديدة.');renderNoAnim();
 }
-function restoreMerge(){const i=document.createElement('input');i.type='file';i.accept='.osra,.json,*/*';i.onchange=async()=>{try{const f=i.files?.[0];if(!f)return;if(f.size<20)throw new Error('empty backup file');const raw=await f.text();if(!raw.trim())throw new Error('empty backup file');const x=JSON.parse(raw);validateBackupPayload(x);const stamp=x.exportedAt?new Date(x.exportedAt):null;const when=stamp&&!isNaN(stamp)?stamp.toLocaleString('ar-EG'):'وقت غير معروف';const n=Array.isArray(x.photoManifest)?x.photoManifest.length:0;if(!confirm(`دمج نسخة OsRa المحفوظة في:
+function restoreMerge(){const i=document.createElement('input');i.type='file';i.accept='.txt,.osra,.json,text/plain,application/json,application/octet-stream,*/*';i.onchange=async()=>{try{const f=i.files?.[0];if(!f)return;if(f.size<20)throw new Error('empty backup file');const raw=await f.text();if(!raw.trim())throw new Error('empty backup file');const x=JSON.parse(raw);validateBackupPayload(x);const stamp=x.exportedAt?new Date(x.exportedAt):null;const when=stamp&&!isNaN(stamp)?stamp.toLocaleString('ar-EG'):'وقت غير معروف';const n=Array.isArray(x.photoManifest)?x.photoManifest.length:0;if(!confirm(`دمج نسخة OsRa المحفوظة في:
 ${when}
 
 سيتم الاحتفاظ بكل ما هو موجود على هذا الجهاز، وإضافة/تحديث بيانات النسخة فقط.
 سجلات الصور: ${n}
 
 لن تُحذف الصور الأصلية من الجهاز.`))return;await mergeBackupPayload(x)}catch(e){console.error(e);toast('ملف النسخة الاحتياطية غير صالح أو تالف.')}};i.click()}
-function restore(){const i=document.createElement('input');i.type='file';i.accept='.osra,.json,*/*';i.onchange=async()=>{try{const f=i.files?.[0];if(!f)return;if(f.size<20)throw new Error('empty backup file');const raw=await f.text();if(!raw.trim())throw new Error('empty backup file');const x=JSON.parse(raw);validateBackupPayload(x);const stamp=x.exportedAt?new Date(x.exportedAt):null;const when=stamp&&!isNaN(stamp)?stamp.toLocaleString('ar-EG'):'وقت غير معروف';const photoCount=Array.isArray(x.photoManifest)?x.photoManifest.length:0;if(!confirm(`استرجاع نسخة OsRa المحفوظة في:\n${when}
+function restore(){const i=document.createElement('input');i.type='file';i.accept='.txt,.osra,.json,text/plain,application/json,application/octet-stream,*/*';i.onchange=async()=>{try{const f=i.files?.[0];if(!f)return;if(f.size<20)throw new Error('empty backup file');const raw=await f.text();if(!raw.trim())throw new Error('empty backup file');const x=JSON.parse(raw);validateBackupPayload(x);const stamp=x.exportedAt?new Date(x.exportedAt):null;const when=stamp&&!isNaN(stamp)?stamp.toLocaleString('ar-EG'):'وقت غير معروف';const photoCount=Array.isArray(x.photoManifest)?x.photoManifest.length:0;if(!confirm(`استرجاع نسخة OsRa المحفوظة في:\n${when}
 
 الذكريات: ${x.memories.length}
 سجلات الصور في تلك اللحظة: ${photoCount}
