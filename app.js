@@ -1,4 +1,4 @@
-const APP_VERSION='79-v77-core-hybrid-relink';
+const APP_VERSION='80-v77-hybrid-relink';
 const DB='OsRaDB', DB_VERSION=2, THUMB_VERSION=6, THUMB_MAX_BYTES=160*1024;
 const VISUAL_SIG_VERSION=3, VISUAL_CANDIDATE_LIMIT=5, VISUAL_QUICK_LIMIT=24, VISUAL_MIN_SCORE=.58, VISUAL_STRONG_SCORE=.90, VISUAL_VERY_STRONG_SCORE=.95, LOCAL_MAX_FEATURES=48, LOCAL_DESC_BITS=64, DEEP_RECOVERY_VERSION=4, DEEP_VISUAL_INDEX_VERSION=1;
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
@@ -72,12 +72,129 @@ function disarmPortableRecovery(reason=''){portableRecoveryReady=false;portableR
 function hasDeepVisualSignature(p){if(!p)return false;const sig=prepareVisualSignature(p.visualSignature);if(sig?.grid&&sig?.edge&&sig?.color&&sig?.ph&&sig?.dh)return true;return photoLocations(p).some(l=>{const s=prepareVisualSignature(l?.visualSignature);return !!(s?.grid&&s?.edge&&s?.color&&s?.ph&&s?.dh)})}
 function activatePortableRecoveryFromBackup(x){const linking=x?.linking||{},manifest=Array.isArray(x?.photoManifest)?x.photoManifest:[];const legacyDeep=(linking?.deepRecoveryMode===true&&linking?.lightRuntimeDeepRecovery===true&&Number(linking?.deepVisualIndexVersion||0)>=DEEP_VISUAL_INDEX_VERSION);const explicitDeep=linking?.backupMode==='deep'&&linking?.deepRecoveryMode===true&&linking?.lightRuntimeDeepRecovery===true;const deepReady=Number(linking?.deepVisualIndexVersion||0)>=DEEP_VISUAL_INDEX_VERSION&&(Number(linking?.deepVisualIndexedCount)||0)>0;const hasDeepRows=manifest.some(p=>hasDeepVisualSignature(p));portableRecoveryReady=!!((explicitDeep||legacyDeep)&&deepReady&&hasDeepRows);portableRecoveryUsedSources=new Set();portableRecoveryBatchId=portableRecoveryReady?String(linking.deepRecoveryBatchId||`backup-${Date.now()}`):'';persistPortableRecoveryState().catch(()=>{});return portableRecoveryReady}
 function sourceLinksFor(source,p){return photoLocations(p).filter(l=>l?.sourceId===source?.id&&l?.relPath)}
+async function openOriginalFast(p,ask=false){
+ if(!p?.id)return null;
+ const ordered=[...photoLocations(p)].sort((a,b)=>{
+  const ap=a?.sourceId===p.sourceId?0:1,bp=b?.sourceId===p.sourceId?0:1;
+  if(ap!==bp)return ap-bp;
+  const am=a?.linkState==='missing'?1:0,bm=b?.linkState==='missing'?1:0;return am-bm;
+ });
+ const changed=[];
+ for(const link of ordered){
+  const source=sources.find(x=>x.id===link.sourceId&&x.handle);if(!source)continue;
+  try{
+   if(!(await ensureSourcePermission(source,ask)))continue;
+   const fh=await resolve(source.handle,link.relPath),f=await fh.getFile();
+   const actualSize=Number(f.size)||0,actualModified=Number(f.lastModified)||0;
+   // Ordinary runtime: the saved relative path is the primary key.
+   // Size/mtime are refreshed as metadata only; they never block opening a file that exists at its saved path.
+   link.name=f.name||link.name||p.name||'';link.size=actualSize||link.size;link.lastModified=actualModified||link.lastModified;link.fileDate=link.fileDate||fileDateFromFile(f);if(link.linkState==='missing')link.linkState='saved';
+   p.sourceLinks=photoLocations(p);syncPhotoPrimary(p,source.id,link.relPath);photos.set(p.id,p);await savePhotoMetaBatch([p]).catch(()=>{});
+   return {file:f,source,link,fastPath:true};
+  }catch(e){if(e?.name==='NotAllowedError'||e?.name==='SecurityError')permissionCache.delete(source.id);link.linkState='missing';delete link.verifiedAt;changed.push(p)}
+ }
+ if(changed.length)await savePhotoMetaBatch([p]).catch(()=>{});
+ return null;
+}
 function photoHasLinkToSource(p,source){return sourceLinksFor(source,p).some(l=>l.linkState!=='missing'||!!l.relPath)}
-function legacySavedLinks(p){const links=photoLocations(p).filter(l=>l?.relPath);return links.sort((a,b)=>{const ap=a?.sourceId===p?.sourceId?0:1,bp=b?.sourceId===p?.sourceId?0:1;if(ap!==bp)return ap-bp;const aa=a?.sourceId&&sources.some(s=>s.id===a.sourceId&&s.handle)?0:1,bb=b?.sourceId&&sources.some(s=>s.id===b.sourceId&&s.handle)?0:1;return aa-bb})}
-async function resolveDir(root,relDir){const parts=String(relDir||'').split('/').filter(Boolean);let dir=root;for(const part of parts)dir=await dir.getDirectoryHandle(part,{create:false});return dir}
-function dirnameOf(rel){const parts=String(rel||'').split('/').filter(Boolean);parts.pop();return parts.join('/')}
-async function trySavedRelativePathInSource(source,p,ask=false){if(!source?.handle||!p?.id)return null;const all=legacySavedLinks(p),explicit=all.filter(l=>l.sourceId===source.id),portable=all.filter(l=>l.sourceId!==source.id&&!sources.some(s=>s.id===l.sourceId&&s.handle)),links=[...explicit,...portable],seen=new Set();for(const link of links){const rel=String(link.relPath||'');if(!rel||seen.has(rel))continue;seen.add(rel);try{if(!(await ensureSourcePermission(source,ask)))continue;const fh=await resolve(source.handle,rel),f=await fh.getFile();const actualSize=Number(f.size)||0,actualModified=Number(f.lastModified)||0;link.sourceId=source.id;link.relPath=rel;link.name=f.name||link.name||p.name||'';link.size=actualSize||link.size;link.lastModified=actualModified||link.lastModified;link.fileDate=fileDateFromFile(f)||link.fileDate||'';link.mimeType=f.type||link.mimeType||p.mimeType||'';link.linkState='saved';p.sourceLinks=photoLocations(p);syncPhotoPrimary(p,source.id,rel);photos.set(p.id,p);await savePhotoMetaBatch([p]).catch(()=>{});return {file:f,source,link,fastPath:true,portablePath:true}}catch(e){if(e?.name==='NotAllowedError'||e?.name==='SecurityError')permissionCache.delete(source.id)}}return null}
-async function openOriginalFast(p,ask=false){if(!p?.id)return null;const changed=[];for(const link of legacySavedLinks(p).filter(l=>sources.some(s=>s.id===l.sourceId&&s.handle))){const source=sources.find(x=>x.id===link.sourceId&&x.handle);if(!source)continue;try{if(!(await ensureSourcePermission(source,ask)))continue;const fh=await resolve(source.handle,link.relPath),f=await fh.getFile();const actualSize=Number(f.size)||0,actualModified=Number(f.lastModified)||0;link.name=f.name||link.name||p.name||'';link.size=actualSize||link.size;link.lastModified=actualModified||link.lastModified;link.fileDate=fileDateFromFile(f)||link.fileDate||'';link.mimeType=f.type||link.mimeType||p.mimeType||'';if(link.linkState==='missing')link.linkState='saved';p.sourceLinks=photoLocations(p);syncPhotoPrimary(p,source.id,link.relPath);photos.set(p.id,p);await savePhotoMetaBatch([p]).catch(()=>{});return {file:f,source,link,fastPath:true}}catch(e){if(e?.name==='NotAllowedError'||e?.name==='SecurityError')permissionCache.delete(source.id);if(link.sourceId===source.id){link.linkState='missing';delete link.verifiedAt;changed.push(p)}}}if(changed.length)await savePhotoMetaBatch([p]).catch(()=>{});for(const source of rankedLinkSources()){if(!source?.handle)continue;const hit=await trySavedRelativePathInSource(source,p,ask);if(hit)return hit}return null}
+async function fastLinkTargetsToSource(source,targets){
+ const unique=[...new Map((targets||[]).filter(isPhotoRecord).map(p=>[p.id,p])).values()];let linked=0,missed=[];beginOperation(`الربط السريع «${sourceLabel(source)}»`,unique.length,'صورة','مسارات وبيانات الملف فقط');
+ try{
+  if(!(await ensureSourcePermission(source,true))){finishOperation(`لم يُمنح إذن «${sourceLabel(source)}»؛ لم يتم تغيير أي رابط.`);return {linked:0,unresolved:unique,error:new Error('source-permission-denied')}}
+  const unresolved=[];
+  for(let i=0;i<unique.length;i++){
+   const p=unique[i],links=sourceLinksFor(source,p);let hit=false;
+   for(const link of links){try{const fh=await resolve(source.handle,link.relPath),f=await fh.getFile();addPhotoLink(p,source,f,link.relPath,'','','');photos.set(p.id,p);await savePhotoMetaBatch([p]);hit=true;break}catch{}}
+   if(!hit)unresolved.push(p);else linked++;
+   await operationStep({done:i+1,lastItem:p.name||'صورة',phase:'محاولة المسار المحفوظ',note:`تم الربط ${linked} • باقي ${unique.length-linked-(unique.length-i-1)} محتاجة بحث`});
+   if((i+1)%32===0)await new Promise(r=>setTimeout(r,0));
+  }
+  // Only unresolved targets enter the cheap directory metadata fallback.
+  if(unresolved.length){
+   const byNameSize=new Map();
+   async function walk(dir,path=''){
+    const entries=[];for await(const e of dir.entries())entries.push(e);entries.sort((a,b)=>a[0].localeCompare(b[0],undefined,{numeric:true,sensitivity:'base'}));
+    for(const [name,e] of entries){if(e.kind==='directory'){await walk(e,path?path+'/'+name:name);continue}if(!isImage(name))continue;let f;try{f=await e.getFile()}catch{continue}const key=`${String(name).trim().toLocaleLowerCase()}|${Number(f.size)||0}`,a=byNameSize.get(key)||[];a.push({name,rel:path?path+'/'+name:name,file:f});byNameSize.set(key,a)}
+   }
+   await walk(source.handle,'');
+   const still=[];
+   for(let i=0;i<unresolved.length;i++){
+    const p=unresolved[i],key=`${String(p.name||'').trim().toLocaleLowerCase()}|${Number(p.size)||0}`,a=byNameSize.get(key)||[];
+    if(a.length===1){const hit=a[0];addPhotoLink(p,source,hit.file,hit.rel,'','','');photos.set(p.id,p);await savePhotoMetaBatch([p]);linked++}else still.push(p);
+    await operationStep({done:unique.length,label:'',lastItem:p.name||'صورة',phase:'مطابقة اسم + حجم فقط',note:`تم الربط ${linked} • بقي ${unique.length-linked}`});
+   }
+   if(still.length){
+    const byName=new Map();
+    for(const arr of byNameSize.values())for(const item of arr){const k=String(item.name||'').trim().toLocaleLowerCase();if(!k)continue;const a=byName.get(k)||[];a.push(item);byName.set(k,a)}
+    const finalMissed=[];
+    for(let i=0;i<still.length;i++){
+      const p=still[i],k=String(p.name||'').trim().toLocaleLowerCase(),a=byName.get(k)||[];
+      if(a.length===1){const hit=a[0];addPhotoLink(p,source,hit.file,hit.rel,'','','');photos.set(p.id,p);await savePhotoMetaBatch([p]);linked++}
+      else finalMissed.push(p);
+      await operationStep({done:unique.length,lastItem:p.name||'صورة',phase:'مطابقة الاسم فقط عند عدم توفر تطابق اسم + حجم',note:`تم الربط ${linked} • بقي ${unique.length-linked}`});
+    }
+    missed=finalMissed;
+   } else missed=still;
+  }
+  finishOperation(`اكتمل الربط السريع: ${linked} صورة، و${missed.length} لم يُعثر على أصلها بالطريقة الخفيفة.`);return {linked,unresolved:missed};
+ }catch(e){console.error('fast link failed',e);failOperation('تعذر إكمال الربط السريع.');return {linked,unresolved:unique.filter(p=>!photoHasLinkToSource(p,source)),error:e};}
+}
+async function quickLightVisualSignature(source){
+ try{
+  if(!source)return null;
+  const bmp=await createImageBitmap(source,{imageOrientation:'from-image'}),w=Math.max(1,bmp.width),h=Math.max(1,bmp.height),aspect=w/h,S=24,canvas=document.createElement('canvas');canvas.width=S;canvas.height=S;
+  const ctx=canvas.getContext('2d',{alpha:false,willReadFrequently:true});if(!ctx){bmp.close?.();return null}
+  ctx.fillStyle='#808080';ctx.fillRect(0,0,S,S);ctx.drawImage(bmp,0,0,S,S);
+  const rgba=ctx.getImageData(0,0,S,S).data,gray=new Uint8Array(S*S);let mean=0;
+  for(let i=0,p=0;i<rgba.length;i+=4,p++){const g=clampByte(.299*rgba[i]+.587*rgba[i+1]+.114*rgba[i+2]);gray[p]=g;mean+=g}
+  mean/=gray.length;
+  let variance=0;for(const g of gray)variance+=(g-mean)*(g-mean);const sd=Math.sqrt(variance/gray.length)||1;
+  for(let i=0;i<gray.length;i++)gray[i]=clampByte((gray[i]-mean)/sd*42+128);
+  const block=new Uint8Array(64);let bi=0;
+  for(let by=0;by<8;by++)for(let bx=0;bx<8;bx++){let q=0;for(let y=0;y<3;y++)for(let x=0;x<3;x++)q+=gray[Math.min(S-1,by*3+y)*S+Math.min(S-1,bx*3+x)];block[bi++]=Math.round(q/9)}
+  const sorted=[...block].sort((a,b)=>a-b),med=sorted[32]||128,pbits=[];for(const v of block)pbits.push(v>=med?'1':'0');
+  const d=[];for(let y=0;y<8;y++)for(let x=0;x<8;x++)d.push(block[y*8+x]>block[y*8+x+1]?'1':'0');
+  bmp.close?.();
+  return {aspect,ph:pairBits(pbits.join('')),dh:pairBits(d.join(''))};
+ }catch{return null}
+}
+function quickLightScore(a,b){if(!a||!b)return 0;return quickVisualSimilarity(a,b)}
+async function lightVisualRelinkTargets(source,targets,label='المطابقة البصرية الخفيفة'){
+ if(!source?.handle)return {linked:0,unresolved:targets||[]};
+ const unique=[...new Map((targets||[]).filter(isPhotoRecord).map(p=>[p.id,p])).values()];if(!unique.length)return {linked:0,unresolved:[]};
+ if(!(await ensureSourcePermission(source,true)))return {linked:0,unresolved:unique,error:new Error('source-permission-denied')};
+ beginOperation(`المطابقة الخفيفة ${label}`,unique.length,'صورة','بصرية محدودة داخل المجلد المتوقع — لا يوجد فحص عميق');
+ let linked=0;const unresolved=[];try{
+  for(let ti=0;ti<unique.length;ti++){
+   const p=unique[ti];let root=source.handle,baseDir='';
+   const oldRel=(sourceLinksFor(source,p)[0]?.relPath)||photoLocations(p)[0]?.relPath||p.relPath||'';
+   const dir=dirnameOf(oldRel);
+   if(dir){try{root=await resolveDir(source.handle,dir);baseDir=dir}catch{}}
+   const candidates=[];
+   async function walk(dirHandle,path=''){
+    const entries=[];for await(const entry of dirHandle.entries())entries.push(entry);entries.sort((a,b)=>a[0].localeCompare(b[0],undefined,{numeric:true,sensitivity:'base'}));
+    for(const [name,e] of entries){if(name.startsWith('.')||name==='Android')continue;if(e.kind==='directory'){if(path.split('/').length<3)await walk(e,path?path+'/'+name:name);continue}if(!isImage(name))continue;if(candidates.length>=360)return;try{const f=await e.getFile();candidates.push({name,rel:path?path+'/'+name:name,file:f})}catch{}}
+   }
+   await walk(root,'');
+   const targetSig=await quickLightVisualSignature(await getThumbBlob(p.id).catch(()=>null));
+   if(!targetSig){unresolved.push(p);await operationStep({done:ti+1,lastItem:p.name||'صورة',phase:'تعذر قراءة المعاينة للمقارنة'});continue}
+   const quick=[];
+   for(const c of candidates){const sig=await quickLightVisualSignature(c.file);if(!sig)continue;const q=quickLightScore(targetSig,sig);quick.push({candidate:c,sig,q})}
+   quick.sort((a,b)=>b.q-a.q);const top=quick.slice(0,8);let best=null,second=0;
+   for(const item of top){let full=null;try{full=await visualSignature(item.candidate.file)}catch{}const score=full?visualSimilarity(await visualSignatureForPhoto(p),full):item.q;if(score>(best?.score||-1)){second=best?.score||0;best={...item,score,full}}else if(score>second)second=score}
+   if(best&&best.score>=.92&&best.score-second>=.035){
+    const added=addPhotoLink(p,source,best.candidate.file,best.candidate.rel,'','','');const link=photoLocations(p).find(l=>l.sourceId===source.id&&l.relPath===best.candidate.rel);
+    if(link){link.visualScore=best.score;link.visualSignature=best.full?serializeVisualSignature(best.full):null;link.linkState='saved';link.verifiedAt=0}
+    syncPhotoPrimary(p,source.id,best.candidate.rel);photos.set(p.id,p);await savePhotoMetaBatch([p]);linked++;
+    await operationStep({done:ti+1,lastItem:p.name||'صورة',phase:'تمت المطابقة الخفيفة',note:`مرتبط ${linked} • ${Math.round(best.score*100)}%`});
+   }else{
+    unresolved.push(p);await operationStep({done:ti+1,lastItem:p.name||'صورة',phase:'لا يوجد تطابق بصري آمن',note:`أفضل نتيجة ${best?Math.round(best.score*100):0}%`});
+   }
+  }
+  finishOperation(`اكتملت المطابقة الخفيفة: ${linked} تم ربطها تلقائيًا • ${unresolved.length} بقيت للمسار الأقوى.`);return {linked,unresolved};
+ }catch(e){console.error('light relink failed',e);failOperation(`تعذر إكمال المطابقة الخفيفة: ${e?.message||'خطأ غير معروف'}`);return {linked,unresolved:[...unique.filter(p=>!hasSavedOriginalLink(p))],error:e};}
+}
+
 async function openSavedOriginalForDeepBackup(p,ask=false){
  if(!p)return null;
  for(const link of photoLocations(p)){
@@ -155,9 +272,9 @@ function openLinkPlanner(targets,label){
 }
 function moveLinkPlan(id,dir){if(!linkPlan)return;const i=linkPlan.sourceIds.indexOf(String(id)),j=i+dir;if(i<0||j<0||j>=linkPlan.sourceIds.length)return;[linkPlan.sourceIds[i],linkPlan.sourceIds[j]]=[linkPlan.sourceIds[j],linkPlan.sourceIds[i]];renderLinkPlannerRows()}
 function renderLinkPlannerRows(){const wrap=$('#linkPlanRows');if(!wrap||!linkPlan)return;const ranked=linkPlan.sourceIds.map(id=>sources.find(s=>s.id===id)).filter(Boolean);wrap.innerHTML=ranked.map((s,i)=>{const st=sourceStat(s.id),avg=st.runs?`متوسط ${st.hits} أصل/تشغيل`:'لم يُختبر بعد';return `<div class="link-plan-row"><span class="plan-num">${i+1}</span><div class="info"><b>${i===0?'⭐ ':''}${esc(sourceLabel(s))}</b><small class="meta">${avg}${st.lastHitAt?' • آخر نجاح '+new Date(st.lastHitAt).toLocaleDateString('ar-EG'):''}</small></div><div class="actions"><button class="btn tiny" data-action="linkPlanUp" data-id="${esc(s.id)}" ${i?'':'disabled'}>↑</button><button class="btn tiny" data-action="linkPlanDown" data-id="${esc(s.id)}" ${i<ranked.length-1?'':'disabled'}>↓</button></div></div>`}).join('')}
-async function startLinkPlan(){if(!linkPlan||scanLock)return;const plan=linkPlan;saveLinkSourceOrder(plan.sourceIds);linkPlan=null;closeModal();const srcs=plan.sourceIds.map(id=>sources.find(s=>s.id===id)).filter(Boolean);let remaining=plan.targets;for(const source of srcs){if(!remaining.length)break;const fast=await fastLinkTargetsToSource(source,remaining);remaining=fast.unresolved||[];if(remaining.length)remaining=(await lightVisualRelinkTargets(source,remaining,plan.label)).unresolved||[]}if(remaining.length&&portableRecoveryReady)await runDeepRecoveryOnce(remaining,srcs,plan.label);renderNoAnim(true)}
-async function linkPhotoSmart(pid){if(scanLock){toast('عملية أخرى جارية بالفعل.');return}const p=photos.get(pid);if(!isPhotoRecord(p))return;const fast=await openOriginalFast(p,true);if(fast){toast('تم فتح الأصل مباشرة وتثبيت الرابط لهذا الجهاز.');renderNoAnim(true);return}const sourcesList=rankedLinkSources();if(!sourcesList.length){toast('أضف مجلدًا/مصدرًا مرتبطًا أولًا.');return}let result={unresolved:[p]};for(const source of sourcesList){if(!result.unresolved?.length)break;result=await fastLinkTargetsToSource(source,result.unresolved);if(result.unresolved?.length)result=await lightVisualRelinkTargets(source,result.unresolved,`الصورة «${p.name||'صورة'}»`)}if(result.unresolved?.length&&portableRecoveryReady)await runDeepRecoveryOnce(result.unresolved,sourcesList,'استرداد الصورة — المسار الأقوى');renderNoAnim(true)}
-async function linkAlbumSmart(memoryId){if(scanLock){toast('عملية أخرى جارية بالفعل.');return}const m=state.memories.find(x=>x.id===memoryId);if(!m)return;let targets=photoFor(m).filter(p=>!hasSavedOriginalLink(p));if(!targets.length){toast('كل صور هذا الألبوم لها روابط أصل محفوظة حاليًا.');return}const sourcesList=rankedLinkSources();if(!sourcesList.length){toast('أضف مجلدًا/مصدرًا مرتبطًا أولًا.');return}let remaining=targets;for(const source of sourcesList){if(!remaining.length)break;remaining=(await fastLinkTargetsToSource(source,remaining)).unresolved||[];if(remaining.length)remaining=(await lightVisualRelinkTargets(source,remaining,`الألبوم «${m.title||'بدون اسم'}»`)).unresolved||[]}if(remaining.length&&portableRecoveryReady)await runDeepRecoveryOnce(remaining,sourcesList,`استرداد «${m.title||'الألبوم'}» — المسار الأقوى`);toast(remaining.length?`تمت المعالجة السريعة والخفيفة. بقي ${remaining.length} صورة للمسار الأقوى.`:'تم ربط صور الألبوم بالمصادر تلقائيًا.');renderNoAnim(true)}
+async function startLinkPlan(){if(!linkPlan||scanLock)return;const plan=linkPlan;saveLinkSourceOrder(plan.sourceIds);linkPlan=null;closeModal();const srcs=plan.sourceIds.map(id=>sources.find(s=>s.id===id)).filter(Boolean);let remaining=plan.targets;for(const source of srcs){if(!remaining.length)break;const fast=await fastLinkTargetsToSource(source,remaining);remaining=fast.unresolved||[];if(!remaining.length)break}if(remaining.length&&portableRecoveryReady)await runDeepRecoveryOnce(remaining,srcs,plan.label);renderNoAnim(true)}
+async function linkPhotoSmart(pid){if(scanLock){toast('عملية أخرى جارية بالفعل.');return}const p=photos.get(pid);if(!isPhotoRecord(p))return;const fast=await openOriginalFast(p,true);if(fast){toast('الأصل موجود بالفعل؛ تم تثبيت مساره السريع.');await openPhoto(pid);return}const sourcesList=rankedLinkSources();if(!sourcesList.length){toast('أضف مجلدًا/مصدرًا مرتبطًا أولًا.');return}let result={unresolved:[p]};for(const source of sourcesList){if(!result.unresolved?.length)break;result=await fastLinkTargetsToSource(source,result.unresolved);if(result.unresolved?.length)result=await lightVisualRelinkTargets(source,result.unresolved,`الصورة «${p.name||'صورة'}»`)}if(result.unresolved?.length&&portableRecoveryReady)result=await runDeepRecoveryOnce(result.unresolved,sourcesList,'استرداد الصورة — المسار الأقوى');const opened=await openOriginalFast(p,false);if(opened){toast('تم العثور على الأصل الحقيقي وربطه بهذا الجهاز.');await openPhoto(pid)}else{toast(result.unresolved?.length?`لم أجد الأصل بعد المسارات المتاحة؛ بقيت صورة واحدة للمسار الأقوى.`:'تمت معالجة الربط، لكن الأصل لم يُفتح.');renderNoAnim(true)}}
+async function linkAlbumSmart(memoryId){if(scanLock){toast('عملية أخرى جارية بالفعل.');return}const m=state.memories.find(x=>x.id===memoryId);if(!m)return;let targets=photoFor(m).filter(p=>!hasSavedOriginalLink(p));if(!targets.length){toast('كل صور هذا الألبوم لها روابط أصل محفوظة حاليًا.');return}const sourcesList=rankedLinkSources();if(!sourcesList.length){toast('أضف مجلدًا/مصدرًا مرتبطًا أولًا.');return}let remaining=targets;for(const source of sourcesList){if(!remaining.length)break;remaining=(await fastLinkTargetsToSource(source,remaining)).unresolved||[];if(remaining.length)remaining=(await lightVisualRelinkTargets(source,remaining,`الألبوم «${m.title||'بدون اسم'}»`)).unresolved||[]}if(remaining.length&&portableRecoveryReady)remaining=(await runDeepRecoveryOnce(remaining,sourcesList,`استرداد «${m.title||'الألبوم'}» — المسار الأقوى`)).unresolved||[];toast(remaining.length?`تمت المعالجة السريعة والخفيفة. بقي ${remaining.length} صورة للمسار الأقوى.`:'تم ربط صور الألبوم بالمصادر تلقائيًا.');renderNoAnim(true)}
 async function openVerifiedOriginal(p,ask=true){
  if(!p?.id)return null;
  for(const link of photoLocations(p)){
@@ -528,15 +645,15 @@ async function chooseFolder(){
  try{
   const root=await window.showDirectoryPicker({mode:'read'});let source=await getSourceByHandle(root);
   if(source){await setActiveSource(source);if(!(await ensureSourcePermission(source,true))){toast('لم يُمنح إذن هذا المجلد.');return}
-   let targets=allPhotos();
-   if(targets.length){const fast=await fastLinkTargetsToSource(source,targets);targets=fast.unresolved||[];if(targets.length){const light=await lightVisualRelinkTargets(source,targets,`«${sourceLabel(source)}»`);targets=light.unresolved||[]}if(targets.length&&portableRecoveryReady){const deep=await runDeepRecoveryOnce(targets,[source],`استرداد المصدر «${sourceLabel(source)}» — المسار الأقوى`);targets=deep.unresolved||[]}}
+   let targets=allPhotos().filter(p=>!hasVerifiedOriginal(p));
+   if(targets.length){const fast=await fastLinkTargetsToSource(source,targets);targets=fast.unresolved||[];if(targets.length&&portableRecoveryReady){const deep=await runDeepRecoveryOnce(targets,[source],`استرداد المصدر «${sourceLabel(source)}»`);targets=deep.unresolved||[]}}
    toast(targets.length?`تمت محاولة الربط. بقي ${targets.length} صورة بلا أصل مطابق، ولم تُضف صور أو ألبومات.`:'تم الربط بنجاح بالمسار الخفيف.');return;
   }
   const savedBlueprint=matchingPortableSourceBlueprint(root.name||'');
   if(savedBlueprint){
    const reconnect=confirm(`يوجد مصدر محفوظ باسم «${root.name||'مجلد الصور'}» في النسخة الاحتياطية.\n\n«موافق» = إعادة ربط الصور الموجودة في OsRa فقط، يبدأ بالمسار السريع ثم يستخدم الاسترداد العميق مرة واحدة فقط عند الحاجة.\n«إلغاء» = إضافة هذا المجلد كمصدر جديد بالطريقة العادية.`);
    if(reconnect){source={id:savedBlueprint.id,name:root.name||savedBlueprint.name,handle:root,asAlbum:!!savedBlueprint.asAlbum,mergeIntoMemoryId:savedBlueprint.mergeIntoMemoryId||'',createdAt:Date.now()};if(!(await ensureSourcePermission(source,true))){toast('لم يُمنح إذن قراءة المجلد.');return}sources.push(source);pendingSourceBlueprints=pendingSourceBlueprints.filter(x=>x.id!==savedBlueprint.id);await persistSources();await persistPortableSourceBlueprints();await setActiveSource(source);scanProgresses[source.id]=null;await put('library',{key:'scanProgresses',value:structuredClone(scanProgresses)});
-    let targets=allPhotos();const fast=await fastLinkTargetsToSource(source,targets);targets=fast.unresolved||[];if(targets.length){const light=await lightVisualRelinkTargets(source,targets,`«${sourceLabel(source)}»`);targets=light.unresolved||[]}if(targets.length&&portableRecoveryReady){const deep=await runDeepRecoveryOnce(targets,[source],`استرداد المصدر «${sourceLabel(source)}» — المسار الأقوى`);targets=deep.unresolved||[]}
+    let targets=allPhotos().filter(p=>photoLocations(p).some(l=>l.sourceId===source.id)||p.sourceId===source.id);const fast=await fastLinkTargetsToSource(source,targets);targets=fast.unresolved||[];if(targets.length&&portableRecoveryReady){const deep=await runDeepRecoveryOnce(targets,[source],`استرداد المصدر «${sourceLabel(source)}»`);targets=deep.unresolved||[]}
     toast(targets.length?`أعيد ربط المصدر، وبقي ${targets.length} صورة لم يُعثر على أصلها.`:'أعيد ربط المصدر وكل الصور الممكنة بدون إضافة جديدة.');return;
    }
   }
@@ -971,8 +1088,10 @@ async function runVisualSearch(targets,label='الصور المحددة',baseSou
 async function smartLinkTargets(targets,label='الاسترداد العميق',plannedSourceIds=null,options={}){if(!portableRecoveryReady){toast('تم إغلاق البحث البصري الثقيل في التشغيل العادي. استعد نسخة احتياطية عميقة أولًا عند الحاجة.');return {blocked:true,review:0}}const base=(Array.isArray(plannedSourceIds)&&plannedSourceIds.length?plannedSourceIds.map(id=>sources.find(s=>s.id===id)).filter(Boolean):rankedLinkSources());return runVisualSearch((targets||[]).filter(p=>!hasVerifiedOriginal(p)),label,base,{openReview:true,...options})}
 
 async function cancelSmartLink(){if(!scanLock||!operationProgress)return;scanStopRequested=true;operationProgress.note='جاري الإنهاء الآمن بعد الملف الحالي…';updateOperationProgress(true)}
-async function linkSourceExisting(sourceId){if(scanLock){toast('الفحص جارٍ بالفعل.');return}const source=sources.find(s=>s.id===String(sourceId));if(!source?.handle){toast('المصدر غير متاح حاليًا.');return}if(!(await ensureSourcePermission(source,true))){toast('لم يُمنح إذن هذا المجلد.');return}const targets=allPhotos().filter(p=>!photoLocations(p).some(l=>l?.sourceId===source.id&&l?.relPath&&l.linkState!=='missing'));if(!targets.length){toast('كل الصور لها رابط محفوظ لهذا المصدر بالفعل.');return}if(!confirm(`سيبدأ OsRa بالمسار السريع داخل «${sourceLabel(source)}»، ثم سيستخدم المطابقة الخفيفة فقط للصور التي لم يجدها. لن يضيف أي صورة أو ألبوم جديد.`))return;const fast=await fastLinkTargetsToSource(source,targets);let remaining=fast.unresolved||[];if(remaining.length)remaining=(await lightVisualRelinkTargets(source,remaining,`«${sourceLabel(source)}»`)).unresolved||[];if(remaining.length&&portableRecoveryReady)await runDeepRecoveryOnce(remaining,[source],`استرداد «${sourceLabel(source)}» — المسار الأقوى`);else toast(`تم الربط: ${fast.linked||0} سريعًا${remaining.length?`، وبقي ${remaining.length} بدون تطابق مؤكد.`:''}`);renderNoAnim(true)}
-async function linkAllSources(){if(scanLock){toast('الفحص جارٍ بالفعل.');return}const usable=sources.filter(s=>s?.handle);if(!usable.length){toast('أضف المجلدات/المصادر أولًا.');return}let targets=allPhotos();if(!targets.length){toast('لا توجد صور داخل OsRa حاليًا.');return}for(const source of rankedLinkSources(usable)){if(!targets.length)break;if(!(await ensureSourcePermission(source,true)))continue;let fast=await fastLinkTargetsToSource(source,targets);targets=fast.unresolved||[];if(targets.length){const light=await lightVisualRelinkTargets(source,targets,`«${sourceLabel(source)}»`);targets=light.unresolved||[]}}if(targets.length&&portableRecoveryReady)await runDeepRecoveryOnce(targets,usable,'ربط كل المصادر — المسار الأقوى');toast(targets.length?`اكتمل الربط السريع والمطابقة الخفيفة. بقي ${targets.length} صورة للمسار الأقوى.`:'اكتمل الربط بدون إضافة صور أو ألبومات.');renderNoAnim(true)}
+async function linkSourceExisting(sourceId){
+ if(scanLock){toast('الفحص جارٍ بالفعل.');return}const source=sources.find(s=>s.id===String(sourceId));if(!source?.handle){toast('المصدر غير متاح حاليًا.');return}if(!(await ensureSourcePermission(source,true))){toast('لم يُمنح إذن هذا المجلد.');return}const targets=allPhotos().filter(p=>!hasVerifiedOriginal(p));if(!targets.length){toast('لا توجد صور تحتاج ربطًا أو تحققًا حاليًا.');return}if(!confirm(`سيجرب OsRa الربط السريع داخل «${sourceLabel(source)}» أولًا، ولن يضيف أي صورة أو ألبوم جديد. الاسترداد البصري العميق لا يعمل إلا إذا كانت نسخة احتياطية عميقة مستعادة متاحة وبعد فشل المسار السريع.`))return;const fast=await fastLinkTargetsToSource(source,targets);if(fast.unresolved?.length&&portableRecoveryReady)await runDeepRecoveryOnce(fast.unresolved,[source],`استرداد «${sourceLabel(source)}» — البصري العميق`);else toast(`تم الربط السريع: ${fast.linked||0} صورة. لم تتم إضافة صور أو ألبومات جديدة.`);renderNoAnim(true)}
+async function linkAllSources(){
+ if(scanLock){toast('الفحص جارٍ بالفعل.');return}const usable=sources.filter(s=>s?.handle);if(!usable.length){toast('أضف المجلدات/المصادر أولًا.');return}let targets=allPhotos().filter(p=>!hasVerifiedOriginal(p));if(!targets.length){toast('كل الصور مرتبطة ومؤكدة حاليًا. لا حاجة لربط جديد.');return}for(const source of rankedLinkSources(usable)){if(!targets.length)break;if(!(await ensureSourcePermission(source,true)))continue;const fast=await fastLinkTargetsToSource(source,targets);targets=fast.unresolved||[]}if(targets.length&&portableRecoveryReady)await runDeepRecoveryOnce(targets,usable,'ربط كل المصادر');toast(targets.length?`اكتمل المسار الخفيف، وبقي ${targets.length} صورة لم يُعثر على أصلها.`:'اكتمل الربط السريع بدون إضافة أي صور أو ألبومات.');renderNoAnim(true)}
 async function saveSettings(){for(const x of ['startDate','engagementDate','birthdayRania'])state.settings[x]=$('#set'+(x==='startDate'?'Start':x==='engagementDate'?'Eng':'Birth')).value;for(const [k,id2] of [['osamaPhone','setOsama'],['raniaPhone','setRania'],['whatsappUrl','setWA']])state.settings[k]=$('#'+id2).value.trim();normalizeState();await save();toast('تم حفظ الإعدادات.');renderNoAnim()}
 async function saveVerse(){state.verses.unshift({id:id('v'),ref:$('#vRef').value.trim(),text:$('#vText').value.trim(),favorite:false});await save();closeModal();renderNoAnim()}
 async function savePrayer(i){let p=i?state.prayers.find(x=>x.id===i):null;if(!p){p={id:id('p'),done:false};state.prayers.unshift(p)}p.title=$('#pTitle').value.trim()||'صلاة / أمنية';p.text=$('#pText').value.trim();await save();closeModal();toast('تم حفظ الصلاة / الأمنية.');renderNoAnim()}
@@ -1170,7 +1289,7 @@ function restore(){const i=document.createElement('input');i.type='file';i.accep
 
 سيتم إعادة OsRa إلى هذه اللحظة فقط. سجلات الصور التي أُضيفت بعد النسخة ستختفي من فهرس OsRa، لكن الصور الأصلية نفسها لن تُحذف من الجهاز.
 ستُحفظ نسخة أمان من الحالة الحالية قبل الاسترجاع.`))return;if(scanLock){toast('أوقف الفحص الحالي قبل الاسترجاع ثم أعد المحاولة.');return}clearTimeout(safetyTimer);await clearScanProgress();await snapshotBeforeRestore();await applyBackupPayload(x);absorbBackupLinkStats(x);activatePortableRecoveryFromBackup(x);if(Array.isArray(x.photoManifest))await replacePhotoSnapshot(x.photoManifest);await saveMainExact();soundOn=!!state.settings.soundEnabled;updateSoundButton();selectedMemories.clear();selectedPhotos.clear();toast(`تم الاسترجاع كما كان في ${when}، وتم الحفاظ على ترتيب الألبومات. اربط مجلد الصور لدى الجهاز الآخر ليطابق الملفات حسب بصمتها.`);renderNoAnim()}catch(e){console.error(e);toast('ملف النسخة الاحتياطية غير صالح أو تالف.')}};i.click()}
-async function diagnostic(){const secure=!!isSecureContext,picker=!!window.showDirectoryPicker;let activePerm='لا يوجد مجلد';const active=activeSource();if(active)try{activePerm=await active.handle.queryPermission({mode:'read'})}catch{}const e=await navigator.storage?.estimate?.();const all=allPhotos(),verified=all.filter(hasVerifiedOriginal).length,deepVisuals=all.filter(hasDeepVisualSignature).length,visuals=all.filter(p=>photoLocations(p).some(l=>l.linkState==='user-confirmed-visual'&&l.visualSignature)).length;const rows=sources.map((x,i)=>{const cp=scanProgresses[x.id];return `<div class="card"><b>${i===0?'⭐ ':''}${esc(sourceLabel(x))}</b><div class="meta">${x.asAlbum?'ألبوم مستقل':'المكتبة الأساسية'}${sourceMergeLabel(x)}${cp?.status==='done'?' • آخر فحص مكتمل':''}${cp?.status==='paused'?' • فحص متوقف':''}</div><div class="actions"><button class="btn small" data-action="activateSource" data-id="${x.id}">تحديد</button><button class="btn small" data-action="grantSourcePermission" data-id="${x.id}">منح الإذن</button><button class="btn small primary" data-action="linkSourceExisting" data-id="${x.id}">🔗 ربط المصدر</button><button class="btn small" data-action="scanSource" data-id="${x.id}">＋ إضافة الصور الجديدة</button></div></div>`}).join('');modal(`<h2>تشخيص OsRa</h2><div class="cards"><div class="card">إصدار التطبيق: <b>${APP_VERSION}</b></div><div class="card">إصدار قاعدة البيانات: <b>${DB_VERSION}</b> <span class="meta">(داخلي — لا يغيّر إصدار التطبيق)</span></div><div class="card">هوية الأصل: <b>المسار السريع أولًا؛ الاسترداد العميق فقط عند الفشل وبعد نسخة احتياطية عميقة</b></div><div class="card">صور مرتبطة ومؤكدة: <b>${verified} / ${all.length}</b></div><div class="card">صور لها بصمة بصرية عميقة: <b>${deepVisuals} / ${all.length}</b><br>منها تأكيد بصري يدوي: <b>${visuals}</b></div><div class="card">HTTPS/secure: <b>${secure?'نعم':'لا'}</b></div><div class="card">اختيار المجلد: <b>${picker?'متاح':'غير متاح'}</b></div><div class="card">المصادر المرتبطة: <b>${sources.length}</b></div><div class="card">المصدر النشط: <b>${esc(sourceLabel(active))}</b></div><div class="card">استرداد بصري عميق من النسخة: <b>${portableRecoveryReady?'جاهز لحدث الاسترداد — بعد فشل المسار السريع فقط':'غير مفعّل'}</b></div><div class="card">إذن المصدر النشط: <b>${esc(activePerm)}</b></div>${rows||'<div class="empty">لا توجد مكتبات مرتبطة.</div>'}<div class="card">الصور المفهرسة: <b>${all.length}</b></div><div class="card">الذكريات: <b>${state.memories.length}</b></div><div class="card">التخزين المستخدم: <b>${e?.usage?Math.round(e.usage/1024/1024)+' MB':'غير معروف'}</b></div><div class="actions">${active?`<button class="btn" data-action="grantPermission">منح إذن المصدر النشط</button>`:''}<button class="btn primary" data-action="folder">＋ إضافة مجلد / ألبوم</button></div></div>`)}
+async function diagnostic(){const secure=!!isSecureContext,picker=!!window.showDirectoryPicker;let activePerm='لا يوجد مجلد';const active=activeSource();if(active)try{activePerm=await active.handle.queryPermission({mode:'read'})}catch{}const e=await navigator.storage?.estimate?.();const all=allPhotos(),verified=all.filter(hasVerifiedOriginal).length,deepVisuals=all.filter(hasDeepVisualSignature).length,visuals=all.filter(p=>photoLocations(p).some(l=>l.linkState==='user-confirmed-visual'&&l.visualSignature)).length;const rows=sources.map((x,i)=>{const cp=scanProgresses[x.id];return `<div class="card"><b>${i===0?'⭐ ':''}${esc(sourceLabel(x))}</b><div class="meta">${x.asAlbum?'ألبوم مستقل':'المكتبة الأساسية'}${sourceMergeLabel(x)}${cp?.status==='done'?' • آخر فحص مكتمل':''}${cp?.status==='paused'?' • فحص متوقف':''}</div><div class="actions"><button class="btn small" data-action="activateSource" data-id="${x.id}">تحديد</button><button class="btn small" data-action="grantSourcePermission" data-id="${x.id}">منح الإذن</button><button class="btn small primary" data-action="linkSourceExisting" data-id="${x.id}">🔗 ربط المصدر</button><button class="btn small" data-action="scanSource" data-id="${x.id}">＋ إضافة الصور الجديدة</button></div></div>`}).join('');modal(`<h2>تشخيص OsRa</h2><div class="cards"><div class="card">إصدار التطبيق: <b>${APP_VERSION}</b></div><div class="card">إصدار قاعدة البيانات: <b>${DB_VERSION}</b> <span class="meta">(داخلي — لا يغيّر إصدار التطبيق)</span></div><div class="card">هوية الأصل: <b>المسار السريع أولًا؛ ثم المطابقة الخفيفة عند الفشل؛ والـDeep فقط عند الحاجة</b></div><div class="card">صور مرتبطة ومؤكدة: <b>${verified} / ${all.length}</b></div><div class="card">صور لها بصمة بصرية عميقة: <b>${deepVisuals} / ${all.length}</b><br>منها تأكيد بصري يدوي: <b>${visuals}</b></div><div class="card">HTTPS/secure: <b>${secure?'نعم':'لا'}</b></div><div class="card">اختيار المجلد: <b>${picker?'متاح':'غير متاح'}</b></div><div class="card">المصادر المرتبطة: <b>${sources.length}</b></div><div class="card">المصدر النشط: <b>${esc(sourceLabel(active))}</b></div><div class="card">استرداد بصري عميق من النسخة: <b>${portableRecoveryReady?'جاهز لحدث الاسترداد — بعد فشل المسار السريع فقط':'غير مفعّل'}</b></div><div class="card">إذن المصدر النشط: <b>${esc(activePerm)}</b></div>${rows||'<div class="empty">لا توجد مكتبات مرتبطة.</div>'}<div class="card">الصور المفهرسة: <b>${all.length}</b></div><div class="card">الذكريات: <b>${state.memories.length}</b></div><div class="card">التخزين المستخدم: <b>${e?.usage?Math.round(e.usage/1024/1024)+' MB':'غير معروف'}</b></div><div class="actions">${active?`<button class="btn" data-action="grantPermission">منح إذن المصدر النشط</button>`:''}<button class="btn primary" data-action="folder">＋ إضافة مجلد / ألبوم</button></div></div>`)}
 function paperSound(duration=720){if(!soundOn)return;try{audioCtx??=new (window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume();const dur=Math.max(.32,Math.min(1.05,Number(duration)/1000)),sr=audioCtx.sampleRate,len=Math.floor(sr*dur),buf=audioCtx.createBuffer(1,len,sr),data=buf.getChannelData(0);for(let i=0;i<len;i++){const x=i/len,a=Math.min(1,x/.11),r=Math.max(0,1-(x-.54)/.46),s=Math.sin(Math.PI*Math.min(1,x/.82));data[i]=(Math.random()*2-1)*(0.026+0.17*a*r*s)}const src=audioCtx.createBufferSource(),filter=audioCtx.createBiquadFilter(),gain=audioCtx.createGain();src.buffer=buf;filter.type='bandpass';filter.frequency.setValueAtTime(1500,audioCtx.currentTime);filter.frequency.exponentialRampToValueAtTime(3600,audioCtx.currentTime+dur*.56);filter.frequency.exponentialRampToValueAtTime(2000,audioCtx.currentTime+dur);filter.Q.value=.65;gain.gain.setValueAtTime(.0001,audioCtx.currentTime);gain.gain.exponentialRampToValueAtTime(.05,audioCtx.currentTime+dur*.12);gain.gain.exponentialRampToValueAtTime(.16,audioCtx.currentTime+dur*.48);gain.gain.exponentialRampToValueAtTime(.0001,audioCtx.currentTime+dur*.98);src.connect(filter).connect(gain).connect(audioCtx.destination);src.start();src.stop(audioCtx.currentTime+dur+.02)}catch{}}
 async function setSound(){soundOn=!soundOn;state.settings.soundEnabled=soundOn;await save();updateSoundButton();if(soundOn)paperSound()}
 $('#nav')?.addEventListener('click',e=>{const b=e.target.closest('[data-section]');if(b)go(b.dataset.section)});
