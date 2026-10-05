@@ -1,4 +1,4 @@
-const APP_VERSION='77-fast-visual-deep-split-backups';
+const APP_VERSION='78-fast-visual-deep-split-backups-fixed-memory-page';
 const DB='OsRaDB', DB_VERSION=2, THUMB_VERSION=6, THUMB_MAX_BYTES=160*1024;
 const VISUAL_SIG_VERSION=3, VISUAL_CANDIDATE_LIMIT=5, VISUAL_QUICK_LIMIT=24, VISUAL_MIN_SCORE=.58, VISUAL_STRONG_SCORE=.90, VISUAL_VERY_STRONG_SCORE=.95, LOCAL_MAX_FEATURES=48, LOCAL_DESC_BITS=64, DEEP_RECOVERY_VERSION=4, DEEP_VISUAL_INDEX_VERSION=1;
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
@@ -1327,6 +1327,17 @@ async function suggestAlbumForGroup(group){
  const top=scored.slice(0,3),groupRep=group.find(Boolean),gs=groupRep?await visualSignatureForPhoto(groupRep):null;
  if(gs&&top.length){for(const item of top){const sample=photoFor(item.memory).slice(0,4);const sims=[];for(const p of sample){const ps=await visualSignatureForPhoto(p);if(ps)sims.push(visualSimilarity(gs,ps));}if(sims.length)item.score=Math.max(0,Math.min(1,item.score+.10*(sims.reduce((a,b)=>a+b,0)/sims.length)))}}
  top.sort((a,b)=>b.score-a.score);return top[0]||null;
+}
+function pendingNewPhotoIds(){
+ const ids=Array.isArray(state?.settings?.newPhotoReviewIds)?state.settings.newPhotoReviewIds:[];
+ const seen=new Set();
+ return ids.map(String).filter(pid=>{
+  if(seen.has(pid))return false;
+  const p=photos.get(pid);
+  if(!isPhotoRecord(p)||p.excluded)return false;
+  seen.add(pid);
+  return true;
+ });
 }
 function reviewGroups(ids){const ps=ids.map(id=>photos.get(id)).filter(isPhotoRecord).sort((a,b)=>reviewDateMs(a)-reviewDateMs(b)||String(a.name).localeCompare(String(b.name),undefined,{numeric:true,sensitivity:'base'}));const groups=[];for(const p of ps){const last=groups[groups.length-1];if(!last){groups.push([p]);continue}const times=last.map(reviewDateMs).filter(Boolean),pt=reviewDateMs(p);const lt=times.length?Math.max(...times):0;if(pt&&lt&&pt-lt<=36*3600000){last.push(p)}else if(!pt&&!lt&&topFolderOf(p)===topFolderOf(last[0]))last.push(p);else groups.push([p])}return groups}
 function reviewGroupDateLabel(group){const ds=group.map(reviewDateMs).filter(Boolean).sort((a,b)=>a-b);if(!ds.length)return'التاريخ غير متاح';const a=new Date(ds[0]),b=new Date(ds[ds.length-1]);return a.toDateString()===b.toDateString()?a.toLocaleDateString('ar-EG'):a.toLocaleDateString('ar-EG')+' — '+b.toLocaleDateString('ar-EG')}
