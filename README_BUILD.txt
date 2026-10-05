@@ -12,3 +12,17 @@ Fixes in this v100 rebuild:
 - PWA manifest identity/start_url remains unchanged.
 
 Important: the ZIP contains program files, not the live private IndexedDB data or the phone's original photos.
+
+
+Revision r3 — requested behavior:
+- Source-only relink is immediate and does not run a scan, create photos/albums, or rebuild thumbnails.
+- Reusing an existing source or the same normalized source name reuses that source record rather than creating another.
+- Duplicate auto albums with the same normalized name are consolidated into one visible album; redundant automatic records are hidden, not deleted.
+- Exact photo records with the same strong content key are consolidated while preserving album memberships and source links.
+- Global image search returns the album once with its current photo count; message search returns only message hits and opens/highlights the matching message.
+
+- Interrupted scans are not resumed automatically on startup/visibility; resuming is manual only.
+
+- Fast source relink batches legacy photo-record writes instead of opening one IndexedDB transaction per photo.
+- HQ creation uses one image decode per source image and batches progress writes, reducing overhead without changing the selection or output rules.
+- Fast HQ relink checks saved paths through directory/file handles without reading full image bytes.

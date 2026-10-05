@@ -195,3 +195,11 @@ button,input,textarea,select{font:inherit}button{cursor:pointer}.topbar{position
 .album-notes{border-top:1px solid var(--line);margin-top:6px;padding-top:8px}
 .album-notes>b{display:block;color:var(--rose);font-size:12px;margin-bottom:3px}
 .album-notes p{margin:0;white-space:pre-wrap;max-height:220px;overflow:auto;padding-inline-end:3px}
+
+/* v100 r2 search focus/highlight */
+.search-hit{padding:0 .16em;border-radius:.35em;background:rgba(225,181,72,.45);color:inherit;font-weight:800}
+.search-focus{border:2px solid var(--rose)!important;box-shadow:0 0 0 4px rgba(108,70,100,.10),var(--shadow)!important}
+.search-focus-pulse{animation:osraSearchPulse 1.15s ease both}
+@keyframes osraSearchPulse{0%{transform:scale(.99);box-shadow:0 0 0 0 rgba(108,70,100,.22)}35%{transform:scale(1.01);box-shadow:0 0 0 7px rgba(108,70,100,.12)}100%{transform:scale(1);box-shadow:0 0 0 4px rgba(108,70,100,.08)}}
+.search-snippet{margin-top:7px;line-height:1.7;color:var(--muted);white-space:pre-wrap}
+@media(prefers-reduced-motion:reduce){.search-focus-pulse{animation:none!important}}
