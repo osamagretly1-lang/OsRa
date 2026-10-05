@@ -1,5 +1,5 @@
-const CACHE='OsRa-v67-cross-device-source-reconnect-final';
-const APP=['./','./index.html','./style.css','./app.js?v=67-cross-device-source-reconnect-final','./manifest.json','./icon.svg','./icon-192.png','./icon-512.png'];
+const CACHE='OsRa-v69-visual-link-resume-fast-open';
+const APP=['./','./index.html','./style.css','./app.js?v=69-visual-link-resume-fast-open','./manifest.json','./icon.svg','./icon-192.png','./icon-512.png'];
 const SHELL=new Set(APP.map(x=>new URL(x,self.location.href).pathname));
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(APP)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('OsRa-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
