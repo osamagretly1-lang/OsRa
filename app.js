@@ -1,4 +1,4 @@
-const APP_VERSION='64-visual-local-date-fix-final';
+const APP_VERSION='65-visual-local-date-source-flow-final';
 const DB='OsRaDB', DB_VERSION=2, THUMB_VERSION=6, THUMB_MAX_BYTES=160*1024;
 const VISUAL_SIG_VERSION=3, VISUAL_CANDIDATE_LIMIT=5, VISUAL_QUICK_LIMIT=24, VISUAL_MIN_SCORE=.58, VISUAL_STRONG_SCORE=.90, VISUAL_VERY_STRONG_SCORE=.95, LOCAL_MAX_FEATURES=48, LOCAL_DESC_BITS=64;
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
@@ -528,11 +528,7 @@ async function chooseFolder(){
   source={id:id('src'),name:root.name||'مجلد الصور',handle:root,asAlbum:sources.length>0,mergeIntoMemoryId:'',createdAt:Date.now()};
   if(!(await ensureSourcePermission(source,true))){toast('لم يُمنح إذن قراءة المجلد.');return}
   sources.push(source);await persistSources();await setActiveSource(source);scanProgresses[source.id]=null;await put('library',{key:'scanProgresses',value:structuredClone(scanProgresses)});
-  const targets=allPhotos().filter(p=>!hasVerifiedOriginal(p));
-  const result=targets.length?await smartLinkTargets(targets,`المجلد «${sourceLabel(source)}»`,[source.id]):{review:0};
-  if(result?.cancelled)return;
-  if(targets.length) toast(`تم فهرسة المجلد بصريًا. ظهرت نتائج لـ ${Number(result?.review||0)} صورة؛ لم تُضف أي صورة جديدة تلقائيًا.`);
-  else toast('كل صور OsRa لها أصل مؤكد بالفعل.');
+  await scan(root,true,{source,fresh:true});
  }catch(e){if(e?.name==='AbortError')toast('تم إلغاء اختيار مجلد الصور.');else{console.error(e);toast('تعذر ربط مجلد الصور. افتح التشخيص لمعرفة السبب.')}}
 }
 async function thumb(file){try{if(/heic|heif/i.test(file.name))return null;const b=await createImageBitmap(file,{imageOrientation:'from-image'});let max=Math.min(320,Math.max(b.width,b.height)),quality=.78;for(let attempt=0;attempt<7;attempt++){const scale=Math.min(1,max/Math.max(b.width,b.height)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(b.width*scale));c.height=Math.max(1,Math.round(b.height*scale));const ctx=c.getContext('2d',{alpha:false});ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(b,0,0,c.width,c.height);const blob=await new Promise(r=>c.toBlob(r,'image/webp',quality));if(blob&&blob.size<=THUMB_MAX_BYTES){b.close?.();return blob}if(quality>.65)quality=Math.max(.65,quality-.04);else max=Math.max(240,Math.round(max*.9))}b.close?.();return null}catch{return null}}

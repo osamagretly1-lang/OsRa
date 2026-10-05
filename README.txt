@@ -1,4 +1,4 @@
-OsRa v64 — Visual Local Matching + Capture Date Fix — Final Stable Release
+OsRa v65 — Visual Local Matching + Capture Date Fix — Source Flow Fix — Final Stable Release
 
 هذه النسخة مبنية على خط OsRa المستقر الأخير مع إبقاء التركيز على الهدف الأساسي: ربط صورة OsRa بالملف الأصلي الحقيقي عندما تكون النسخة الموجودة في الهاتف مضغوطة أو معاد حفظها أو تغيّر اسمها/حجمها.
 
