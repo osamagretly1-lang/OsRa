@@ -1,7 +1,7 @@
 {
-  "name": "OsRa — Our Story",
-  "short_name": "OsRa",
-  "start_url": "./",
+  "name": "OsRa — Our Story · v100",
+  "short_name": "OsRa 100",
+  "start_url": "./?osra=v100",
   "display": "standalone",
   "background_color": "#dbc9ba",
   "theme_color": "#6c4664",
