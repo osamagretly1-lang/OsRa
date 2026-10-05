@@ -1,9 +1,10 @@
-const OSRA_BUILD='OsRa v100 — 2026-10-06 — r4 TRUE FAST SOURCE LINK';
+const OSRA_BUILD='OsRa v100 — 2026-10-06 — r6 TRUE FAST ALL 4 SOURCES LINK + REPORT';
 const DB='OsRaDB', VER=100, THUMB_VERSION=6, THUMB_MAX_BYTES=160*1024;
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 const DEFAULT={settings:{startDate:'',engagementDate:'',birthdayRania:'',osamaPhone:'',raniaPhone:'',whatsappUrl:'',libraryName:'',soundEnabled:false,dailyAlbumIds:null,albumOrderMode:'manual',albumMiniView:false,countdowns:[]},memories:[],events:[],dreams:[],verses:[],prayers:[],messages:[],excludedPhotos:[]};
 const thumbCache=new Map();const THUMB_CACHE_MAX=36;
 let db,state=structuredClone(DEFAULT),libraryHandle=null,backupFileHandle=null,backupMeta={lastSavedAt:0,lastAutoFileAt:0},hqSourceHandle=null,hqSourceMeta={name:'',manifestVersion:1},hqIndex=new Map(),hqBuildCheckpoint=null,hqBuildSelection=null,hqBuildStopRequested=false,photos=new Map(),sources=[],activeSourceId=null,scanProgresses={},permissionCache=new Set(),permissionDeniedCache=new Set(),searchState={query:'',messageId:'',fromSection:'home'},section='home',busy=false,scanLock=false,scanStopRequested=false,scanCheckpoint=null,scanProgressWrite=Promise.resolve(),dragSelectMode=false,dragSelecting=false,dragSelectValue=true,dragVisited=new Set(),dragPointerId=null,dragScrollTimer=null,dragLastX=0,dragLastY=0,dragLongPressTimer=null,dragPending=false,dragPendingPhoto='',dragPendingItem=null,dragPendingX=0,dragPendingY=0,quickTapHandledUntil=0,reindexRestorePool=[],duplicateModalGroups=[],installEvent=null,soundOn=false,audioCtx=null,lb={ids:[],i:0,url:null,thumbUrl:null,loadToken:0,timer:null,touchX:null,touchY:null,zoom:1,panX:0,panY:0,dragX:null,dragY:null,dragPanX:0,dragPanY:0,pinchStart:0,pinchBase:1,lastTap:0,lastTapX:0,lastTapY:0,flipBusy:false,flipTimer:null,flipUrls:[]},currentMemoryId=null,selectedPhotos=new Set(),selectedMemories=new Set(),calendarDate=today(),calendarCursor=null,safetyTimer=null,recoveryCandidate=null,pendingFolderRoot=null,pendingFolderName='',albumBookIndex=0,albumBookBusy=false,albumBookTimer=null,albumBookToken=0;
+let lastLinkReport=null;
 const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const id=p=>p+'-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);
 function isImage(n){return /\.(jpe?g|png|webp|gif|avif|heic|heif|tif?f|bmp)$/i.test(String(n||''))}
@@ -28,7 +29,7 @@ function photoLocations(p){return normalizePhotoLinks(p)}
 function syncPhotoPrimary(p,sourceId,relPath){const links=photoLocations(p);const first=links.find(x=>x.sourceId===sourceId&&x.relPath===relPath)||links.find(x=>sources.some(s=>s.id===x.sourceId))||links[0];if(first){p.sourceId=first.sourceId;p.relPath=first.relPath}p.sourceLinks=links;return p}
 function addPhotoLink(p,source,f,relPath,fp='',ck=''){if(!p||!source||!relPath)return false;const links=photoLocations(p);const k=`${source.id}::${relPath}`;if(links.some(x=>`${x.sourceId}::${x.relPath}`===k)){syncPhotoPrimary(p,source.id,relPath);return false}links.push({sourceId:source.id,relPath:String(relPath),name:f?.name||p.name||'',size:Number(f?.size??p.size??0),lastModified:Number(f?.lastModified??p.lastModified??0),contentKey:ck||p.contentKey||'',fingerprint:fp||p.fingerprint||'',mimeType:f?.type||p.mimeType||''});p.sourceLinks=links;syncPhotoPrimary(p,source.id,relPath);return true}
 function removePhotoLocation(p,sourceId,relPath){if(!p)return false;const kept=photoLocations(p).filter(l=>!(l.sourceId===sourceId&&l.relPath===relPath));p.sourceLinks=kept;if(kept.length)syncPhotoPrimary(p,kept[0].sourceId,kept[0].relPath);else{p.sourceId='';p.relPath=''}return true}
-function hasOriginalLink(p){return photoLocations(p).some(l=>sources.some(s=>s.id===l.sourceId&&s.handle))}
+function hasOriginalLink(p){return photoLocations(p).some(l=>sources.some(s=>s.id===l.sourceId&&s.handle)&&l.verified!==false)}
 function originalLinkCount(p){return photoLocations(p).filter(l=>sources.some(s=>s.id===l.sourceId&&s.handle)).length}
 function originalCoverage(m){const ps=photoFor(m);if(!ps.length)return 0;return Math.round(ps.filter(hasOriginalLink).length*100/ps.length)}
 function originalBadge(p){return hasOriginalLink(p)?'<span class="original-linked" title="الأصل الأصلي مرتبط">✓</span>':''}
@@ -136,7 +137,7 @@ async function persistScanProgress(patch={}){const sid=scanCheckpoint?.sourceId|
 async function clearScanProgress(sourceId=activeSourceId){if(!sourceId){scanCheckpoint=null;return}delete scanProgresses[sourceId];if(sourceId===activeSourceId)scanCheckpoint=null;scanProgressWrite=scanProgressWrite.then(async()=>{await put('library',{key:'scanProgresses',value:structuredClone(scanProgresses)});const a=activeSource();if(a&&a.id===sourceId)await del('library','scanProgress')}).catch(e=>{console.warn('scan progress clear failed',e)});return scanProgressWrite}
 async function load(){
  const [st,safety,preRestore,main,sr,ar,b,hq,hqcp,hqsel,hqlast,rawPhotos,sp,legacy,rp]=await Promise.all([
-  get('state','main'),get('state','safetyBackup'),get('state','preRestoreBackup'),get('library','main'),get('library','sources'),get('library','activeSource'),get('library','backup'),get('library','hqSource'),get('library','hqBuildProgress'),get('library','hqBuildSelection'),get('library','hqLastBuildReport'),getAll('photos'),get('library','scanProgresses'),get('library','scanProgress'),get('library','reindexRestorePool')
+  get('state','main'),get('state','safetyBackup'),get('state','preRestoreBackup'),get('library','main'),get('library','sources'),get('library','activeSource'),get('library','backup'),get('library','hqSource'),get('library','hqBuildProgress'),get('library','hqBuildSelection'),get('library','hqLastBuildReport'),getAll('photos'),get('library','scanProgresses'),get('library','scanProgress'),get('library','reindexRestorePool'),get('library','lastLinkReport')
  ]);
  if(st)state={...structuredClone(DEFAULT),...st.value};normalizeState();
  const candidates=[safety?.value,preRestore?.value].filter(x=>x&&recoveryScore(x)>0);const cur=recoveryScore(state);candidates.sort((a,b)=>recoveryScore(b)-recoveryScore(a));recoveryCandidate=candidates[0]&&recoveryScore(candidates[0])>cur?structuredClone(candidates[0]):null;hqBuildCheckpoint=hqcp?.value&&hqcp.value.status!=='done'?hqcp.value:null;hqBuildSelection=hqsel?.value||null;window.__osraHqLastBuildReport=hqlast?.value||null;
@@ -153,7 +154,7 @@ async function load(){
  state.excludedPhotos=migratedExcluded;normalizeState();const photoDupGroups=exactDuplicateGroups();let repairedDupPhotos=0;for(const g of photoDupGroups){const live=g.map(x=>photos.get(x.id)).filter(Boolean);if(live.length<2)continue;const keep=pickCanonicalPhoto(live);for(const dup of live){if(dup.id===keep.id)continue;await mergeDuplicateRecords(dup,keep);repairedDupPhotos++;}}const albumRepair=await repairAutoDuplicateAlbums();if(repairedDupPhotos||albumRepair.changed){normalizeState();await saveMainExact();console.info('OsRa duplicate repair',{photos:repairedDupPhotos,albums:albumRepair.hidden});}
  scanProgresses=(sp?.value&&typeof sp.value==='object'&&!Array.isArray(sp.value))?structuredClone(sp.value):{};
  if(legacy?.value&&sources[0]&&!scanProgresses[sources[0].id])scanProgresses[sources[0].id]={...structuredClone(legacy.value),sourceId:sources[0].id};
- reindexRestorePool=Array.isArray(rp?.value)?structuredClone(rp.value):[];
+ reindexRestorePool=Array.isArray(rp?.value)?structuredClone(rp.value):[];lastLinkReport=lr?.value||null;
  scanCheckpoint=activeSourceId?scanProgresses[activeSourceId]||null:null;soundOn=!!state.settings.soundEnabled;
  if(sources[0]){const missing=[...photos.values()].filter(p=>!p.sourceId);if(missing.length){const tx=db.transaction('photos','readwrite'),stx=tx.objectStore('photos');for(const p of missing){p.sourceId=sources[0].id;stx.put(p)}await new Promise((resolve,reject)=>{tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error||new Error('source id batch write aborted'))})}}
  // المعاينات محفوظة في store مستقل ولا تُسحب عند التشغيل.
@@ -439,7 +440,7 @@ function countdownForm(existing=null){const x=existing||{title:'',date:'',emoji:
 async function saveCountdown(i){const title=$('#cTitle').value.trim();const date=$('#cDate').value;const emoji=$('#cEmoji').value.trim()||'⏳';if(!title||!date){toast('اكتب اسم الموعد والتاريخ.');return}let x=i?state.settings.countdowns.find(v=>v.id===i):null;if(!x){x={id:id('cnt'),title:'',date:'',emoji:'⏳',showHome:true,annual:false};state.settings.countdowns.unshift(x)}x.title=title;x.date=date;x.emoji=emoji;x.annual=!!$('#cAnnual')?.checked;x.showHome=!!$('#cHome')?.checked;await save();closeModal();toast('تم حفظ العداد.');renderNoAnim()}
 function editCountdown(i){const x=state.settings.countdowns.find(v=>v.id===i);if(x)countdownForm(x)}
 async function deleteCountdown(i){const x=state.settings.countdowns.find(v=>v.id===i);if(!x)return;if(!confirm(`حذف العداد «${x.title}»؟`))return;state.settings.countdowns=state.settings.countdowns.filter(v=>v.id!==i);await save();toast('تم حذف العداد.');renderNoAnim()}
-function pageSettings(){const ex=state.excludedPhotos.length;return `<div class="inner">${scanProgressCard()}${hqBuildProgressCard()}${hqLastBuildCard()}${dataRecoveryCard()}${reindexRestorePool.length?`<div class="card scan-progress-card"><h3>↻ إعادة فهرسة مستبعدة معلقة</h3><p>هناك ${reindexRestorePool.length} صورة ما زالت في قائمة الاسترجاع الآمن. شغّل «السماح بها وإعادة فحصها» لإكمالها.</p></div>`:''}<div class="kicker">⚙ المزيد</div><h1 class="title">إعدادات OsRa</h1><div class="cards"><div class="card"><h3>📁 مكتبات الصور</h3><p>${sources.length?`تم ربط ${sources.length} مجلد${sources.length===1?'':'ات'} — المصدر الأساسي: ${esc(sourceLabel(sources[0]))}`:'غير مرتبطة'}</p><div class="actions"><button class="btn primary" data-action="folder">＋ إضافة مجلد / ألبوم</button><button class="btn" data-action="scan">↻ فحص المجلد المحدد</button><button class="btn primary" data-action="fastLinkSourceOnly">⚡ ربط المصدر — سريع</button><button class="btn" data-action="diag">تشخيص</button><button class="btn" data-action="duplicateManager">🔎 كشف التكرارات</button></div><p class="meta">${allPhotos().length} صورة مفهرسة — الفحص العادي يخص المجلد المحدد فقط. «ربط المصدر — سريع» يبحث فقط عن الصور المفهرسة مسبقًا في المسارات المحفوظة، ويربط أصولها بدون فحص كامل للمجلد وبدون إضافة صور أو ألبومات جديدة. عند فتح الصورة يستخدم الأصل المرتبط.</p></div>${sourcesPanel()}<div class="card"><h3>🧹 الصور المستبعدة من الفهرس</h3><p>${ex} صورة مستبعدة حاليًا. الأصل يبقى في مجلد الهاتف ولا يُحذف.</p><p class="meta">إعادة الفحص العادي لا تعيد أي صورة مستبعدة. هذا الزر وحده هو الذي يرفع الاستبعاد، ثم يعيد إدخال الصور التي تجد أصولها مع محاولة استرجاع ترتيبها وألبوماتها السابقة.</p><button class="btn" data-action="restoreExcluded" ${ex||reindexRestorePool.length?'':'disabled'}>↻ السماح بها وإعادة فحصها</button></div><div class="card"><h3>📅 التواريخ</h3><div class="formgrid">${field('setStart','بداية قصتنا',state.settings.startDate,'date')}${field('setEng','تاريخ الخطوبة',state.settings.engagementDate,'date')}${field('setBirth','عيد ميلاد رانيا',state.settings.birthdayRania,'date')}</div></div>${countdownsPanel()}<div class="card"><h3>📱 التواصل</h3><div class="formgrid">${field('setOsama','رقم أسامة',state.settings.osamaPhone,'tel')}${field('setRania','رقم رانيا',state.settings.raniaPhone,'tel')}${field('setWA','رابط واتساب',state.settings.whatsappUrl,'url')}</div><button class="btn primary" data-action="settingsSave" style="margin-top:10px">حفظ</button></div><div class="card"><h3>💾 النسخة الاحتياطية والأمان</h3><p>النسخة تحفظ بيانات OsRa ومراجع الصور وتواريخ التقاط EXIF والإخفاء والاستبعاد واختيار ألبومات صورة اليوم ومعاينات مصغرة خفيفة، وليست الملفات الأصلية.</p><p class="meta">نسخة البيانات القديمة تظل كما هي. مصدر الصور عالي الجودة منفصل عنها ولا يدخل في قاعدة OsRa اليومية.</p><div class="actions"><button class="btn primary" data-action="chooseBackup">📁 تحديد مكان الحفظ</button><button class="btn" data-action="backup">💾 حفظ نسخة الآن</button><button class="btn" data-action="restore">↩ استرجاع ملف كامل</button><button class="btn" data-action="restoreMerge">📦 استيراد ودمج نسخة</button><button class="btn" data-action="restoreSafety">🛟 استرجاع آخر نسخة أمان</button></div><div class="meta">${backupFileHandle?`ملف النسخة: ${esc(backupFileHandle.name||'محدد')}${backupMeta.lastSavedAt?' — آخر حفظ: '+new Date(backupMeta.lastSavedAt).toLocaleString('ar-EG'):''}`:'لم تحدد ملفًا ثابتًا بعد. عند الحفظ الأول سيطلب منك OsRa اختيار المكان.'}</div></div><div class="card"><h3>🖼️ مصدر الصور عالي الجودة</h3><p>ينشئ OsRa مجلدًا مستقلًا بصور حتى 2048px وجودة JPEG 88 تقريبًا. هذا المصدر بديل خفيف عن الأصل، ولا يغيّر الأصل ولا يحمّل الصور العالية داخل OsRa أثناء الاستخدام.</p><p class="meta">يدخل فقط الصور الموجودة في ألبومات ظاهرة. الصور المخفية أو التي أزلتها من الألبومات أو المستبعدة من الفهرس لا تُنسخ كملفات هنا؛ تبقى معلوماتها فقط داخل Backup البيانات.</p><div class="actions"><button class="btn primary" data-action="buildHQSource">🖼️ إنشاء / تحديث مصدر HQ</button><button class="btn" data-action="hqZip">📦 إنشاء ZIP للمشاركة</button><button class="btn" data-action="linkHQSource">🔗 ربط مصدر HQ موجود</button>${hqSourceHandle?`<button class="btn" data-action="clearHQSource">فصل مصدر HQ</button>`:''}</div><div class="meta">${hqSourceHandle?`مصدر HQ مرتبط: ${esc(hqSourceMeta.name||'OsRa_HQ_Source')} — ${hqIndex.size} صورة، والربط يقرأ manifest فقط بدون فحص الصور.`:'لا يوجد مصدر HQ مرتبط حاليًا.'}</div><div class="notice" style="margin-top:10px">جودة HQ الحالية ثابتة عند 2048px تقريبًا / JPEG 88؛ لم نضف جودة أعلى لأنها غالبًا تزيد الحجم أكثر من الفائدة على الهاتف.</div></div></div></div>`}
+function pageSettings(){const ex=state.excludedPhotos.length;return `<div class="inner">${scanProgressCard()}${hqBuildProgressCard()}${hqLastBuildCard()}${dataRecoveryCard()}${reindexRestorePool.length?`<div class="card scan-progress-card"><h3>↻ إعادة فهرسة مستبعدة معلقة</h3><p>هناك ${reindexRestorePool.length} صورة ما زالت في قائمة الاسترجاع الآمن. شغّل «السماح بها وإعادة فحصها» لإكمالها.</p></div>`:''}<div class="kicker">⚙ المزيد</div><h1 class="title">إعدادات OsRa</h1><div class="cards"><div class="card"><h3>📁 مكتبات الصور</h3><p>${sources.length?`تم ربط ${sources.length} مجلد${sources.length===1?'':'ات'} — المصدر الأساسي: ${esc(sourceLabel(sources[0]))}`:'غير مرتبطة'}</p><div class="actions"><button class="btn primary" data-action="folder">＋ إضافة مجلد / ألبوم</button><button class="btn" data-action="scan">↻ فحص المجلد المحدد</button><button class="btn primary" data-action="linkAllSources">⚡ ربط كل المصادر — سريع + تقرير</button><button class="btn" data-action="diag">تشخيص</button><button class="btn" data-action="duplicateManager">🔎 كشف التكرارات</button></div><p class="meta">${allPhotos().length} صورة مفهرسة — الفحص العادي يخص المجلد المحدد فقط. «ربط كل المصادر — سريع + تقرير» يربط الأصول الحقيقية للصور الموجودة بالفعل في جميع المجلدات المرتبطة، مجلدًا بعد الآخر، ويحفظ نتيجة كل مجلد فور اكتماله. لا ينشئ صورًا أو ألبومات ولا يولّد صورًا مصغرة، وفي النهاية يعرض قائمة بكل صورة لم يُعثر على أصلها.</p></div>${sourcesPanel()}<div class="card"><h3>🧹 الصور المستبعدة من الفهرس</h3><p>${ex} صورة مستبعدة حاليًا. الأصل يبقى في مجلد الهاتف ولا يُحذف.</p><p class="meta">إعادة الفحص العادي لا تعيد أي صورة مستبعدة. هذا الزر وحده هو الذي يرفع الاستبعاد، ثم يعيد إدخال الصور التي تجد أصولها مع محاولة استرجاع ترتيبها وألبوماتها السابقة.</p><button class="btn" data-action="restoreExcluded" ${ex||reindexRestorePool.length?'':'disabled'}>↻ السماح بها وإعادة فحصها</button></div><div class="card"><h3>📅 التواريخ</h3><div class="formgrid">${field('setStart','بداية قصتنا',state.settings.startDate,'date')}${field('setEng','تاريخ الخطوبة',state.settings.engagementDate,'date')}${field('setBirth','عيد ميلاد رانيا',state.settings.birthdayRania,'date')}</div></div>${countdownsPanel()}<div class="card"><h3>📱 التواصل</h3><div class="formgrid">${field('setOsama','رقم أسامة',state.settings.osamaPhone,'tel')}${field('setRania','رقم رانيا',state.settings.raniaPhone,'tel')}${field('setWA','رابط واتساب',state.settings.whatsappUrl,'url')}</div><button class="btn primary" data-action="settingsSave" style="margin-top:10px">حفظ</button></div><div class="card"><h3>💾 النسخة الاحتياطية والأمان</h3><p>النسخة تحفظ بيانات OsRa ومراجع الصور وتواريخ التقاط EXIF والإخفاء والاستبعاد واختيار ألبومات صورة اليوم ومعاينات مصغرة خفيفة، وليست الملفات الأصلية.</p><p class="meta">نسخة البيانات القديمة تظل كما هي. مصدر الصور عالي الجودة منفصل عنها ولا يدخل في قاعدة OsRa اليومية.</p><div class="actions"><button class="btn primary" data-action="chooseBackup">📁 تحديد مكان الحفظ</button><button class="btn" data-action="backup">💾 حفظ نسخة الآن</button><button class="btn" data-action="restore">↩ استرجاع ملف كامل</button><button class="btn" data-action="restoreMerge">📦 استيراد ودمج نسخة</button><button class="btn" data-action="restoreSafety">🛟 استرجاع آخر نسخة أمان</button></div><div class="meta">${backupFileHandle?`ملف النسخة: ${esc(backupFileHandle.name||'محدد')}${backupMeta.lastSavedAt?' — آخر حفظ: '+new Date(backupMeta.lastSavedAt).toLocaleString('ar-EG'):''}`:'لم تحدد ملفًا ثابتًا بعد. عند الحفظ الأول سيطلب منك OsRa اختيار المكان.'}</div></div><div class="card"><h3>🖼️ مصدر الصور عالي الجودة</h3><p>ينشئ OsRa مجلدًا مستقلًا بصور حتى 2048px وجودة JPEG 88 تقريبًا. هذا المصدر بديل خفيف عن الأصل، ولا يغيّر الأصل ولا يحمّل الصور العالية داخل OsRa أثناء الاستخدام.</p><p class="meta">يدخل فقط الصور الموجودة في ألبومات ظاهرة. الصور المخفية أو التي أزلتها من الألبومات أو المستبعدة من الفهرس لا تُنسخ كملفات هنا؛ تبقى معلوماتها فقط داخل Backup البيانات.</p><div class="actions"><button class="btn primary" data-action="buildHQSource">🖼️ إنشاء / تحديث مصدر HQ</button><button class="btn" data-action="hqZip">📦 إنشاء ZIP للمشاركة</button><button class="btn" data-action="linkHQSource">🔗 ربط مصدر HQ موجود</button>${hqSourceHandle?`<button class="btn" data-action="clearHQSource">فصل مصدر HQ</button>`:''}</div><div class="meta">${hqSourceHandle?`مصدر HQ مرتبط: ${esc(hqSourceMeta.name||'OsRa_HQ_Source')} — ${hqIndex.size} صورة، والربط يقرأ manifest فقط بدون فحص الصور.`:'لا يوجد مصدر HQ مرتبط حاليًا.'}</div><div class="notice" style="margin-top:10px">جودة HQ الحالية ثابتة عند 2048px تقريبًا / JPEG 88؛ لم نضف جودة أعلى لأنها غالبًا تزيد الحجم أكثر من الفائدة على الهاتف.</div></div></div></div>`}
 function field(id,l,v,t){return `<div class="field"><label>${l}</label><input id="${id}" type="${t}" value="${esc(v||'')}"></div>`}
 function pageAbout(){return `<div class="inner"><div class="kicker">♥ عن OsRa</div><h1 class="title">عن البرنامج</h1><div class="card dedication-card"><div class="about-text"><p><b>إلى أحب إنسانة إلى قلبي</b> ♥️💛❤️</p><p>إلى تلك التي أضاءت سماء حياتي،<br>بل هي التي جعلت لحياتي سماء.</p><p>إهداء إلى جميلتي، وحبيبتي، وملاكي الصغير...<br>إلى القلب العجيب، والوجه الجميل، والابتسامة الرقيقة المنعشة،<br>يا من يسكنكِ كل شيء جميل.</p><p>يا من بها رقة وصفاء وطهارة السماء،<br>مع قوة وعنفوان ورهوان 😉 الأرض<br>التقيا وتلاقيا.</p><p>إهداء إلى تلك اليد الصغيرة،<br>التي تحمل حبًا كبيرًا،<br>وتتفتح بلمساتها أزهار سماوية،<br>مانحةً إياها الأبدية والحب والجمال.</p><p>إلى صوت همساتك،<br>وضحكاتك العفوية،<br>وإلى غمازة الخد اليمين...</p><p>أرسل قلبي وحبي، دائمًا وأبدًا،<br>لروحي... يا روحي، يا رنووووشي 😍😘</p><p>يا من أحببتها للمنتهى،<br>وأحبها، وسأحبها...</p><p><b>أحبك جدًا، وجداً، وجداًااا... ❤️</b></p><p><b>رانيا...<br>حبيبتي، ورفيقة دربي،<br>وأجمل ما أعطاني إِلهُ السَّمَاءِ.</b> ❤️</p></div></div><div class="security-note"><b>خصوصية OsRa</b><br>الصور الأصلية تبقى في مجلدكم المحلي. OsRa لا يرفع الصور إلى خادم، والمعاينات المخزنة هي داخل مساحة الموقع المحلية على الجهاز.</div></div>`}
 function pageCalendar(){
@@ -668,41 +669,83 @@ async function excludeSelected(){if(!requireSelection())return;const current=sta
 async function reorderPhoto(pid,dir){const m=state.memories.find(x=>x.id===currentMemoryId);if(!m)return;const arr=m.photoIds||[],p=photos.get(pid);if(!isPhotoRecord(p))return;const slots=arr.map((x,i)=>isPhotoRecord(photos.get(x))?i:-1).filter(i=>i>=0),at=slots.indexOf(arr.indexOf(pid)),to=at+dir;if(at<0||to<0||to>=slots.length)return;const next=[...arr],a=slots[at],b=slots[to];[next[a],next[b]]=[next[b],next[a]];m.photoIds=next;await save();renderNoAnim()}
 async function restoreExcluded(){if(!state.excludedPhotos.length&&!reindexRestorePool.length){toast('لا توجد صور مستبعدة حاليًا لإعادة فهرستها.');return}if(scanLock){toast('أوقف الفحص الحالي قبل إعادة فهرسة الصور المستبعدة.');return}const pool=reindexRestorePool.length?[...reindexRestorePool]:structuredClone(state.excludedPhotos);reindexRestorePool=[...pool];await persistReindexPool();const sourceIds=new Set(pool.flatMap(x=>Array.isArray(x.sourceLinks)?x.sourceLinks.map(l=>l.sourceId):[x.sourceId]).filter(Boolean));toast('تم تجهيز إعادة الفهرسة الآمنة. الصور المستبعدة ستظل مستبعدة أمام الفحص العادي حتى تُعاد من هنا فقط.');await persistReindexPool();for(const sid of sourceIds){const s=sources.find(x=>x.id===sid);if(!s)continue;try{await setActiveSource(s);if(await ensureSourcePermission(s,true)){await clearScanProgress(s.id);await scan(s.handle,false,{source:s,fresh:true,reindex:true})}}catch(e){console.warn('reindex excluded source failed',e)}}await persistReindexPool();await save();toast(reindexRestorePool.length?`توقفت إعادة الفهرسة مع بقاء ${reindexRestorePool.length} صورة لم تُعثر على أصلها بعد؛ يمكنك المتابعة لاحقًا.`:(state.excludedPhotos.length?'اكتملت إعادة الفهرسة لما وُجد. الصور التي لم تُعثر عليها بقيت مستبعدة.':'اكتملت إعادة الفهرسة بنجاح.'));renderNoAnim()}
 async function saveDream(i){let d=i?state.dreams.find(x=>x.id===i):null;if(!d){d={id:id('dream')};state.dreams.unshift(d)}d.title=$('#dTitle').value.trim()||'حلم';d.targetDate=$('#dDate').value;d.progress=Math.max(0,Math.min(100,Number($('#dProgress').value||0)));d.note=$('#dNote').value.trim();d.done=d.progress>=100;await save();closeModal();renderNoAnim()}
-async function fastLinkSourceOnly(){
- if(scanLock){toast('الفحص جارٍ بالفعل.');return}
- if(!window.showDirectoryPicker){toast('اختيار المصدر غير مدعوم هنا. استخدم Chrome حديث على Android.');return}
- let root;try{root=await window.showDirectoryPicker({mode:'read'})}catch(e){if(e?.name==='AbortError')return;toast('تم إلغاء اختيار المصدر.');return}
- let source=await getSourceByHandle(root);
- if(!source){const nk=normalizeAlbumKey(root.name||'مجلد الصور');source=sources.find(x=>normalizeAlbumKey(x.name)===nk)||null}
- if(!source){source={id:id('src'),name:root.name||'مجلد الصور',handle:root,asAlbum:false,mergeIntoMemoryId:'',createdAt:Date.now()};sources.push(source)}
- else{source.handle=root;source.name=root.name||source.name}
- if(!(await ensureSourcePermission(source,true))){toast('لم يُمنح إذن قراءة المصدر. لم يتم تعديل الصور أو الألبومات.');return}
- await persistSources();await setActiveSource(source);
- const candidates=[...photos.values()].filter(p=>isPhotoRecord(p)&&p.relPath);
- let linked=0,verified=0,missing=0,checked=0,changed=[];
- const worker=async(p)=>{
-   try{
-     const fh=await resolve(root,p.relPath),f=await fh.getFile();
-     checked++;
-     if(!isImageFile(f))return;
-     const sameMeta=Number(f.size)===Number(p.size||0)&&Number(f.lastModified)===Number(p.lastModified||0);
-     let ck=p.contentKey||'',fp=p.fingerprint||'';
-     if(!sameMeta){ck=await contentKey(f);if(p.contentKey&&ck!==p.contentKey)return;fp=p.fingerprint||''}
-     const already=photoLocations(p).some(l=>l.sourceId===source.id&&l.relPath===p.relPath);
-     const added=addPhotoLink(p,source,f,p.relPath,fp,ck);
-     if(added||!already){
-       changed.push({...p,thumbBlob:undefined});linked++;
-     }else verified++;
-   }catch{missing++}
- };
- const queue=[...candidates];const workers=Array.from({length:12},async()=>{while(queue.length){const p=queue.shift();if(p)await worker(p)}});
- await Promise.all(workers);
- if(changed.length)await putMany('photos',changed.map(p=>{const x={...p};delete x.thumbBlob;return x}));
- await save();
- toast(`⚡ تم ربط المصدر «${sourceLabel(source)}» — تم التحقق من ${checked} صورة، وربط ${linked} أصلًا${missing?`، وتعذر العثور على ${missing}`:''}. بدون إضافة صور أو ألبومات.`);
- renderNoAnim();
+function photoAlbumTitles(photoId){
+ const seen=new Set();
+ for(const m of state.memories){
+  if(m.hidden||!Array.isArray(m.photoIds)||!m.photoIds.includes(photoId))continue;
+  const t=String(m.title||m.album||'').trim();if(t&&!seen.has(t))seen.add(t);
+ }
+ return [...seen];
 }
-async function linkAllSources(){if(scanLock){toast('الفحص جارٍ بالفعل.');return}if(!sources.length){toast('أضف مجلدًا واحدًا على الأقل أولًا.');return}if(!confirm('سيبحث OsRa في كل المجلدات المرتبطة فقط عن الأصول الأصلية للصور المسجلة حاليًا، دون إضافة صور جديدة إلى الفهرس. قد يستغرق ذلك وقتًا حسب عدد الملفات.'))return;let done=0,skipped=0;for(const s of sources){try{await setActiveSource(s);if(!(await ensureSourcePermission(s,true))){skipped++;continue}toast(`جارٍ البحث عن الأصول في «${sourceLabel(s)}»…`);await clearScanProgress(s.id);await scan(s.handle,false,{source:s,fresh:true,matchOnly:true});done++}catch(e){console.warn('link all source failed',e);skipped++}}toast(`انتهى ربط الأصول: ${done} مجلد${skipped?' — تعذر الوصول إلى '+skipped+' مجلدات':''}.`);renderNoAnim()}
+function linkReportModal(report){
+ const total=Number(report?.totalPhotos||0),linked=Number(report?.linkedPhotos||0),missing=Number(report?.missing?.length||0),shown=Math.min(missing,300);
+ const pct=total?Math.round(linked*100/total):0;
+ const shownRows=(report?.missing||[]).slice(0,shown).map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.name||'—')}</td><td>${esc(x.source||'—')}</td><td>${esc((x.albums||[]).join('، ')||'—')}</td><td dir="ltr" style="text-align:left;word-break:break-all">${esc(x.relPath||'—')}</td></tr>`).join('');
+ modal(`<h2>♥ تقرير ربط الأصول</h2><div class="card"><b>النتيجة النهائية</b><p>تم ربط أصل حقيقي لـ <b>${linked}</b> من <b>${total}</b> صورة (${pct}%).</p><p>${missing?`لم يُعثر على الأصل لـ <b>${missing}</b> صورة.`:'✅ تم العثور على الأصل لكل الصور.'}</p><p class="meta">تم الربط فقط: لم تُنشأ صور أو ألبومات أو thumbnails ولم تُنسخ أي صورة.</p></div>${missing?`<div class="card" style="overflow:auto;max-height:58vh"><h3>الصور غير المرتبطة</h3>${missing>shown?`<p class="meta">يعرض الجدول أول ${shown} فقط من ${missing}. التقرير الكامل محفوظ داخل OsRa.</p>`:''}<table class="data-table"><thead><tr><th>#</th><th>الصورة</th><th>المصدر</th><th>الألبوم</th><th>المسار المحفوظ</th></tr></thead><tbody>${shownRows}</tbody></table></div>`:''}<div class="actions"><button class="btn primary" data-action="closeModal">تم</button></div>`);
+}
+async function fastLinkOneSource(source){
+ if(!source?.handle)return {ok:false,linked:0,verified:0,failed:0,total:0,missing:[]};
+ if(!(await ensureSourcePermission(source,true)))return {ok:false,linked:0,verified:0,failed:0,total:0,missing:[]};
+ const targets=[];
+ for(const photo of photos.values()){
+  if(!isPhotoRecord(photo))continue;
+  const locs=photoLocations(photo);
+  const target=locs.find(x=>x?.sourceId===source.id&&x?.relPath)||((photo.sourceId===source.id&&photo.relPath)?{sourceId:source.id,relPath:photo.relPath}:null);
+  if(!target?.relPath)continue;
+  targets.push({photo,relPath:String(target.relPath)});
+ }
+ let linked=0,verified=0,failed=0,checked=0,changed=[];const missing=[];const concurrency=12;
+ for(let i=0;i<targets.length;i+=concurrency){
+  const batch=targets.slice(i,i+concurrency);
+  const results=await Promise.all(batch.map(async ({photo,relPath})=>{
+   try{const fh=await resolve(source.handle,relPath);if(!fh)throw new Error('not found');await fh.getFile();return {photo,ok:true,relPath}}catch{return {photo,ok:false,relPath}}
+  }));
+  for(const r of results){
+   checked++;
+   const locs=photoLocations(r.photo);const existing=locs.find(l=>l?.sourceId===source.id&&l?.relPath===r.relPath);
+   if(!r.ok){
+    failed++;
+    if(existing){existing.verified=false;existing.verifiedAt=0;const meta={...r.photo,sourceLinks:locs};delete meta.thumbBlob;changed.push(meta)}
+    missing.push({name:r.photo.name||'',source:sourceLabel(source),relPath:r.relPath,albums:photoAlbumTitles(r.photo.id)});
+    continue;
+   }
+   if(existing){
+    existing.verified=true;existing.verifiedAt=Date.now();const meta={...r.photo,sourceLinks:locs};delete meta.thumbBlob;changed.push(meta);verified++;
+   }else if(addPhotoLink(r.photo,source,null,r.relPath)){
+    const links=photoLocations(r.photo),last=links.find(l=>l.sourceId===source.id&&l.relPath===r.relPath);if(last){last.verified=true;last.verifiedAt=Date.now()}
+    const meta={...r.photo,sourceLinks:links};delete meta.thumbBlob;changed.push(meta);linked++;
+   }
+  }
+  if(changed.length>=150){await putMany('photos',changed);changed=[];await hqYield()}
+  if(checked%300===0)toast(`«${sourceLabel(source)}»: ${checked}/${targets.length} صورة…`);
+ }
+ if(changed.length)await putMany('photos',changed);
+ return {ok:true,linked,verified,failed,total:targets.length,missing};
+}
+async function linkAllSources(){
+ if(scanLock){toast('هناك عملية ربط جارية بالفعل.');return}
+ if(!sources.length){toast('لا توجد مجلدات مرتبطة حاليًا.');return}
+ scanLock=true;scanStopRequested=false;
+ let done=0,totalLinked=0,totalVerified=0,totalFailed=0,totalTargets=0;
+ try{
+  for(let i=0;i<sources.length;i++){
+   const source=sources[i];await setActiveSource(source);
+   toast(`المجلد ${i+1}/${sources.length}: ربط «${sourceLabel(source)}»…`);
+   const r=await fastLinkOneSource(source);
+   if(r.ok){done++;totalLinked+=r.linked;totalVerified+=r.verified;totalFailed+=r.failed;totalTargets+=r.total;toast(`✅ انتهى «${sourceLabel(source)}»: ربط ${r.linked} — تحقق ${r.verified}${r.failed?` — تعذر ${r.failed}`:''}.`)}
+   else{totalFailed++;toast(`⚠️ تعذر الوصول إلى «${sourceLabel(source)}». سيتم الانتقال للمصدر التالي.`)}
+   await hqYield();
+  }
+  const unlinked=[...photos.values()].filter(isPhotoRecord).filter(p=>!hasOriginalLink(p));
+  const missing=unlinked.map(p=>{const loc=photoLocations(p)[0]||{};const src=sources.find(s=>s.id===p.sourceId)||sources.find(s=>s.id===loc.sourceId);return {id:p.id,name:p.name||'',source:sourceLabel(src),relPath:p.relPath||loc.relPath||'',albums:photoAlbumTitles(p.id)}});
+  const totalPhotos=allPhotos().length,linkedPhotos=totalPhotos-unlinked.length;
+  lastLinkReport={createdAt:Date.now(),sourcesCount:sources.length,doneSources:done,totalPhotos,linkedPhotos,newlyLinked:totalLinked,verified:totalVerified,failed:totalFailed,totalTargets,missing};
+  try{await put('library',{key:'lastLinkReport',value:structuredClone(lastLinkReport)})}catch{}
+  renderNoAnim(true);linkReportModal(lastLinkReport);
+ }catch(e){console.error(e);toast('توقف الربط؛ كل النتائج التي حُفظت قبل التوقف ما زالت محفوظة.')}
+ finally{scanLock=false;scanStopRequested=false}
+}
+
 async function saveSettings(){for(const x of ['startDate','engagementDate','birthdayRania'])state.settings[x]=$('#set'+(x==='startDate'?'Start':x==='engagementDate'?'Eng':'Birth')).value;for(const [k,id2] of [['osamaPhone','setOsama'],['raniaPhone','setRania'],['whatsappUrl','setWA']])state.settings[k]=$('#'+id2).value.trim();normalizeState();await save();toast('تم حفظ الإعدادات.');renderNoAnim()}
 async function saveVerse(){state.verses.unshift({id:id('v'),ref:$('#vRef').value.trim(),text:$('#vText').value.trim(),favorite:false});await save();closeModal();renderNoAnim()}
 async function savePrayer(i){let p=i?state.prayers.find(x=>x.id===i):null;if(!p){p={id:id('p'),done:false};state.prayers.unshift(p)}p.title=$('#pTitle').value.trim()||'صلاة / أمنية';p.text=$('#pText').value.trim();await save();closeModal();toast('تم حفظ الصلاة / الأمنية.');renderNoAnim()}
