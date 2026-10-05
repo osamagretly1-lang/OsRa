@@ -747,8 +747,38 @@ function restore(){const i=document.createElement('input');i.type='file';i.accep
 سيتم إعادة OsRa إلى هذه اللحظة فقط. سجلات الصور التي أُضيفت بعد النسخة ستختفي من فهرس OsRa، لكن الصور الأصلية نفسها لن تُحذف من الجهاز.
 ستُحفظ نسخة أمان من الحالة الحالية قبل الاسترجاع.`))return;if(scanLock){toast('أوقف الفحص الحالي قبل الاسترجاع ثم أعد المحاولة.');return}clearTimeout(safetyTimer);await clearScanProgress();await snapshotBeforeRestore();applyBackupPayload(x);if(Array.isArray(x.photoManifest))await replacePhotoSnapshot(x.photoManifest);await saveMainExact();soundOn=!!state.settings.soundEnabled;updateSoundButton();selectedMemories.clear();selectedPhotos.clear();toast(`تم الاسترجاع كما كان في ${when}، وتم الحفاظ على ترتيب الألبومات. على الهاتف الآخر اربط مجلد الصور أو مصدر HQ من الإعدادات.`);renderNoAnim()}catch(e){console.error(e);toast('ملف النسخة الاحتياطية غير صالح أو تالف.')}};i.click()}
 async function diagnostic(){const secure=!!isSecureContext,picker=!!window.showDirectoryPicker;let activePerm='لا يوجد مجلد';const active=activeSource();if(active)try{activePerm=await active.handle.queryPermission({mode:'read'})}catch{}const e=await navigator.storage?.estimate?.();const rows=sources.map((x,i)=>{const cp=scanProgresses[x.id];return `<div class="card"><b>${i===0?'⭐ ':''}${esc(sourceLabel(x))}</b><div class="meta">${x.asAlbum?'ألبوم مستقل':'المكتبة الأساسية'}${sourceMergeLabel(x)}${cp?.status==='done'?' • آخر فحص مكتمل':''}${cp?.status==='paused'?' • فحص متوقف':''}</div><div class="actions"><button class="btn small" data-action="activateSource" data-id="${x.id}">تحديد</button><button class="btn small" data-action="grantSourcePermission" data-id="${x.id}">منح الإذن</button><button class="btn small" data-action="scanSource" data-id="${x.id}">↻ فحص هذا المجلد</button></div></div>`}).join('');modal(`<h2>تشخيص OsRa</h2><div class="cards"><div class="card">HTTPS/secure: <b>${secure?'نعم':'لا'}</b></div><div class="card">اختيار المجلد: <b>${picker?'متاح':'غير متاح'}</b></div><div class="card">المصادر المرتبطة: <b>${sources.length}</b></div><div class="card">المصدر النشط: <b>${esc(sourceLabel(active))}</b></div><div class="card">إذن المصدر النشط: <b>${esc(activePerm)}</b></div>${rows||'<div class="empty">لا توجد مكتبات مرتبطة.</div>'}<div class="card">الصور المفهرسة: <b>${allPhotos().length}</b></div><div class="card">الذكريات: <b>${state.memories.length}</b></div><div class="card">التخزين المستخدم: <b>${e?.usage?Math.round(e.usage/1024/1024)+' MB':'غير معروف'}</b></div><div class="actions">${active?`<button class="btn" data-action="grantPermission">منح إذن المصدر النشط</button>`:''}<button class="btn primary" data-action="folder">＋ إضافة مجلد / ألبوم</button></div></div>`)}
-function paperSound(duration=720){if(!soundOn)return;try{audioCtx??=new (window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume();const dur=Math.max(.32,Math.min(1.05,Number(duration)/1000)),sr=audioCtx.sampleRate,len=Math.floor(sr*dur),buf=audioCtx.createBuffer(1,len,sr),data=buf.getChannelData(0);for(let i=0;i<len;i++){const x=i/len,a=Math.min(1,x/.11),r=Math.max(0,1-(x-.54)/.46),s=Math.sin(Math.PI*Math.min(1,x/.82));data[i]=(Math.random()*2-1)*(0.026+0.17*a*r*s)}const src=audioCtx.createBufferSource(),filter=audioCtx.createBiquadFilter(),gain=audioCtx.createGain();src.buffer=buf;filter.type='bandpass';filter.frequency.setValueAtTime(1500,audioCtx.currentTime);filter.frequency.exponentialRampToValueAtTime(3600,audioCtx.currentTime+dur*.56);filter.frequency.exponentialRampToValueAtTime(2000,audioCtx.currentTime+dur);filter.Q.value=.65;gain.gain.setValueAtTime(.0001,audioCtx.currentTime);gain.gain.exponentialRampToValueAtTime(.05,audioCtx.currentTime+dur*.12);gain.gain.exponentialRampToValueAtTime(.16,audioCtx.currentTime+dur*.48);gain.gain.exponentialRampToValueAtTime(.0001,audioCtx.currentTime+dur*.98);src.connect(filter).connect(gain).connect(audioCtx.destination);src.start();src.stop(audioCtx.currentTime+dur+.02)}catch{}}
-async function setSound(){soundOn=!soundOn;state.settings.soundEnabled=soundOn;await save();updateSoundButton();if(soundOn)paperSound()}
+async function paperSound(duration=720){
+  if(!soundOn)return;
+  try{
+    audioCtx??=new (window.AudioContext||window.webkitAudioContext)();
+    if(audioCtx.state==='suspended')await audioCtx.resume();
+    if(audioCtx.state!=='running')return;
+    const dur=Math.max(.32,Math.min(1.05,Number(duration)/1000)),sr=audioCtx.sampleRate,len=Math.floor(sr*dur),buf=audioCtx.createBuffer(1,len,sr),data=buf.getChannelData(0);
+    for(let i=0;i<len;i++){
+      const x=i/len,a=Math.min(1,x/.11),r=Math.max(0,1-(x-.54)/.46),pulse=Math.sin(Math.PI*Math.min(1,x/.82));
+      data[i]=(Math.random()*2-1)*(0.026+0.17*a*r*pulse);
+    }
+    const src=audioCtx.createBufferSource(),filter=audioCtx.createBiquadFilter(),gain=audioCtx.createGain();
+    src.buffer=buf;filter.type='bandpass';
+    filter.frequency.setValueAtTime(1500,audioCtx.currentTime);
+    filter.frequency.exponentialRampToValueAtTime(3600,audioCtx.currentTime+dur*.56);
+    filter.frequency.exponentialRampToValueAtTime(2000,audioCtx.currentTime+dur);
+    filter.Q.value=.65;
+    gain.gain.setValueAtTime(.0001,audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(.05,audioCtx.currentTime+dur*.12);
+    gain.gain.exponentialRampToValueAtTime(.16,audioCtx.currentTime+dur*.48);
+    gain.gain.exponentialRampToValueAtTime(.0001,audioCtx.currentTime+dur*.98);
+    src.connect(filter).connect(gain).connect(audioCtx.destination);
+    src.start();src.stop(audioCtx.currentTime+dur+.02);
+  }catch(e){console.warn('paper sound unavailable',e)}
+}
+async function setSound(){
+  soundOn=!soundOn;
+  state.settings.soundEnabled=soundOn;
+  updateSoundButton();
+  if(soundOn)void paperSound();
+  await save();
+}
 $('#nav')?.addEventListener('click',e=>{const b=e.target.closest('[data-section]');if(b)go(b.dataset.section)});
 document.addEventListener('change',e=>{const x=e.target.closest('.photo-select');if(x){if(x.checked)selectedPhotos.add(x.dataset.photo);else selectedPhotos.delete(x.dataset.photo);if(!dragSelectMode||!dragSelecting)rerenderCurrentMemory();return}const m=e.target.closest('.memory-select');if(m){const mid=m.dataset.memory;if(m.checked)selectedMemories.add(mid);else selectedMemories.delete(mid);renderNoAnim(true)}});document.addEventListener('pointerdown',e=>{
  if(!dragSelectMode||e.pointerType==='mouse'&&e.button!==0)return;
