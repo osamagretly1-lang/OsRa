@@ -1,4 +1,4 @@
-const APP_VERSION='69-visual-link-resume-fast-open';
+const APP_VERSION='70-visual-link-resume-startup-safe';
 const DB='OsRaDB', DB_VERSION=2, THUMB_VERSION=6, THUMB_MAX_BYTES=160*1024;
 const VISUAL_SIG_VERSION=3, VISUAL_CANDIDATE_LIMIT=5, VISUAL_QUICK_LIMIT=24, VISUAL_MIN_SCORE=.58, VISUAL_STRONG_SCORE=.90, VISUAL_VERY_STRONG_SCORE=.95, LOCAL_MAX_FEATURES=48, LOCAL_DESC_BITS=64;
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
@@ -305,8 +305,10 @@ function visualLinkCheckpointMatches(targets,sourcesList){if(!visualLinkCheckpoi
 async function ensureAllSourcePermissions(list,ask=true){const usable=[...(list||[])].filter(s=>s?.handle),denied=[];for(const source of usable){if(!(await ensureSourcePermission(source,ask)))denied.push(source)}return denied.length?{ok:false,sources:usable,denied,source:denied[0]}:{ok:true,sources:usable,denied:[]}}
 async function load(){
  const [st,safety,preRestore,main,sr,ar,b,rawPhotos,sp,legacy,rp,ls,psb]=await Promise.all([
-  get('state','main'),get('state','safetyBackup'),get('state','preRestoreBackup'),get('library','main'),get('library','sources'),get('library','activeSource'),get('library','backup'),getAll('photos'),get('library','scanProgresses'),get('library','scanProgress'),get('library','visualLinkCheckpoint'),get('library','reindexRestorePool'),get('library','linkSourceStats'),get('library','portableSourceIndex')
+  get('state','main'),get('state','safetyBackup'),get('state','preRestoreBackup'),get('library','main'),get('library','sources'),get('library','activeSource'),get('library','backup'),getAll('photos'),get('library','scanProgresses'),get('library','scanProgress'),get('library','reindexRestorePool'),get('library','linkSourceStats'),get('library','portableSourceIndex')
  ]);
+ let vlc=null;
+ try{vlc=await get('library','visualLinkCheckpoint')}catch(e){console.warn('visual link checkpoint read skipped',e);vlc=null}
  if(st)state={...structuredClone(DEFAULT),...st.value};normalizeState();
  visualRecoveryQueue=structuredClone(state.settings.visualLinkReview?.items||[]);
  recoveryCandidate=null;
@@ -334,8 +336,13 @@ async function load(){
  pendingSourceBlueprints=(Array.isArray(psb?.value)?structuredClone(psb.value):[]).filter(x=>x?.id&&!sources.some(s=>s.id===x.id));
  scanProgresses=(sp?.value&&typeof sp.value==='object'&&!Array.isArray(sp.value))?structuredClone(sp.value):{};
  if(legacy?.value&&sources[0]&&!scanProgresses[sources[0].id])scanProgresses[sources[0].id]={...structuredClone(legacy.value),sourceId:sources[0].id};
- visualLinkCheckpoint=(vlc?.value&&typeof vlc.value==='object'&&!Array.isArray(vlc.value))?structuredClone(vlc.value):null;
- if(visualLinkCheckpoint&&visualLinkCheckpoint.status==='running'){visualLinkCheckpoint={...visualLinkCheckpoint,status:'paused',interrupted:true,updatedAt:Date.now()};try{await put('library',{key:'visualLinkCheckpoint',value:structuredClone(visualLinkCheckpoint)})}catch{}}
+ try{
+  visualLinkCheckpoint=(vlc?.value&&typeof vlc.value==='object'&&!Array.isArray(vlc.value))?structuredClone(vlc.value):null;
+  if(visualLinkCheckpoint&&visualLinkCheckpoint.status==='running'){visualLinkCheckpoint={...visualLinkCheckpoint,status:'paused',interrupted:true,updatedAt:Date.now()};try{await put('library',{key:'visualLinkCheckpoint',value:structuredClone(visualLinkCheckpoint)})}catch{}}
+ }catch(e){
+  console.warn('visual link checkpoint ignored during startup',e);
+  visualLinkCheckpoint=null;
+ }
  reindexRestorePool=Array.isArray(rp?.value)?structuredClone(rp.value):[];
  for(const [sid,cp] of Object.entries(scanProgresses)){if(cp?.status==='running'){scanProgresses[sid]={...cp,status:'paused',interrupted:true,updatedAt:Date.now()}}}
  scanCheckpoint=activeSourceId?scanProgresses[activeSourceId]||null:null;soundOn=!!state.settings.soundEnabled;
