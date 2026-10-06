@@ -1,10 +1,10 @@
-const BUILD='osra100-20261006-r18';
+const BUILD='osra100-20261006-r23';
 const CACHE=`OsRa-v100-${BUILD}`;
 const APP=[
   './',
   './index.html',
   './style.css',
-  './app.js?v=osra100-20261006-r18',
+  './app.js?v=osra100-20261006-r23',
   './manifest.json',
   './icon.svg',
   './icon-192.png',
@@ -36,13 +36,14 @@ self.addEventListener('fetch',event=>{
   const isNav=event.request.mode==='navigate'||event.request.destination==='document';
   const isShell=SHELL.has(u.pathname);
   if(isNav||isShell){
-    event.respondWith(
-      freshNetwork(event.request).catch(()=>
-        caches.match(event.request,{ignoreSearch:false})
-          .then(r=>r||caches.match(event.request,{ignoreSearch:true}))
-          .then(r=>r||caches.match('./index.html',{ignoreSearch:true}))
-      )
-    );
+    event.respondWith((async()=>{
+      const cached=await caches.match(event.request,{ignoreSearch:false})||await caches.match(event.request,{ignoreSearch:true})||await caches.match('./index.html',{ignoreSearch:true});
+      if(cached){
+        event.waitUntil(freshNetwork(event.request).catch(()=>{}));
+        return cached;
+      }
+      return freshNetwork(event.request);
+    })());
     return;
   }
   event.respondWith(

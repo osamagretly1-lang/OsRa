@@ -1,21 +1,44 @@
-OsRa v100 — r18 ULTRA FAST DIRECT ALBUM LINK + SAFE TARGETS
+OsRa v100 — r23 FINAL RE-REVIEWED + ISOLATED DEEP DUPLICATE REVIEW
 
 Baseline: OsRa_v33_HQ_FINAL_SAFE_REVIEW_FIXED.zip ONLY.
 No code from v67/v70/v77/v78/v79/v80/v81 or later branches was used as the baseline.
 
-CORE LINKING RULES:
-- Linking is LINK-ONLY: no new photo records, albums, thumbnails, or copied originals.
-- Each album may specify its own exact original source folder.
-- In direct album-folder mode, OsRa checks the requested filename directly in the selected folder; no recursive source enumeration is performed for the common case.
-- Excluded photos are skipped completely.
-- Photos removed from all visible albums are not link targets, even if an old sourceId/source link remains on the photo record.
-- Hidden-only albums are not link targets.
-- Already VERIFIED links are skipped.
-- Fallback indexing is used only for unresolved photos on non-direct sources.
-- Results are saved in batches and progress is shown without refreshing the page.
-- Original phone files are never deleted by linking.
-- HQ creation remains separate from linking.
+LINK ENGINE:
+- One unified link engine. No separate duplicate "fast link" engine.
+- Linking is LINK-ONLY: existing OsRa photo records are linked to existing phone originals; no import, new photo record, album, thumbnail, or copy is created.
+- Visible albums are the target. Hidden albums are ignored. Excluded photos are a hard exclusion. Photos removed from all visible albums are ignored even when stale sourceId/sourceLinks remain.
+- An album can point to a source root plus an exact subfolder target. A subfolder inside an existing source is NOT created as a second independent source. Old nested sources are consolidated into their parent source and their relative paths are rewritten.
+- Fast direct mode: enumerate the selected target folder once, keep filename/handle entries in memory, then match by normalized full filename; if needed, use filename stem only when unique. No image bytes, file size, hash, or pixel analysis is needed in the normal path.
+- For source roots without an exact target folder, saved relative paths are tried first; only unresolved names use a source index/fallback.
+- Already verified links are skipped only when the saved verified path belongs to the current target folder. This prevents an old link in another folder from incorrectly suppressing a needed link.
+- Link records are saved with sourceId + relative path + verified state in safe batches/checkpoints. A browser interruption can only redo the current unsaved small batch, not the whole operation.
+- A failed source/folder is isolated; later sources continue.
+- The final report is generated from the same target/link state used by the engine and only the latest report is persisted.
 
-SAFETY:
-- IndexedDB version remains VER=100; no reset or object-store deletion is introduced.
-- Service-worker/app cache markers are aligned to r18.
+COUNTS / CONSISTENCY:
+- Home and diagnostics distinguish visible photo IDs from total stored photo records. Hidden memories and hidden-only content are not counted as visible.
+- The same exclusion/visibility rules are used by linking, HQ, calendar, and home counts.
+- Duplicate maintenance and nested-source consolidation are deferred until after the first screen is rendered so OsRa can open sooner; they do not reset or clear data.
+
+HQ:
+- HQ uses the same eligible-photo rules: visible albums only, excluding excluded photos.
+- "All", "selected albums", and "currently selected photos" are exact scopes; checking an album automatically selects the selected-albums scope.
+- HQ copies remain separate from OsRa originals. Original phone files are never deleted by HQ creation.
+- HQ manifest identifies photos by photoId and records the actual source relative path. Generated JPEGs keep the source-relative base/path with .jpg output.
+- manifest.json is required for later HQ source linking; README.txt is documentation. manifest.progress.json is temporary and is removed after a successful build.
+
+BACKUP / SAFETY:
+- IndexedDB version remains VER=100; no database reset or object-store clearing was introduced.
+- Backup data preserves album linkSourceId/linkFolderPath, photo sourceLinks, exclusions, memories, and thumbnails. Source handles themselves are not JSON-serializable, so another device must grant/link its local folders again.
+- Recovery notice can be hidden without deleting the recovery data.
+
+CACHE:
+- app.js/index.html/sw.js cache markers are aligned to r23.
+
+
+FINAL RE-REVIEW NOTES:
+- Legacy excluded photo cleanup is deferred until after first paint, reducing launch-time writes without changing visible exclusions.
+- HQ path selection prefers verified original links; stale unverified links are only fallback candidates.
+- First-screen launch remains data-preserving; no IndexedDB clear/reset was introduced.
+
+- Service Worker shell strategy is cache-first for fast launch, with network refresh in the background when a cached shell exists.

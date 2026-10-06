@@ -206,3 +206,5 @@ button,input,textarea,select{font:inherit}button{cursor:pointer}.topbar{position
 
 .link-live-bar{position:fixed;left:12px;right:12px;bottom:12px;z-index:9999;padding:9px 12px;border-radius:12px;background:rgba(35,28,34,.94);color:#fff;font-size:13px;line-height:1.45;box-shadow:0 6px 24px rgba(0,0,0,.18);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media(max-width:620px){.link-live-bar{left:8px;right:8px;bottom:8px;font-size:12px;padding:8px 10px}}
+
+.duplicate-choice-grid{display:grid;gap:8px;margin-top:10px}.duplicate-choice-grid .card{margin:0}
