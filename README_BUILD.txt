@@ -1,4 +1,4 @@
-OsRa v100 — r24 FINAL + SIMPLE DUPLICATE CANCEL + SOURCE UI
+OsRa v100 — R24 PRESERVED UI + NAME LINK + SCAN CARD HIDE
 
 Baseline: OsRa_v33_HQ_FINAL_SAFE_REVIEW_FIXED.zip ONLY.
 No code from v67/v70/v77/v78/v79/v80/v81 or later branches was used as the baseline.
@@ -46,3 +46,12 @@ FINAL RE-REVIEW NOTES:
 - Duplicate review remains fully opt-in and now has a cancel path; closing its modal while analysis is active also cancels it. No duplicate changes are applied during analysis.
 - Visual duplicate comparison yields to the UI periodically so cancellation remains responsive.
 - Settings keep the stored source roots as the main sources; manual album subfolders are shown compactly beneath their parent source and are not represented as separate library roots.
+
+
+REQUESTED FINAL CHANGES:
+- Built directly on the R24 CACHE HARD FIXED package; the R24 page structure/CSS are preserved.
+- Photo-only scope retained; no active video UI or video scan path was added.
+- Album-name matching is metadata-only and safe: visible albums without a chosen link are matched to one unique direct folder/root with the same normalized name. Ambiguous names are left untouched and reported.
+- The unified fast link engine remains the only file-link engine; name matching only supplies album targets before linking.
+- The scan continuation card can be hidden without deleting its saved checkpoint. It can be shown again from Settings.
+- Backup already serializes Settings, so the hide preference is included in normal OsRa backup/safety snapshots.
