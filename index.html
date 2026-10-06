@@ -4,26 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#6c4664">
-<meta name="osra-build" content="OsRa v100 — 2026-10-06 — r24 FINAL + SIMPLE DUPLICATE CANCEL + SOURCE UI">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg">
 <link rel="stylesheet" href="style.css">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; connect-src 'self'; worker-src 'self'; font-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; media-src 'self' blob:; connect-src 'self'; worker-src 'self'; font-src 'self'">
 <title>OsRa — Our Story</title>
 </head>
 <body>
-<div id="bootSplash" class="boot-splash" role="status" aria-live="polite" aria-label="جارٍ فتح OsRa">
-  <div class="boot-book" aria-hidden="true">
-    <div class="boot-sheet boot-sheet-back"></div>
-    <div class="boot-sheet boot-sheet-front">
-      <img src="icon.svg" alt="" class="boot-logo">
-    </div>
-  </div>
-  <div class="boot-title">OsRa</div>
-  <div class="boot-subtitle">رانيا ♥ أسامة</div>
-  <div class="boot-progress" aria-hidden="true"><i></i></div>
-  <div class="boot-loading">جارٍ فتح صفحات قصتنا<span class="boot-dots">…</span></div>
-</div>
 <header class="topbar"><div class="brand"><b>OsRa</b><div><small>Our Story</small><strong>رانيا ♥ أسامة</strong></div></div><div><button id="searchBtn" class="round" title="بحث">⌕</button><button id="soundBtn" class="round" title="صوت قلب الورق">🔇</button><button id="installBtn" class="round" hidden title="تثبيت">＋</button></div></header>
 <main class="stage">
   <div class="book-shadow"></div>
@@ -32,7 +19,7 @@
     <article id="currentPage" class="page current"></article>
     <div id="flipPage" class="page flip"></div>
   </section>
-  <div class="hint">اسحب الورقة ← أو → أو اضغط على الأقسام • كل ألبوم له صفحة خاصة</div>
+  <div class="hint">اسحب الصفحة ← أو → أو اضغط على الأقسام</div>
 </main>
 <nav id="nav" class="nav">
   <button data-section="home">⌂<small>البداية</small></button>
@@ -46,7 +33,17 @@
 </nav>
 <div id="toast" class="toast"></div>
 <dialog id="modal" class="modal"><button id="modalClose" class="modal-close">×</button><div id="modalBody"></div></dialog>
-<dialog id="lightbox" class="lightbox"><div class="lbtop"><button id="lbClose" class="round dark" title="إغلاق">×</button><div class="lbtitle-wrap"><span id="lbTitle"></span><small id="lbMeta"></small></div><span id="lbCounter" class="lb-counter"></span><div class="lb-controls"><button id="lbZoomOut" class="round dark" title="تصغير">−</button><button id="lbZoomReset" class="round dark" title="الحجم الطبيعي">1:1</button><button id="lbZoomIn" class="round dark" title="تكبير">＋</button><button id="lbPlay" class="round dark" title="عرض تلقائي">▶</button><button id="lbPrev" class="round dark" title="السابق">‹</button><button id="lbNext" class="round dark" title="التالي">›</button></div></div><div class="lbbody"><div id="lbFrame" class="lb-frame"><img id="lbImage" alt=""></div><div id="lbStatus" class="lb-status">جارٍ فتح الصورة…</div></div><div id="lbStrip" class="lb-strip"></div></dialog>
-<script src="app.js?v=osra100-20261006-r24" defer></script>
+<dialog id="lightbox" class="lightbox"><div class="lbtop"><button id="lbClose" class="round dark" title="إغلاق">×</button><div class="lbtitle-wrap"><span id="lbTitle"></span><small id="lbMeta"></small></div><span id="lbCounter" class="lb-counter"></span><div class="lb-controls"><button id="lbPlay" class="round dark" title="عرض تلقائي">▶</button><button id="lbPrev" class="round dark" title="السابق">‹</button><button id="lbNext" class="round dark" title="التالي">›</button></div></div><div class="lbbody"><div class="lb-frame"><div class="lb-photo-shadow"></div><img id="lbImage" alt=""><video id="lbVideo" controls playsinline preload="metadata" hidden></video>
+<div id="videoTools" class="video-tools">
+<button class="round dark" data-video-control="rotate" title="تدوير">↻</button>
+<button class="round dark" data-video-control="zoomOut" title="تصغير">−</button>
+<button class="round dark" data-video-control="zoomIn" title="تكبير">＋</button>
+<button class="round dark" data-video-control="fullscreen" title="ملء الشاشة">⛶</button>
+<button class="round dark" data-video-control="pip" title="نافذة عائمة">▣</button>
+<label>السرعة <select id="videoSpeed"><option>0.5</option><option>0.75</option><option selected>1</option><option>1.25</option><option>1.5</option><option>2</option></select><span id="videoSpeedLabel">1×</span></label>
+<label>الصوت <input id="videoVolume" type="range" min="0" max="1" step="0.05" value="1"></label>
+<label>الإضاءة <input id="videoBrightness" type="range" min="50" max="150" value="100"><span id="videoBrightnessLabel">100%</span></label>
+</div><span class="lb-heart">♥</span></div><div id="lbStatus" class="lb-status">جارٍ فتح الصورة…</div></div><div id="lbStrip" class="lb-strip"></div></dialog>
+<script src="app.js?v=osra20-album-link" defer></script>
 </body>
 </html>
