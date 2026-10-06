@@ -1,3 +1,5 @@
+OsRa v100 — r24 FINAL + SIMPLE DUPLICATE CANCEL + SOURCE UI
+
 OsRa HQ Source — final safe build
 
 مصدر مستقل عالي الجودة لـ OsRa، منفصل عن Backup البيانات.

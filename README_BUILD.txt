@@ -1,4 +1,4 @@
-OsRa v100 — r23 FINAL RE-REVIEWED + ISOLATED DEEP DUPLICATE REVIEW
+OsRa v100 — r24 FINAL + SIMPLE DUPLICATE CANCEL + SOURCE UI
 
 Baseline: OsRa_v33_HQ_FINAL_SAFE_REVIEW_FIXED.zip ONLY.
 No code from v67/v70/v77/v78/v79/v80/v81 or later branches was used as the baseline.
@@ -33,7 +33,7 @@ BACKUP / SAFETY:
 - Recovery notice can be hidden without deleting the recovery data.
 
 CACHE:
-- app.js/index.html/sw.js cache markers are aligned to r23.
+- app.js/index.html/sw.js cache markers are aligned to r24.
 
 
 FINAL RE-REVIEW NOTES:
@@ -42,3 +42,7 @@ FINAL RE-REVIEW NOTES:
 - First-screen launch remains data-preserving; no IndexedDB clear/reset was introduced.
 
 - Service Worker shell strategy is cache-first for fast launch, with network refresh in the background when a cached shell exists.
+
+- Duplicate review remains fully opt-in and now has a cancel path; closing its modal while analysis is active also cancels it. No duplicate changes are applied during analysis.
+- Visual duplicate comparison yields to the UI periodically so cancellation remains responsive.
+- Settings keep the stored source roots as the main sources; manual album subfolders are shown compactly beneath their parent source and are not represented as separate library roots.
