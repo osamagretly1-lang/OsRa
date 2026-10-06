@@ -24,18 +24,19 @@ OsRa v15 UI addition: romantic album photo viewer, thumbnail strip, swipe naviga
 
 OsRa v19 additions:
 - Local contentKey for cross-device media matching without relying on file modification time.
-- Backup import/merge preserves existing local OsRa entries and prepares the media manifest for re-linking after the original photos/videos are supplied.
 - Full restore keeps a pre-restore safety snapshot.
-- Daily video selection from visible chosen albums only.
 - Manual album ordering (move up/down) plus optional ordering by detail completeness.
 - Automatic cleanup only for empty auto-generated albums; user-edited/text-rich memories are protected.
 - Romantic heart-gate transition retained and enhanced.
 
 
 OsRa v20 + Album Name Link (2026-10-06)
-- Built directly from OsRa_v20_VIDEO_FIXED_COMPLETE.
 - Added only a lightweight album-name -> same-named-folder connector.
 - Added a fast album relinker + report that uses those saved folder paths.
-- It does not create, delete, move, or re-sort albums; it only updates the source path of existing photo/video records.
 - The database schema/version remains VER=1.
 - Service-worker cache was renamed so the modified v20 assets are actually loaded.
+
+OsRa v24 Photo-only + Album Name Link + Fast Report
+- Album name matching is a preflight only: it connects an OsRa album to a same-named source folder and does not create/delete albums or move originals.
+- Fast linking then performs filename/stem matching inside the selected album folder and produces a report.
+- Backup/restore keeps OsRa data and photo manifests; original photo files remain in the local source folder.
