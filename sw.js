@@ -1,66 +1,16 @@
-const BUILD='osra100-20261006-r24-cachefix2';
-const CACHE=`OsRa-v100-${BUILD}`;
-const APP=[
-  './',
-  './index.html',
-  './style.css',
-  './app.js?v=osra100-20261006-r24-cachefix2',
-  './manifest.json',
-  './icon.svg',
-  './icon-192.png',
-  './icon-512.png'
-];
-const SHELL=new Set(APP.map(x=>new URL(x,self.location.href).href));
-
-self.addEventListener('install',event=>event.waitUntil(
-  caches.open(CACHE).then(cache=>cache.addAll(APP)).then(()=>self.skipWaiting())
-));
-
-self.addEventListener('message',event=>{
-  if(event.data?.type==='SKIP_WAITING') self.skipWaiting();
-});
-
-self.addEventListener('activate',event=>event.waitUntil((async()=>{
-  const keys=await caches.keys();
-  const hadOlderCache=keys.some(k=>/^OsRa-/i.test(k)&&k!==CACHE);
-  await Promise.all(keys.filter(k=>/^OsRa-/i.test(k)&&k!==CACHE).map(k=>caches.delete(k)));
-  await self.clients.claim();
-  if(hadOlderCache){
-    const pages=await self.clients.matchAll({type:'window'});
-    await Promise.all(pages.map(c=>c.navigate(c.url).catch(()=>null)));
-  }
-})()));
-
-async function freshNetwork(request){
-  const fresh=new Request(request,{cache:'no-store'});
-  const res=await fetch(fresh);
-  if(res.ok){
-    const cache=await caches.open(CACHE);
-    await cache.put(request,res.clone()).catch(()=>{});
-  }
-  return res;
-}
-
-self.addEventListener('fetch',event=>{
-  if(event.request.method!=='GET') return;
-  const u=new URL(event.request.url);
-  if(u.origin!==location.origin) return;
-  const isNav=event.request.mode==='navigate'||event.request.destination==='document';
-  const isShell=SHELL.has(event.request.url);
-  if(isNav||isShell){
-    event.respondWith((async()=>{
-      try{
-        // Always prefer the current deployed files. Cache is fallback only.
-        return await freshNetwork(event.request);
-      }catch{
-        return (await caches.match(event.request,{ignoreSearch:false})) ||
-               (isNav ? await caches.match('./index.html') : null) ||
-               new Response('',{status:504});
-      }
-    })());
-    return;
-  }
-  event.respondWith(
-    caches.match(event.request,{ignoreSearch:false}).then(cached=>cached||freshNetwork(event.request)).catch(()=>new Response('',{status:504}))
-  );
+const CACHE='OsRa-v20';
+const APP=['./','./index.html','./style.css','./app.js?v=20','./manifest.json','./icon.svg','./icon-192.png','./icon-512.png'];
+const SHELL=new Set(APP.map(x=>new URL(x,self.location.href).pathname));
+self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(APP)).then(()=>self.skipWaiting())));
+self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('OsRa-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
+self.addEventListener('fetch',e=>{
+ if(e.request.method!=='GET')return;
+ const u=new URL(e.request.url); if(u.origin!==location.origin)return;
+ const isNav=e.request.mode==='navigate'||e.request.destination==='document';
+ const isShell=SHELL.has(u.pathname);
+ if(isNav||isShell){
+  e.respondWith(fetch(e.request).then(res=>{if(res.ok)caches.open(CACHE).then(c=>c.put(e.request,res.clone())).catch(()=>{});return res}).catch(()=>caches.match(e.request).then(r=>r||caches.match('./index.html'))));
+ }else{
+  e.respondWith(caches.match(e.request).then(cached=>cached||fetch(e.request).then(res=>{if(res.ok)caches.open(CACHE).then(c=>c.put(e.request,res.clone())).catch(()=>{});return res}).catch(()=>caches.match('./index.html'))));
+ }
 });
