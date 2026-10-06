@@ -1,31 +1,43 @@
-const BUILD='osra100-20261006-r24';
+const BUILD='osra100-20261006-r24-cachefix2';
 const CACHE=`OsRa-v100-${BUILD}`;
 const APP=[
   './',
   './index.html',
   './style.css',
-  './app.js?v=osra100-20261006-r24',
+  './app.js?v=osra100-20261006-r24-cachefix2',
   './manifest.json',
   './icon.svg',
   './icon-192.png',
   './icon-512.png'
 ];
-const SHELL=new Set(APP.map(x=>new URL(x,self.location.href).pathname));
+const SHELL=new Set(APP.map(x=>new URL(x,self.location.href).href));
 
 self.addEventListener('install',event=>event.waitUntil(
-  caches.open(CACHE).then(c=>c.addAll(APP)).then(()=>self.skipWaiting())
+  caches.open(CACHE).then(cache=>cache.addAll(APP)).then(()=>self.skipWaiting())
 ));
 
-self.addEventListener('activate',event=>event.waitUntil(
-  caches.keys().then(keys=>Promise.all(
-    keys.filter(k=>/^OsRa-/i.test(k)&&k!==CACHE).map(k=>caches.delete(k))
-  )).then(()=>self.clients.claim())
-));
+self.addEventListener('message',event=>{
+  if(event.data?.type==='SKIP_WAITING') self.skipWaiting();
+});
+
+self.addEventListener('activate',event=>event.waitUntil((async()=>{
+  const keys=await caches.keys();
+  const hadOlderCache=keys.some(k=>/^OsRa-/i.test(k)&&k!==CACHE);
+  await Promise.all(keys.filter(k=>/^OsRa-/i.test(k)&&k!==CACHE).map(k=>caches.delete(k)));
+  await self.clients.claim();
+  if(hadOlderCache){
+    const pages=await self.clients.matchAll({type:'window'});
+    await Promise.all(pages.map(c=>c.navigate(c.url).catch(()=>null)));
+  }
+})()));
 
 async function freshNetwork(request){
   const fresh=new Request(request,{cache:'no-store'});
   const res=await fetch(fresh);
-  if(res.ok) caches.open(CACHE).then(c=>c.put(request,res.clone())).catch(()=>{});
+  if(res.ok){
+    const cache=await caches.open(CACHE);
+    await cache.put(request,res.clone()).catch(()=>{});
+  }
   return res;
 }
 
@@ -34,21 +46,21 @@ self.addEventListener('fetch',event=>{
   const u=new URL(event.request.url);
   if(u.origin!==location.origin) return;
   const isNav=event.request.mode==='navigate'||event.request.destination==='document';
-  const isShell=SHELL.has(u.pathname);
+  const isShell=SHELL.has(event.request.url);
   if(isNav||isShell){
     event.respondWith((async()=>{
-      const cached=await caches.match(event.request,{ignoreSearch:false})||await caches.match(event.request,{ignoreSearch:true})||await caches.match('./index.html',{ignoreSearch:true});
-      if(cached){
-        event.waitUntil(freshNetwork(event.request).catch(()=>{}));
-        return cached;
+      try{
+        // Always prefer the current deployed files. Cache is fallback only.
+        return await freshNetwork(event.request);
+      }catch{
+        return (await caches.match(event.request,{ignoreSearch:false})) ||
+               (isNav ? await caches.match('./index.html') : null) ||
+               new Response('',{status:504});
       }
-      return freshNetwork(event.request);
     })());
     return;
   }
   event.respondWith(
-    caches.match(event.request,{ignoreSearch:false})
-      .then(cached=>cached||freshNetwork(event.request))
-      .catch(()=>caches.match('./index.html',{ignoreSearch:true}))
+    caches.match(event.request,{ignoreSearch:false}).then(cached=>cached||freshNetwork(event.request)).catch(()=>new Response('',{status:504}))
   );
 });

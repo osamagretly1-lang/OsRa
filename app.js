@@ -1,4 +1,4 @@
-const OSRA_BUILD='OsRa v100 — 2026-10-06 — r24 FINAL + SIMPLE DUPLICATE CANCEL + SOURCE UI';
+const OSRA_BUILD='OsRa v100 — 2026-10-06 — r24 FINAL + SIMPLE DUPLICATE CANCEL + SOURCE UI + CACHE HARD FIX';
 const DB='OsRaDB', VER=100, THUMB_VERSION=6, THUMB_MAX_BYTES=160*1024;
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 const DEFAULT={settings:{startDate:'',engagementDate:'',birthdayRania:'',osamaPhone:'',raniaPhone:'',whatsappUrl:'',libraryName:'',soundEnabled:false,dailyAlbumIds:null,albumOrderMode:'manual',albumMiniView:false,messagesOrder:'desc',countdowns:[]},memories:[],events:[],dreams:[],verses:[],prayers:[],messages:[],excludedPhotos:[]};
@@ -1105,4 +1105,18 @@ async function runDeferredStartupMaintenance(){
  }catch(e){console.warn('deferred startup maintenance failed',e)}
 }
 async function maybeResumeInterruptedScan(){if(scanLock)return;for(const source of sources){const cp=scanProgresses[source.id];if(!cp||cp.status!=='running')continue;try{const q=await source.handle.queryPermission({mode:'read'});if(q==='granted'){permissionCache.add(source.id);await setActiveSource(source,false);toast(`استكمال «${sourceLabel(source)}» من: ${cp.lastRelPath||'البداية'}`);await scan(source.handle,false,{resume:true,source});return}}catch(e){console.warn('resume scan check failed',e)}}}
-(async()=>{try{await dbOpen();await load();renderNoAnim();updateSoundButton();hideBootSplash();if(navigator.storage?.persist)navigator.storage.persist().catch(()=>{});setTimeout(async()=>{await runDeferredStartupMaintenance();if('serviceWorker'in navigator){navigator.serviceWorker.addEventListener('controllerchange',()=>{try{const k='OsRa-sw-reload-at',last=Number(sessionStorage.getItem(k)||0);if(Date.now()-last<5000)return;sessionStorage.setItem(k,String(Date.now()));location.reload();}catch{location.reload();}});const reg=await navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).catch(()=>null);reg?.update?.().catch(()=>{});}await shareTarget();await maybeAutoFileBackup();},500);setInterval(()=>{maybeAutoFileBackup().catch(()=>{})},6*60*60*1000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&scanCheckpoint?.status==='running')persistScanProgress();if(document.visibilityState==='visible'){setTimeout(()=>{maybeAutoFileBackup().catch(()=>{})},120)}})}catch(e){console.error(e);hideBootSplash();toast('تعذر تشغيل OsRa.')}})();
+async function ensureLatestOsRa(){
+  if(!('serviceWorker' in navigator)) return;
+  let reloading=false;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    if(reloading) return;
+    reloading=true;
+    location.reload();
+  },{once:true});
+  try{
+    const reg=await navigator.serviceWorker.register('./sw.js?build=osra100-20261006-r24-cachefix2',{updateViaCache:'none'});
+    await reg.update().catch(()=>{});
+    if(reg.waiting) reg.waiting.postMessage({type:'SKIP_WAITING'});
+  }catch(e){console.warn('OsRa service worker update skipped',e)}
+}
+(async()=>{try{ensureLatestOsRa().catch(()=>{});await dbOpen();await load();renderNoAnim();updateSoundButton();hideBootSplash();if(navigator.storage?.persist)navigator.storage.persist().catch(()=>{});setTimeout(async()=>{await runDeferredStartupMaintenance();await shareTarget();await maybeAutoFileBackup();},500);setInterval(()=>{maybeAutoFileBackup().catch(()=>{})},6*60*60*1000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&scanCheckpoint?.status==='running')persistScanProgress();if(document.visibilityState==='visible'){setTimeout(()=>{maybeAutoFileBackup().catch(()=>{})},120)}})}catch(e){console.error(e);hideBootSplash();toast('تعذر تشغيل OsRa.')}})();
