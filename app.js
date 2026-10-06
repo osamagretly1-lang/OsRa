@@ -1,4 +1,4 @@
-const OSRA_BUILD='OsRa v100 — 2026-10-06 — r6 TRUE FAST ALL 4 SOURCES LINK + REPORT';
+const OSRA_BUILD='OsRa v100 — 2026-10-06 — r7 TRUE FAST ALL 4 SOURCES LINK + REPORT FIXED';
 const DB='OsRaDB', VER=100, THUMB_VERSION=6, THUMB_MAX_BYTES=160*1024;
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 const DEFAULT={settings:{startDate:'',engagementDate:'',birthdayRania:'',osamaPhone:'',raniaPhone:'',whatsappUrl:'',libraryName:'',soundEnabled:false,dailyAlbumIds:null,albumOrderMode:'manual',albumMiniView:false,countdowns:[]},memories:[],events:[],dreams:[],verses:[],prayers:[],messages:[],excludedPhotos:[]};
@@ -136,7 +136,7 @@ function scanProgressCard(){const cp=scanCheckpoint;if(!cp)return'';const runnin
 async function persistScanProgress(patch={}){const sid=scanCheckpoint?.sourceId||activeSourceId;if(!sid)return;scanCheckpoint={...(scanCheckpoint||{}),...patch,sourceId:sid,updatedAt:Date.now()};scanProgresses[sid]=structuredClone(scanCheckpoint);scanProgressWrite=scanProgressWrite.then(async()=>{await put('library',{key:'scanProgresses',value:structuredClone(scanProgresses)});await put('library',{key:'scanProgress',value:structuredClone(scanCheckpoint)})}).catch(e=>{console.warn('scan progress save failed',e)});return scanProgressWrite}
 async function clearScanProgress(sourceId=activeSourceId){if(!sourceId){scanCheckpoint=null;return}delete scanProgresses[sourceId];if(sourceId===activeSourceId)scanCheckpoint=null;scanProgressWrite=scanProgressWrite.then(async()=>{await put('library',{key:'scanProgresses',value:structuredClone(scanProgresses)});const a=activeSource();if(a&&a.id===sourceId)await del('library','scanProgress')}).catch(e=>{console.warn('scan progress clear failed',e)});return scanProgressWrite}
 async function load(){
- const [st,safety,preRestore,main,sr,ar,b,hq,hqcp,hqsel,hqlast,rawPhotos,sp,legacy,rp]=await Promise.all([
+ const [st,safety,preRestore,main,sr,ar,b,hq,hqcp,hqsel,hqlast,rawPhotos,sp,legacy,rp,lr]=await Promise.all([
   get('state','main'),get('state','safetyBackup'),get('state','preRestoreBackup'),get('library','main'),get('library','sources'),get('library','activeSource'),get('library','backup'),get('library','hqSource'),get('library','hqBuildProgress'),get('library','hqBuildSelection'),get('library','hqLastBuildReport'),getAll('photos'),get('library','scanProgresses'),get('library','scanProgress'),get('library','reindexRestorePool'),get('library','lastLinkReport')
  ]);
  if(st)state={...structuredClone(DEFAULT),...st.value};normalizeState();

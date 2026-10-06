@@ -1,10 +1,10 @@
-const BUILD='osra100-20261006-r6';
+const BUILD='osra100-20261006-r7';
 const CACHE=`OsRa-v100-${BUILD}`;
 const APP=[
   './',
   './index.html',
   './style.css',
-  './app.js?v=osra100-20261006-r6',
+  './app.js?v=osra100-20261006-r7',
   './manifest.json',
   './icon.svg',
   './icon-192.png',
