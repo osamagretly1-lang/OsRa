@@ -1,8 +1,8 @@
-const OSRA_BUILD='OsRa v100 — 2026-10-06 — R24 PRESERVED UI + NAME LINK + SCAN CARD HIDE + CACHE HARD FIX';
+const OSRA_BUILD='OsRa v100 — 2026-10-07 — R24 PRESERVED UI + FAST THUMBS + ALL-ALBUM NAME LINK + SCAN CARD HIDE + CACHE HARD FIX';
 const DB='OsRaDB', VER=100, THUMB_VERSION=6, THUMB_MAX_BYTES=160*1024;
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 const DEFAULT={settings:{startDate:'',engagementDate:'',birthdayRania:'',osamaPhone:'',raniaPhone:'',whatsappUrl:'',libraryName:'',soundEnabled:false,dailyAlbumIds:null,albumOrderMode:'manual',albumMiniView:false,messagesOrder:'desc',hideScanProgressCard:false,countdowns:[]},memories:[],events:[],dreams:[],verses:[],prayers:[],messages:[],excludedPhotos:[]};
-const thumbCache=new Map();const THUMB_CACHE_MAX=36;
+const thumbCache=new Map();const THUMB_CACHE_MAX=96;let thumbHydrateQueue=new Set(),thumbHydrateTimer=0;
 let excludedCacheSource=null,excludedCacheSet=new Set();
 let db,state=structuredClone(DEFAULT),libraryHandle=null,backupFileHandle=null,backupMeta={lastSavedAt:0,lastAutoFileAt:0},hqSourceHandle=null,hqSourceMeta={name:'',manifestVersion:1},hqIndex=new Map(),hqBuildCheckpoint=null,hqBuildSelection=null,hqBuildStopRequested=false,photos=new Map(),sources=[],activeSourceId=null,scanProgresses={},permissionCache=new Set(),permissionDeniedCache=new Set(),searchState={query:'',messageId:'',fromSection:'home'},section='home',busy=false,scanLock=false,scanStopRequested=false,scanCheckpoint=null,scanProgressWrite=Promise.resolve(),dragSelectMode=false,dragSelecting=false,dragSelectValue=true,dragVisited=new Set(),dragPointerId=null,dragScrollTimer=null,dragLastX=0,dragLastY=0,dragLongPressTimer=null,dragPending=false,dragPendingPhoto='',dragPendingItem=null,dragPendingX=0,dragPendingY=0,quickTapHandledUntil=0,reindexRestorePool=[],duplicateModalGroups=[],installEvent=null,soundOn=false,audioCtx=null,lb={ids:[],i:0,url:null,thumbUrl:null,loadToken:0,timer:null,touchX:null,touchY:null,zoom:1,panX:0,panY:0,dragX:null,dragY:null,dragPanX:0,dragPanY:0,pinchStart:0,pinchBase:1,lastTap:0,lastTapX:0,lastTapY:0,flipBusy:false,flipTimer:null,flipUrls:[]},currentMemoryId=null,selectedPhotos=new Set(),selectedMemories=new Set(),calendarDate=today(),calendarCursor=null,safetyTimer=null,recoveryCandidate=null,recoveryNoticeHidden=false,pendingFolderRoot=null,pendingFolderName='',albumBookIndex=0,albumBookBusy=false,albumBookTimer=null,albumBookToken=0;
 let lastLinkReport=null,linkProgresses={},linkProgressTimer=null,linkRunStartedAt=0;
@@ -495,10 +495,12 @@ function pageHTML(s){return s==='home'?pageHome():s==='memories'?pageMemories():
 function hideBootSplash(){const el=document.getElementById('bootSplash');if(!el||el.classList.contains('boot-done'))return;const wait=Math.max(0,220-(performance.now()-(window.__osraBootAt||performance.now())));setTimeout(()=>requestAnimationFrame(()=>el.classList.add('boot-done')),wait)}
 function renderNoAnim(preserveScroll=false){resetAlbumBookTurn();const oldInner=$('#currentPage .inner');const scrollTop=preserveScroll?(oldInner?.scrollTop||0):0;const scrollLeft=preserveScroll?(oldInner?.scrollLeft||0):0;$('#currentPage').innerHTML=pageHTML(section);hydrate();setNav();updateSelectionCount();requestAnimationFrame(()=>{fitAlbumBookStage();if(preserveScroll){const inner=$('#currentPage .inner');if(inner){inner.scrollTop=scrollTop;inner.scrollLeft=scrollLeft}}})}
 function navigate(to,dir=1){if(to===section||busy)return;resetAlbumBookTurn();busy=true;const book=$('#book'),current=$('#currentPage'),back=$('#backPage'),duration=760;back.innerHTML=pageHTML(to);hydrate();book.classList.remove('turn-next','turn-prev');requestAnimationFrame(()=>book.classList.add(dir>0?'turn-next':'turn-prev'));paperSound(duration);setTimeout(()=>{section=to;current.innerHTML=pageHTML(section);back.innerHTML='';book.classList.remove('turn-next','turn-prev');busy=false;hydrate();setNav();updateSelectionCount()},duration)}
-const thumbObserver=('IntersectionObserver' in window)?new IntersectionObserver(entries=>{for(const ent of entries){if(!ent.isIntersecting)continue;thumbObserver.unobserve(ent.target);hydrateThumb(ent.target)}},{rootMargin:'280px 0px'}):null;
+const thumbObserver=('IntersectionObserver' in window)?new IntersectionObserver(entries=>{for(const ent of entries){if(!ent.isIntersecting)continue;thumbObserver.unobserve(ent.target);queueThumbHydrate(ent.target)}},{rootMargin:'800px 0px'}):null;
 async function getThumbBlob(id){if(thumbCache.has(id))return thumbCache.get(id);let b=null;try{const rec=await get('thumbs',id);b=rec?.blob||null}catch{}if(!b){const legacy=await get('photos',id).catch(()=>null);b=legacy?.thumbBlob||null}if(b){thumbCache.set(id,b);while(thumbCache.size>THUMB_CACHE_MAX){const first=thumbCache.keys().next().value;thumbCache.delete(first)}}return b}
-async function hydrateThumb(el){if(!el||el.dataset.thumbBound==='1')return;const p=photos.get(el.dataset.thumb);if(!p?.id||p.excluded)return;el.dataset.thumbBound='1';el.loading='lazy';el.decoding='async';const b=await getThumbBlob(p.id);if(!b)return;const u=URL.createObjectURL(b);el.addEventListener('load',()=>URL.revokeObjectURL(u),{once:true});el.addEventListener('error',()=>URL.revokeObjectURL(u),{once:true});el.src=u}
-function hydrate(root=document){const els=root.querySelectorAll?.('[data-thumb]')||[];for(const el of els){el.loading='lazy';el.decoding='async';if(el.dataset.thumbBound==='1')continue;if(thumbObserver)thumbObserver.observe(el);else requestAnimationFrame(()=>hydrateThumb(el))}}
+function setThumbElement(el,b){if(!el||!b)return false;const u=URL.createObjectURL(b);el.dataset.thumbBound='1';el.dataset.thumbQueued='';el.loading='eager';el.decoding='async';el.addEventListener('load',()=>URL.revokeObjectURL(u),{once:true});el.addEventListener('error',()=>URL.revokeObjectURL(u),{once:true});el.src=u;return true}
+async function hydrateThumbBatch(elements){const els=[...elements].filter(el=>el&&el.dataset.thumbBound!=='1');if(!els.length)return;const unique=[],seen=new Set();for(const el of els){const p=photos.get(el.dataset.thumb);if(!p?.id||p.excluded)continue;const k=p.id;if(seen.has(k))continue;seen.add(k);unique.push({id:p.id,el})}if(!unique.length)return;const ids=unique.map(x=>x.id),batch=await getThumbBlobsBatch(ids),missing=[];for(const x of unique){const b=batch.get(x.id);if(b)setThumbElement(x.el,b);else missing.push(x)}if(missing.length){for(const x of missing){const b=await getThumbBlob(x.id);if(b)setThumbElement(x.el,b);else x.el.dataset.thumbQueued=''}}}
+function queueThumbHydrate(el){if(!el||el.dataset.thumbBound==='1'||el.dataset.thumbQueued==='1')return;el.dataset.thumbQueued='1';thumbHydrateQueue.add(el);if(thumbHydrateTimer)return;thumbHydrateTimer=setTimeout(async()=>{thumbHydrateTimer=0;const batch=[...thumbHydrateQueue];thumbHydrateQueue.clear();await hydrateThumbBatch(batch)},0)}
+function hydrate(root=document){const els=root.querySelectorAll?.('[data-thumb]')||[];for(const el of els){el.loading='eager';el.decoding='async';if(el.dataset.thumbBound==='1')continue;if(thumbObserver)thumbObserver.observe(el);else queueThumbHydrate(el)}}
 
 function go(to){const order=['home','memories','calendar','story','dreams','spiritual','messages','settings','about'];if(to==='memories'&&section!=='memories')albumBookIndex=0;navigate(to,order.indexOf(to)>order.indexOf(section)?1:-1)}
 async function resolve(root,relPath){const parts=String(relPath||'').split('/').filter(Boolean);if(!parts.length)throw new Error('مسار صورة فارغ');let dir=root;for(let i=0;i<parts.length-1;i++){dir=await dir.getDirectoryHandle(parts[i],{create:false})}return dir.getFileHandle(parts.at(-1),{create:false})}
@@ -767,29 +769,39 @@ async function listDirectAlbumNameCandidates(source,keys){
  const out=[];if(!source?.handle||!keys?.size)return out;
  if(!(await ensureSourcePermission(source,true)))return out;
  try{
-  if(source.asAlbum&&keys.has(normalizeAlbumNameKey(source.name)))out.push({source,folderPath:'',name:source.name||''});
-  for await(const [name,entry] of source.handle.entries()){
-   if(entry.kind!=='directory')continue;
-   const key=normalizeAlbumNameKey(name);if(keys.has(key))out.push({source,folderPath:normalizeFolderRelPath(name),name});
+  const foundKeys=new Set(),seenPaths=new Set();
+  const add=(folderPath,name)=>{const key=normalizeAlbumNameKey(name),path=normalizeFolderRelPath(folderPath||'');if(!key||!keys.has(key)||seenPaths.has(path))return false;seenPaths.add(path);out.push({source,folderPath:path,name:String(name||'')});return true};
+  if(source.asAlbum){if(add('',source.name||''))foundKeys.add(normalizeAlbumNameKey(source.name))}
+  const direct=[];for await(const [name,entry] of source.handle.entries())if(entry.kind==='directory')direct.push([name,entry]);
+  direct.sort((a,b)=>a[0].localeCompare(b[0],undefined,{numeric:true,sensitivity:'base'}));
+  const dirs=[];for(const [name,entry] of direct){const key=normalizeAlbumNameKey(name);if(keys.has(key)){if(add(name,name))foundKeys.add(key)}dirs.push([name,entry])}
+  const missingKeys=new Set([...keys].filter(k=>!foundKeys.has(k)));
+  if(missingKeys.size){
+   const walk=async(list,base='',depth=0)=>{
+    if(depth>8)return;
+    for(const [name,entry] of list){if(entry.kind!=='directory')continue;const rel=base?base+'/'+name:name,key=normalizeAlbumNameKey(name);if(keys.has(key))add(rel,name);const children=[];for await(const x of entry.entries())children.push(x);children.sort((a,b)=>a[0].localeCompare(b[0],undefined,{numeric:true,sensitivity:'base'}));await walk(children,rel,depth+1)}
+   };
+   await walk(dirs,'',0);
   }
  }catch(e){console.warn('album name mapping unavailable',sourceLabel(source),e)}
  return out;
 }
+
 async function matchAlbumsByName(showReport=true){
- const albums=visibleMemories().filter(m=>Array.isArray(m.photoIds)&&m.photoIds.some(pid=>isPhotoRecord(photos.get(pid)))&&!m.linkSourceId);
- if(!albums.length){if(showReport)toast('كل الألبومات الظاهرة لديها مصدر ربط بالفعل، أو لا تحتوي صورًا.');return {matched:0,missing:0,ambiguous:0,errors:0};}
+ const albums=visibleMemories().filter(m=>Array.isArray(m.photoIds)&&m.photoIds.some(pid=>isPhotoRecord(photos.get(pid))));
+ if(!albums.length){if(showReport)toast('لا توجد ألبومات ظاهرة تحتوي صورًا للمطابقة.');return {matched:0,missing:0,ambiguous:0,errors:0};}
  const keys=new Set(albums.map(m=>normalizeAlbumNameKey(m.title||m.album)).filter(Boolean));
  const candidates=[];let errors=0;
  for(const source of sources){if(!source?.handle)continue;const rows=await listDirectAlbumNameCandidates(source,keys);candidates.push(...rows)}
  const byKey=new Map();for(const row of candidates){const key=normalizeAlbumNameKey(row.name);const arr=byKey.get(key)||[];const sig=`${row.source.id}::${row.folderPath}`;if(!arr.some(x=>`${x.source.id}::${x.folderPath}`===sig))arr.push(row);byKey.set(key,arr)}
  let matched=0,missing=0,ambiguous=0;const matchedRows=[],ambiguousRows=[];
  for(const m of albums){const key=normalizeAlbumNameKey(m.title||m.album),arr=byKey.get(key)||[];
-  if(arr.length===1){const hit=arr[0];m.linkSourceId=hit.source.id;m.linkFolderPath=hit.folderPath;m.linkAutoByName=true;matched++;matchedRows.push(`${m.title||m.album} ← ${sourceLabel(hit.source)}${hit.folderPath?` / ${hit.folderPath}`:''}`)}
+  if(arr.length===1){const hit=arr[0],currentManual=!!m.linkSourceId&&!m.linkAutoByName;if(!currentManual){m.linkSourceId=hit.source.id;m.linkFolderPath=hit.folderPath;m.linkAutoByName=true;matched++;matchedRows.push(`${m.title||m.album} ← ${sourceLabel(hit.source)}${hit.folderPath?` / ${hit.folderPath}`:''}`)}}
   else if(arr.length>1){ambiguous++;ambiguousRows.push(m.title||m.album)}
   else missing++;
  }
  if(matched){await persistSources();await save();}
- if(showReport){const parts=[`تمت مطابقة ${matched} ألبومًا بالاسم.`];if(missing)parts.push(`غير موجود: ${missing}`);if(ambiguous)parts.push(`غير محسوم بسبب أكثر من مجلد مطابق: ${ambiguous}`);modal(`<h2>🔤 مطابقة الألبومات بالأسماء</h2><div class="card"><p>${parts.join('<br>')}</p><p class="meta">المطابقة تعتمد على اسم الألبوم واسم المجلد فقط، ولا تنشئ ألبومات ولا تنسخ صورًا ولا تحذف شيئًا.</p>${matchedRows.length?`<details open><summary>المطابقات (${matchedRows.length})</summary><div class="meta" style="margin-top:8px">${matchedRows.slice(0,200).map(esc).join('<br>')}</div></details>`:''}${ambiguousRows.length?`<details><summary>الألبومات غير المحسومة (${ambiguousRows.length})</summary><div class="meta" style="margin-top:8px">${ambiguousRows.slice(0,200).map(esc).join('<br>')}</div></details>`:''}</div><div class="actions"><button class="btn primary" data-action="closeModal">تم</button></div>`)}
+ if(showReport){const parts=[`تمت مطابقة ${matched} ألبومًا بالاسم.`];if(missing)parts.push(`غير موجود: ${missing}`);if(ambiguous)parts.push(`غير محسوم بسبب أكثر من مجلد مطابق: ${ambiguous}`);modal(`<h2>🔤 مطابقة الألبومات بالأسماء</h2><div class="card"><p>${parts.join('<br>')}</p><p class="meta">البحث يبدأ بالمجلدات المباشرة داخل المصدر، ثم يبحث داخل المجلدات الفرعية عند الحاجة. لا يتم إنشاء ألبومات أو نسخ صور أو حذف أي شيء.</p>${matchedRows.length?`<details open><summary>المطابقات (${matchedRows.length})</summary><div class="meta" style="margin-top:8px">${matchedRows.slice(0,200).map(esc).join('<br>')}</div></details>`:''}${ambiguousRows.length?`<details><summary>الألبومات غير المحسومة (${ambiguousRows.length})</summary><div class="meta" style="margin-top:8px">${ambiguousRows.slice(0,200).map(esc).join('<br>')}</div></details>`:''}</div><div class="actions"><button class="btn primary" data-action="closeModal">تم</button></div>`)}
  return {matched,missing,ambiguous,errors};
 }
 
@@ -806,7 +818,7 @@ function buildLinkTargetMap(photoIds=null){
  const excluded=excludedIdSet(),allow=photoIds?new Set(photoIds):null,bySource=new Map(),seenBySource=new Map();
  for(const m of visibleMemories()){
   if(!Array.isArray(m.photoIds))continue;
-  const folderPath=inferAlbumFolderPath(m);
+  const mappedSourceId=String(m.linkSourceId||''),mappedFolder=normalizeFolderRelPath(m.linkFolderPath||''),inferredFolder=inferAlbumFolderPath(m);
   for(const pid of m.photoIds){
    if(allow&&!allow.has(pid))continue;
    const p=photos.get(pid);if(!isPhotoRecord(p)||excluded.has(pid))continue;
@@ -815,6 +827,7 @@ function buildLinkTargetMap(photoIds=null){
    else sourceIds=[...new Set([p.sourceId,...photoLocations(p).map(l=>l.sourceId)].filter(Boolean).map(String))];
    for(const sid of sourceIds){
     const s=sources.find(x=>String(x.id)===sid&&x?.handle);if(!s)continue;
+    const folderPath=(mappedSourceId===String(s.id)&&mappedFolder)?mappedFolder:inferredFolder;
     const arr=bySource.get(s.id)||[],seen=seenBySource.get(s.id)||new Map();
     let t=seen.get(pid);
     if(!t){t={photo:p,albums:[],album:m,folderPath,candidates:[]};arr.push(t);seen.set(pid,t)}

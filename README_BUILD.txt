@@ -1,4 +1,4 @@
-OsRa v100 — R24 PRESERVED UI + NAME LINK + SCAN CARD HIDE
+OsRa v100 — R24 PRESERVED UI + FAST THUMBS + ALL-ALBUM NAME LINK + SCAN CARD HIDE
 
 Baseline: OsRa_v33_HQ_FINAL_SAFE_REVIEW_FIXED.zip ONLY.
 No code from v67/v70/v77/v78/v79/v80/v81 or later branches was used as the baseline.
@@ -51,7 +51,8 @@ FINAL RE-REVIEW NOTES:
 REQUESTED FINAL CHANGES:
 - Built directly on the R24 CACHE HARD FIXED package; the R24 page structure/CSS are preserved.
 - Photo-only scope retained; no active video UI or video scan path was added.
-- Album-name matching is metadata-only and safe: visible albums without a chosen link are matched to one unique direct folder/root with the same normalized name. Ambiguous names are left untouched and reported.
+- Album-name matching is metadata-only and safe: every visible album is checked against matching source folders by normalized name; direct folders are preferred, nested folders are searched when needed, and duplicate matches stay unresolved and are reported.
 - The unified fast link engine remains the only file-link engine; name matching only supplies album targets before linking.
 - The scan continuation card can be hidden without deleting its saved checkpoint. It can be shown again from Settings.
+- Thumbnail hydration reads visible/nearby thumbnails in IndexedDB batches and keeps a larger bounded memory cache, improving first display without changing thumbnail quality or the page layout.
 - Backup already serializes Settings, so the hide preference is included in normal OsRa backup/safety snapshots.
