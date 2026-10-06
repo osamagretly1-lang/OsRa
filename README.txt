@@ -7,3 +7,5 @@ OsRa HQ Source — final safe build
 الربط في الهاتف الآخر يعتمد على photoId + هوية مجموعة الصور، وليس اسم الملف أو حجمه.
 نسخة البيانات هي مصدر الحقيقة للألبومات والترتيب؛ HQ يوفّر ملف الصورة فقط.
 الصور المخفية أو المستبعدة لا تُنسخ كملفات HQ.
+
+Stable R24 performance rebuild: preserved Add Album/Add Memory UI and existing data model; faster batch-first thumbnail hydration; no schema bump and no destructive migration.

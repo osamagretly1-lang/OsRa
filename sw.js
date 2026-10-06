@@ -1,10 +1,10 @@
-const BUILD='osra100-20261007-r24-thumbs-albums-fast';
+const BUILD='osra100-20261007-r24-fastthumbs-stable';
 const CACHE=`OsRa-v100-${BUILD}`;
 const APP=[
   './',
   './index.html',
   './style.css',
-  './app.js?v=osra100-20261007-r24-thumbs-albums-fast',
+  './app.js?v=osra100-20261007-r24-fastthumbs-stable',
   './manifest.json',
   './icon.svg',
   './icon-192.png',

@@ -56,3 +56,6 @@ REQUESTED FINAL CHANGES:
 - The scan continuation card can be hidden without deleting its saved checkpoint. It can be shown again from Settings.
 - Thumbnail hydration reads visible/nearby thumbnails in IndexedDB batches and keeps a larger bounded memory cache, improving first display without changing thumbnail quality or the page layout.
 - Backup already serializes Settings, so the hide preference is included in normal OsRa backup/safety snapshots.
+
+
+R24 stable performance rebuild (2026-10-07): based directly on OsRa_v100_R24_FAST_THUMBS_ALL_ALBUM_NAME_LINK. The Add Album and Add Memory flows are preserved unchanged. Thumbnail reads are cache-first and batched; the first 24 visible thumbnail elements hydrate immediately, while the rest remain intersection-loaded. Thumbnail generation for future scans is modestly improved to 360px max while keeping the existing byte budget. IndexedDB schema/data version remains 100; no destructive migration was added.
