@@ -1,8 +1,8 @@
 window.__osraBootAt=performance.now();
-const OSRA_BUILD='OsRa v107 — 2026-10-08 — R31 SURPRISE_TIMING_BOOT_RIBBON';
+const OSRA_BUILD='OsRa v109 — 2026-10-08 — R33 SURPRISE_SPEED_AND_TIMING';
 const DB='OsRaDB', VER=100, THUMB_VERSION=6, THUMB_MAX_BYTES=160*1024;
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
-const DEFAULT={settings:{startDate:'',engagementDate:'',birthdayRania:'',osamaPhone:'',raniaPhone:'',whatsappUrl:'',libraryName:'',soundEnabled:false,surprisesEnabled:true,dailyAlbumIds:null,albumOrderMode:'manual',albumMiniView:false,messagesOrder:'desc',hideScanProgressCard:false,countdowns:[],surpriseTiming:'10'},memories:[],events:[],dreams:[],verses:[],prayers:[],messages:[],excludedPhotos:[]};
+const DEFAULT={settings:{startDate:'',engagementDate:'',birthdayRania:'',osamaPhone:'',raniaPhone:'',whatsappUrl:'',libraryName:'',soundEnabled:false,surprisesEnabled:true,dailyAlbumIds:null,albumOrderMode:'manual',albumMiniView:false,messagesOrder:'desc',hideScanProgressCard:false,countdowns:[],surpriseTiming:'10',surpriseSpeed:'normal'},memories:[],events:[],dreams:[],verses:[],prayers:[],messages:[],excludedPhotos:[]};
 const thumbCache=new Map();const THUMB_CACHE_MAX=96;let thumbHydrateQueue=new Set(),thumbHydrateTimer=0;
 let excludedCacheSource=null,excludedCacheSet=new Set();
 let db,state=structuredClone(DEFAULT),libraryHandle=null,backupFileHandle=null,backupMeta={lastSavedAt:0,lastAutoFileAt:0},hqSourceHandle=null,hqSourceMeta={name:'',manifestVersion:1},hqIndex=new Map(),hqBuildCheckpoint=null,hqBuildSelection=null,hqBuildStopRequested=false,photos=new Map(),sources=[],activeSourceId=null,scanProgresses={},permissionCache=new Set(),permissionDeniedCache=new Set(),searchState={query:'',messageId:'',fromSection:'home'},section='home',busy=false,scanLock=false,scanStopRequested=false,scanCheckpoint=null,scanProgressWrite=Promise.resolve(),dragSelectMode=false,dragSelecting=false,dragSelectValue=true,dragVisited=new Set(),dragPointerId=null,dragScrollTimer=null,dragLastX=0,dragLastY=0,dragLongPressTimer=null,dragPending=false,dragPendingPhoto='',dragPendingItem=null,dragPendingX=0,dragPendingY=0,quickTapHandledUntil=0,reindexRestorePool=[],duplicateModalGroups=[],installEvent=null,soundOn=false,audioCtx=null,lb={ids:[],i:0,url:null,thumbUrl:null,loadToken:0,timer:null,touchX:null,touchY:null,zoom:1,panX:0,panY:0,dragX:null,dragY:null,dragPanX:0,dragPanY:0,pinchStart:0,pinchBase:1,lastTap:0,lastTapX:0,lastTapY:0,flipBusy:false,flipTimer:null,flipUrls:[]},currentMemoryId=null,selectedPhotos=new Set(),selectedMemories=new Set(),calendarDate=today(),calendarCursor=null,safetyTimer=null,recoveryCandidate=null,recoveryNoticeHidden=false,pendingFolderRoot=null,pendingFolderName='',albumBookIndex=0,albumBookBusy=false,albumBookTimer=null,albumBookToken=0;
@@ -157,7 +157,13 @@ function normalizeState(){
  if(!(state.settings.dailyAlbumIds===null||Array.isArray(state.settings.dailyAlbumIds)))state.settings.dailyAlbumIds=null;
  if(!['manual','details','linked'].includes(state.settings.albumOrderMode))state.settings.albumOrderMode='manual';
  if(!['asc','desc'].includes(state.settings.messagesOrder))state.settings.messagesOrder='desc';
- if(!['3','5','10','20','30','random-fast','random-slow'].includes(String(state.settings.surpriseTiming||'')))state.settings.surpriseTiming='10';
+ const legacyTiming=String(state.settings.surpriseTiming||'10');
+ if(['random-fast','random-slow'].includes(legacyTiming)){
+  if(!state.settings.surpriseSpeed||state.settings.surpriseSpeed==='normal')state.settings.surpriseSpeed=legacyTiming==='random-fast'?'fast':'slow';
+  state.settings.surpriseTiming=legacyTiming==='random-fast'?'5':'20';
+ }
+ if(!['3','5','10','20','30'].includes(String(state.settings.surpriseTiming||'')))state.settings.surpriseTiming='10';
+ if(!['fast','normal','slow','random-all'].includes(String(state.settings.surpriseSpeed||'')))state.settings.surpriseSpeed='normal';
  if(typeof state.settings.albumMiniView!=='boolean')state.settings.albumMiniView=false;
  if(typeof state.settings.surprisesEnabled!=='boolean')state.settings.surprisesEnabled=true;
  if(typeof state.settings.hideScanProgressCard!=='boolean')state.settings.hideScanProgressCard=false;
@@ -176,16 +182,24 @@ function recoveryLabel(x){const d=x?.exportedAt?new Date(x.exportedAt):null;retu
 function updateSoundButton(){const b=$('#soundBtn');if(!b)return;b.textContent=soundOn?'🔊':'🔇';b.classList.toggle('sound-on',soundOn);b.title=soundOn?'إيقاف صوت قلب الورق':'تفعيل صوت قلب الورق'}
 function surprisesAreEnabled(){return state.settings.surprisesEnabled!==false}
 function updateSurpriseButton(){const b=$('#surpriseBtn');if(!b)return;const on=surprisesAreEnabled();b.textContent=on?'🎉 احتفل 🥳':'🎉 احتفل nicht 😔';b.classList.toggle('surprises-on',on);b.classList.toggle('surprises-off',!on);b.setAttribute('aria-pressed',String(on));b.title=on?'إيقاف كل الرسائل العشوائية والاحتفالات':'تشغيل كل الرسائل العشوائية والاحتفالات'}
-function surpriseTimingProfile(){const m=String(state.settings.surpriseTiming||'10');const map={
-  '3':{interval:3000,speed:1.55,key:'fast'},
-  '5':{interval:5000,speed:1.34,key:'fast'},
-  '10':{interval:10000,speed:1.05,key:'normal'},
-  '20':{interval:20000,speed:.88,key:'slow'},
-  '30':{interval:30000,speed:.74,key:'slow'},
-  'random-fast':{interval:3500+Math.random()*5500,speed:1.25+Math.random()*.35,key:'fast'},
-  'random-slow':{interval:18000+Math.random()*17000,speed:.72+Math.random()*.22,key:'slow'}
- };return map[m]||map['10']}
-function surpriseTimingLabel(){const m=String(state.settings.surpriseTiming||'10');return ({'3':'كل 3 ثوانٍ','5':'كل 5 ثوانٍ','10':'كل 10 ثوانٍ','20':'كل 20 ثانية','30':'كل 30 ثانية','random-fast':'عشوائي سريع','random-slow':'عشوائي بطيء'})[m]||'كل 10 ثوانٍ'}
+function surpriseTimingProfile(){
+ const m=String(state.settings.surpriseTiming||'10');
+ const map={'3':3000,'5':5000,'10':10000,'20':20000,'30':30000};
+ const speedKey=String(state.settings.surpriseSpeed||'normal');
+ const motionMap={fast:{factor:1.52,key:'fast'},normal:{factor:1,key:'normal'},slow:{factor:.73,key:'slow'}};
+ const speed=motionMap[speedKey]||motionMap.normal;
+ let interval=map[m]||10000;
+ let randomSpeedKey=speedKey;
+ if(speedKey==='random-all'){
+  interval=3000+Math.random()*27000;
+  const keys=['fast','normal','slow'];
+  randomSpeedKey=keys[Math.floor(Math.random()*keys.length)];
+ }
+ const motion=motionMap[randomSpeedKey]||motionMap.normal;
+ return {interval,speed:motion.factor,key:motion.key,timingKey:m,speedKey:randomSpeedKey,randomAll:speedKey==='random-all'};
+}
+function surpriseTimingLabel(){const m=String(state.settings.surpriseTiming||'10');return ({'3':'كل 3 ثوانٍ','5':'كل 5 ثوانٍ','10':'كل 10 ثوانٍ','20':'كل 20 ثانية','30':'كل 30 ثانية'})[m]||'كل 10 ثوانٍ'}
+function surpriseSpeedLabel(){const m=String(state.settings.surpriseSpeed||'normal');return ({fast:'سريع',normal:'متوسط',slow:'بطيء','random-all':'عشوائي للكل'})[m]||'متوسط'}
 function initBootRibbon(){const el=document.getElementById('bootJoyRibbon');if(!el)return;const palettes=['red-purple','purple-red','rose-violet','violet-rose'];const palette=palettes[Math.floor(Math.random()*palettes.length)];el.classList.remove(...palettes);el.classList.add(palette);el.style.setProperty('--boot-ribbon-spin',`${Math.random()<.5?'left':'right'}`);}
 function clearSurpriseLayers(){['romanticSceneLayer','romanticMessageBubble','romanticLongLayer','romanticBalloonLayer','romanticEffectLayer','romanticFloatLayer','occasionCelebration'].forEach(id=>{const el=document.getElementById(id);if(el)el.remove()});const ticker=document.getElementById('romanticTicker');if(ticker){ticker.classList.remove('show');const tx=document.getElementById('romanticTickerText');if(tx)tx.textContent=''}clearTimeout(romanticTickerCloseTimer);clearTimeout(romanticKissTimer);romanticKissTimer=null;clearTimeout(romanticDelightTimer);romanticDelightTimer=null;occasionCelebrationBusy=false;romanticLongBusy=false}
 async function toggleSurprises(){state.settings.surprisesEnabled=!surprisesAreEnabled();await save();if(!surprisesAreEnabled())clearSurpriseLayers();updateSurpriseButton();updateBirthdayUi();if(surprisesAreEnabled()){startRomanticTicker();maybeRunOccasionCelebrations();}renderNoAnim();}
@@ -580,7 +594,7 @@ const ROMANTIC_LONG_MESSAGE='حلو انت وقاعد مستني الرساله 
 const ROMANTIC_FLOATS=['🎈','🌹','❤️','💛','💖','💕','🌷','🌸','💐','😘','🫂'];
 const ROMANTIC_KISS_MESSAGES=['هات بوسه🙈🙊',...ROMANTIC_TICKER_MESSAGES];
 function occasionJoyActive(){return surprisesAreEnabled()&&occasionCountdownsToday().some(x=>!countdownCelebrateOff(x.id))}
-function showRomanticFloat(kind='random'){
+function showRomanticFloat(kind='random',profile=surpriseTimingProfile()){
  if(!surprisesAreEnabled())return;
  let layer=document.getElementById('romanticFloatLayer');
  if(!layer){layer=document.createElement('div');layer.id='romanticFloatLayer';layer.className='romantic-float-layer';document.body.appendChild(layer)}
@@ -594,7 +608,7 @@ function showRomanticFloat(kind='random'){
   el.style.left=`${4+Math.random()*92}%`;
   el.style.top=`${8+Math.random()*72}%`;
   el.style.fontSize=`${24+Math.random()*24}px`;
-  el.style.animationDuration=`${4.1+Math.random()*2.8}s`;
+  el.style.animationDuration=`${((4.1+Math.random()*2.8)/Math.max(.65,profile.speed)).toFixed(2)}s`;
   el.style.animationDelay=`${(Math.random()*.7).toFixed(2)}s`;
   el.style.setProperty('--sway',`${-12+Math.random()*24}vw`);
   el.style.setProperty('--driftX',`${-8+Math.random()*16}vw`);
@@ -643,23 +657,69 @@ function romanticSceneDecor(count=9){
  }
  return out.join('');
 }
-function romanticSceneHtml(message,style,occasion=false){
- const second=['💖','🌹','💋','🫂','🎈','✨','🌸','💐','💕'][Math.floor(Math.random()*9)];
- const third=['❤️','🌸','💕','🥰','⭐','💛','🌷','😘','🎀'][Math.floor(Math.random()*9)];
- const len=Array.from(String(message||'')).length;
- const scale=len>92?0.66:len>64?0.75:len>40?0.84:len>24?0.93:1.02;
- const left=(8+Math.random()*84).toFixed(1), top=(10+Math.random()*68).toFixed(1);
- return `<div class="romantic-scene-backdrop"></div><div class="romantic-scene-shower">${romanticSceneDecor(10)}</div><div class="romantic-scene-core"><div class="rs-card" style="left:${left}%;top:${top}%;--msg-scale:${scale}"><div class="rs-message">${esc(message)}</div><div class="rs-mini-row"><span>${second}</span><span>${third}</span><span>♥</span></div></div><div class="rs-ring r1">♥</div><div class="rs-ring r2">♥</div></div>`;
+function fitRomanticSceneCard(layer){
+ const card=layer?.querySelector('.rs-card');
+ const msg=layer?.querySelector('.rs-message');
+ if(!card||!msg)return;
+ const vw=Math.max(280,window.innerWidth||360),vh=Math.max(420,window.innerHeight||640);
+ const len=Array.from(msg.textContent||'').length;
+ const target=Math.max(18,Math.min(46, len>150?19:len>110?21:len>85?23:len>60?26:len>40?30:len>24?34:40));
+ msg.style.fontSize=`${target}px`;
+ msg.style.lineHeight=len>90?'1.28':'1.22';
+ msg.style.maxWidth='100%';
+ const maxH=Math.max(210,Math.min(560,vh-105));
+ card.style.maxWidth=`${Math.max(240,Math.min(760,vw-22))}px`;
+ card.style.maxHeight='none';
+ card.style.overflow='visible';
+ // Fit the whole message into the viewport before placement; only very unusual text falls back to scrolling.
+ let fs=target;
+ for(let n=0;n<14;n++){
+  msg.style.fontSize=`${fs}px`;
+  if(card.scrollHeight<=maxH || fs<=16)break;
+  fs-=1;
+ }
+ card.style.maxHeight=`${maxH}px`;
+ // Keep the resting position completely on-screen, while preserving the chosen style/motion.
+ const w=card.offsetWidth||Math.min(760,vw-22),h=card.offsetHeight||Math.min(560,vh-105);
+ const initialX=vw*(.18+Math.random()*.64),initialY=vh*(.22+Math.random()*.56);
+ const safeX=Math.max(w/2+11,Math.min(vw-w/2-11,initialX));
+ const safeY=Math.max(h/2+54,Math.min(vh-h/2-16,initialY));
+ card.style.left=`${safeX}px`;
+ card.style.top=`${safeY}px`;
+ card.dataset.ready='1';
+}
+function clampRomanticSceneCard(layer){
+ const card=layer?.querySelector('.rs-card');
+ if(!card)return;
+ const vw=window.innerWidth||360,vh=window.innerHeight||640,rect=card.getBoundingClientRect();
+ const marginX=10,topSafe=Math.min(74,vh*.12),bottomSafe=10;
+ const dx=(rect.left<marginX?marginX-rect.left:rect.right>vw-marginX?vw-marginX-rect.right:0);
+ const dy=(rect.top<topSafe?topSafe-rect.top:rect.bottom>vh-bottomSafe?vh-bottomSafe-rect.bottom:0);
+ if(dx||dy){
+  const curX=parseFloat(card.style.left)||vw/2,curY=parseFloat(card.style.top)||vh/2;
+  card.style.left=`${curX+dx}px`;card.style.top=`${curY+dy}px`;
+ }
+}
+function enableRomanticCardDrag(layer){
+ const card=layer?.querySelector('.rs-card');
+ if(!card||card.dataset.dragReady)return;
+ card.dataset.dragReady='1';
+ let dragging=false,startX=0,startY=0,startLeft=0,startTop=0,pid=null;
+ const stop=()=>{dragging=false;pid=null;card.classList.remove('user-dragged')};
+ card.addEventListener('pointerdown',e=>{if(!layer.classList.contains('is-visible'))return;dragging=true;pid=e.pointerId;startX=e.clientX;startY=e.clientY;startLeft=parseFloat(card.style.left)||window.innerWidth/2;startTop=parseFloat(card.style.top)||window.innerHeight/2;card.setPointerCapture?.(e.pointerId);card.classList.add('user-dragged');e.preventDefault()},{passive:false});
+ card.addEventListener('pointermove',e=>{if(!dragging||pid!==e.pointerId)return;const w=card.offsetWidth||0,h=card.offsetHeight||0,vw=window.innerWidth,vh=window.innerHeight;let x=startLeft+e.clientX-startX,y=startTop+e.clientY-startY;x=Math.max(w/2+8,Math.min(vw-w/2-8,x));y=Math.max(h/2+48,Math.min(vh-h/2-8,y));card.style.left=`${x}px`;card.style.top=`${y}px`});
+ ['pointerup','pointercancel','lostpointercapture'].forEach(ev=>card.addEventListener(ev,stop));
 }
 function showRomanticScene(message,opts={}){
  if(!surprisesAreEnabled())return;
  const old=document.getElementById('romanticSceneLayer');if(old)old.remove();
  const style=opts.style||romanticScenePickStyle();
  const motion=opts.motion||romanticMotionPick();
- const layer=document.createElement('div');layer.id='romanticSceneLayer';layer.className=`romantic-scene-layer scene-${style} motion-${motion}${opts.occasion?' scene-occasion':''}`;
+ const prof=opts.profile||surpriseTimingProfile();
+ const layer=document.createElement('div');layer.id='romanticSceneLayer';layer.className=`romantic-scene-layer scene-${style} motion-${motion} surprise-speed-${prof.key}${opts.occasion?' scene-occasion':''}`;
  layer.setAttribute('aria-hidden','true');layer.innerHTML=romanticSceneHtml(message,style,!!opts.occasion);document.body.appendChild(layer);
- requestAnimationFrame(()=>layer.classList.add('is-visible'));
- const prof=surpriseTimingProfile();layer.classList.add(`surprise-speed-${prof.key}`);const baseLife=opts.occasion?9200:(style==='dogsign'?11800:7600);const life=Math.round(Math.max(4200,Math.min(12500,baseLife/prof.speed)));layer.style.setProperty('--surprise-speed',String(prof.speed));
+ requestAnimationFrame(()=>{fitRomanticSceneCard(layer);layer.classList.add('is-visible');enableRomanticCardDrag(layer);setTimeout(()=>{clampRomanticSceneCard(layer)},Math.max(90,Math.min(450,650/prof.speed)));setTimeout(()=>{clampRomanticSceneCard(layer)},Math.max(250,Math.min(900,1100/prof.speed)));});
+ const baseLife=opts.occasion?9200:(style==='dogsign'?11800:7600);const life=Math.round(Math.max(4200,Math.min(12500,baseLife/prof.speed)));layer.style.setProperty('--surprise-speed',String(prof.speed));
  setTimeout(()=>layer.classList.add('is-leaving'),Math.max(4500,life-1800));
  setTimeout(()=>layer.remove(),life);
 }
@@ -673,14 +733,14 @@ function showRomanticLongMessage(){
   showRomanticScene(ROMANTIC_LONG_MESSAGE,{style:'polaroid'});setTimeout(()=>{romanticLongBusy=false},8200);
  }
 }
-function showRomanticMessage(){
+function showRomanticMessage(profile=surpriseTimingProfile()){
  if(!surprisesAreEnabled())return;
  if(Math.random()<0.10){showMessageBalloon(ROMANTIC_TICKER_MESSAGES[Math.floor(Math.random()*ROMANTIC_TICKER_MESSAGES.length)]);return}
  if(Math.random()<0.12){showRomanticLongMessage();return}
  let message=ROMANTIC_TICKER_MESSAGES[Math.floor(Math.random()*ROMANTIC_TICKER_MESSAGES.length)];
  if(ROMANTIC_TICKER_MESSAGES.length>1){let guard=0;while(message===lastRomanticSceneMessage&&guard++<8)message=ROMANTIC_TICKER_MESSAGES[Math.floor(Math.random()*ROMANTIC_TICKER_MESSAGES.length)]}
  lastRomanticSceneMessage=message;
- showRomanticScene(message,{style:romanticScenePickStyle(),occasion:occasionJoyActive()});
+ showRomanticScene(message,{style:romanticScenePickStyle(),occasion:occasionJoyActive(),profile});
 }
 function showMessageBalloon(message){
  if(!surprisesAreEnabled())return;
@@ -688,26 +748,31 @@ function showMessageBalloon(message){
 }
 function inKissWindow(){const d=new Date();const mins=d.getHours()*60+d.getMinutes();return mins>=23*60||mins<60}
 function tryScheduleKissBalloon(){if(!surprisesAreEnabled())return;clearTimeout(romanticKissTimer);const key=`${today()}-kiss-balloon`;if(localStorage.getItem('osra-kiss-balloon-shown')===key)return;const d=new Date(),mins=d.getHours()*60+d.getMinutes();if(mins>=23*60||mins<60){const delay=5200+Math.random()*4200;romanticKissTimer=setTimeout(()=>{if(!inKissWindow()||localStorage.getItem('osra-kiss-balloon-shown')===key)return;localStorage.setItem('osra-kiss-balloon-shown',key);const msg=ROMANTIC_KISS_MESSAGES[Math.random()<0.55?0:1+Math.floor(Math.random()*(ROMANTIC_KISS_MESSAGES.length-1))];showRomanticScene(msg,{style:Math.random()<.55?'balloons':'giantcenter'});},delay);return}if(mins<23*60){const until23=(23*60-mins)*60000-d.getSeconds()*1000;romanticKissTimer=setTimeout(()=>tryScheduleKissBalloon(),Math.max(30000,until23));return}const tomorrow=new Date(d);tomorrow.setDate(tomorrow.getDate()+1);tomorrow.setHours(23,0,5,0);romanticKissTimer=setTimeout(()=>tryScheduleKissBalloon(),Math.max(60000,tomorrow-d))}
-function showRomanticEffect(){
+function showRomanticEffect(profile=surpriseTimingProfile()){
  if(!surprisesAreEnabled())return;
  const layer=document.getElementById('romanticEffectLayer')||(()=>{const x=document.createElement('div');x.id='romanticEffectLayer';x.className='romantic-effect-layer';document.body.appendChild(x);return x})();
+ layer.classList.remove('surprise-speed-fast','surprise-speed-normal','surprise-speed-slow');layer.classList.add(`surprise-speed-${profile.key}`);
  const modes=['rain','fountain','swirl','edge','balloons'];const mode=modes[Math.floor(Math.random()*modes.length)];
  const sets={rain:['❤️','💖','🌹','🌸','💋','💕','✨'],fountain:['💗','💐','🌷','💖','⭐','😘'],swirl:['❤️','💛','💗','💞','🌸','🎀'],edge:['🌹','🌷','🌸','💖','💕','✨'],balloons:['🎈','🎈','🎈','💖','🎀']};
  const n=mode==='balloons'?8:20+Math.floor(Math.random()*10);
- for(let i=0;i<n;i++){const s=document.createElement('span');s.className=`romantic-effect-item effect-${mode}`;s.textContent=sets[mode][Math.floor(Math.random()*sets[mode].length)];s.style.left=`${3+Math.random()*94}%`;s.style.top=`${3+Math.random()*90}%`;s.style.setProperty('--drift',`${-14+Math.random()*28}vw`);s.style.setProperty('--delay',`${(Math.random()*.6).toFixed(2)}s`);s.style.setProperty('--dur',`${(3+Math.random()*3.2).toFixed(2)}s`);s.style.fontSize=`${28+Math.random()*34}px`;s.addEventListener('animationend',()=>s.remove(),{once:true});layer.appendChild(s)}
- setTimeout(()=>{if(layer&&!layer.children.length)layer.remove()},7600)
+ const motionFactor=profile.speed;
+ for(let i=0;i<n;i++){const s=document.createElement('span');s.className=`romantic-effect-item effect-${mode}`;s.textContent=sets[mode][Math.floor(Math.random()*sets[mode].length)];s.style.left=`${3+Math.random()*94}%`;s.style.top=`${3+Math.random()*90}%`;s.style.setProperty('--drift',`${-14+Math.random()*28}vw`);s.style.setProperty('--delay',`${(Math.random()*.6).toFixed(2)}s`);s.style.setProperty('--dur',`${((3+Math.random()*3.2)/motionFactor).toFixed(2)}s`);s.style.fontSize=`${28+Math.random()*34}px`;s.addEventListener('animationend',()=>s.remove(),{once:true});layer.appendChild(s)}
+ setTimeout(()=>{if(layer&&!layer.children.length)layer.remove()},Math.round(7600/motionFactor))
 }
 function startRomanticTicker(){
  if(!surprisesAreEnabled())return;
  if(romanticTickerTimer)clearTimeout(romanticTickerTimer);if(romanticDelightTimer)clearTimeout(romanticDelightTimer);
  const schedule=delay=>{romanticDelightTimer=setTimeout(()=>{
-   const occasion=occasionJoyActive();const r=Math.random();
-   if(r<0.58){showRomanticMessage();localStorage.setItem('osra-romantic-day-message',today())}
-   else if(r<0.78){showRomanticEffect()}
-   else{const kind=Math.random();showRomanticFloat(kind<.34?'balloon':kind<.62?'rose':'heart')}
-   const prof=surpriseTimingProfile();const gap=2000;const next=prof.interval+gap;setTimeout(()=>schedule(0),next);
- },delay)};
- const firstDayMessage=localStorage.getItem('osra-romantic-day-message')!==today();const prof=surpriseTimingProfile();const first=Math.min(4500,Math.max(1800,prof.interval*.45));schedule(first);tryScheduleKissBalloon();
+   const prof=surpriseTimingProfile();
+   const r=Math.random();
+   if(r<0.58){showRomanticMessage(prof);localStorage.setItem('osra-romantic-day-message',today())}
+   else if(r<0.78){showRomanticEffect(prof)}
+   else{const kind=Math.random();showRomanticFloat(kind<.34?'balloon':kind<.62?'rose':'heart',prof)}
+   // The selected timing is the actual trigger-to-trigger interval. No hidden 2-second addition.
+   const next=Math.max(3000,Math.round(prof.interval));
+   schedule(next);
+ },Math.max(0,delay))};
+ const first=Math.min(2500,Math.max(1200,2000));schedule(first);tryScheduleKissBalloon();
 }
 function countdownForm(existing=null){const x=existing||{title:'',date:'',emoji:'⏳',showHome:true,annual:false};modal(`<h2>${existing?'تعديل':'إضافة'} عداد / موعد</h2>${field('cTitle','اسم الموعد',x.title,'text')}${field('cDate','التاريخ',x.date,'date')}${field('cEmoji','الرمز (اختياري)',x.emoji,'text')}<label class="field" style="display:flex;align-items:center;gap:8px"><span><input id="cAnnual" type="checkbox" ${x.annual?'checked':''}> يتكرر سنويًا</span></label><label class="field" style="display:flex;align-items:center;gap:8px"><span><input id="cHome" type="checkbox" ${x.showHome?'checked':''}> إظهار العداد في الرئيسية</span></label><div class="actions"><button class="btn primary" data-action="saveCountdown" data-id="${existing?.id||''}">حفظ</button><button class="btn" data-action="closeModal">إلغاء</button></div>`)}
 async function saveCountdown(i){const title=$('#cTitle').value.trim();const date=$('#cDate').value;const emoji=$('#cEmoji').value.trim()||'⏳';if(!title||!date){toast('اكتب اسم الموعد والتاريخ.');return}let x=i?state.settings.countdowns.find(v=>v.id===i):null;if(!x){x={id:id('cnt'),title:'',date:'',emoji:'⏳',showHome:true,annual:false};state.settings.countdowns.unshift(x)}x.title=title;x.date=date;x.emoji=emoji;x.annual=!!$('#cAnnual')?.checked;x.showHome=!!$('#cHome')?.checked;await save();closeModal();toast('تم حفظ العداد.');renderNoAnim()}
@@ -720,9 +785,12 @@ async function saveSettings(){
  state.settings.osamaPhone=$('#setOsama')?.value?.trim()||'';
  state.settings.raniaPhone=$('#setRania')?.value?.trim()||'';
  state.settings.whatsappUrl=$('#setWA')?.value?.trim()||'';
+ const timingEl=document.getElementById('surpriseTimingSetting');const speedEl=document.getElementById('surpriseSpeedSetting');
+ if(timingEl)state.settings.surpriseTiming=timingEl.value;
+ if(speedEl)state.settings.surpriseSpeed=speedEl.value;
  normalizeState();await save();soundOn=!!state.settings.soundEnabled;updateSoundButton();updateSurpriseButton();toast('تم حفظ الإعدادات.');renderNoAnim(true);
 }
-function pageSettings(){const ex=state.excludedPhotos.length;return `<div class="inner">${scanProgressCard()}${linkProgressCard()}${hqBuildProgressCard()}${hqLastBuildCard()}${dataRecoveryCard()}${reindexRestorePool.length?`<div class="card scan-progress-card"><h3>↻ إعادة فهرسة مستبعدة معلقة</h3><p>هناك ${reindexRestorePool.length} صورة ما زالت في قائمة الاسترجاع الآمن. شغّل «السماح بها وإعادة فحصها» لإكمالها.</p></div>`:''}<div class="kicker">⚙ المزيد</div><h1 class="title">إعدادات OsRa</h1><div class="cards"><div class="card"><h3>📁 مكتبات الصور</h3><p>${sources.length?`تم ربط ${sources.length} مجلد${sources.length===1?'':'ات'} — المصدر الأساسي: ${esc(sourceLabel(sources[0]))}`:'غير مرتبطة'}</p><div class="actions"><button class="btn primary" data-action="folder">＋ إضافة مجلد / ألبوم</button><button class="btn" data-action="scan">↻ فحص المجلد المحدد</button><button class="btn" data-action="matchAlbumsByName">🔤 مطابقة الألبومات بالأسماء</button><button class="btn primary" data-action="linkAllSources">⚡ ربط كل المصادر — سريع وذكي + تقرير</button>${state.settings.hideScanProgressCard?`<button class="btn" data-action="showScanProgressCard">↶ إظهار قائمة متابعة الفحص</button>`:''}<button class="btn" data-action="diag">تشخيص</button><button class="btn" data-action="duplicateManager">🔎 مراجعة التكرارات عند الطلب</button>${lastLinkReport?`<button class="btn" data-action="linkReport">🧾 آخر تقرير ربط</button>`:''}</div><p class="meta">${visiblePhotoCount()} صورة داخل الألبومات الظاهرة — ${allPhotos().length} سجل صور محفوظ إجمالًا. «ربط كل المصادر — سريع وذكي + تقرير» يتحقق من الروابط الحالية أولًا ثم يربط الأصول الحقيقية مصدرًا بعد الآخر، ولا يحفظ مصدرًا جديدًا إذا ربط صفر صور، ويجعل الصور المتبقية هي هدف المصدر التالي فقط. لا ينشئ صورًا أو ألبومات ولا يولّد صورًا مصغرة، وعند انتهاء المصادر يدويًا يمكن استخدام المطابقة البصرية كحل أخير وبموافقة المستخدم فقط، ثم يعرض تقريرًا نهائيًا واضحًا لكل صورة بقيت بلا أصل.</p></div>${sourcesPanel()}<div class="card"><h3>🧹 الصور المستبعدة من الفهرس</h3><p>${ex} صورة مستبعدة حاليًا. الأصل يبقى في مجلد الهاتف ولا يُحذف.</p><p class="meta">إعادة الفحص العادي لا تعيد أي صورة مستبعدة. هذا الزر وحده هو الذي يرفع الاستبعاد، ثم يعيد إدخال الصور التي تجد أصولها مع محاولة استرجاع ترتيبها وألبوماتها السابقة.</p><button class="btn" data-action="restoreExcluded" ${ex||reindexRestorePool.length?'':'disabled'}>↻ السماح بها وإعادة فحصها</button></div><div class="card"><h3>📅 التواريخ</h3><div class="formgrid">${field('setStart','بداية قصتنا',state.settings.startDate,'date')}${field('setEng','تاريخ الخطوبة',state.settings.engagementDate,'date')}${field('setBirth','عيد ميلاد رانيا',state.settings.birthdayRania,'date')}</div></div>${countdownsPanel()}<div class="card surprise-settings-card"><h3>🎉 المفاجآت والاحتفالات</h3><p class="meta">حدد الفاصل بين المفاجآت. بعد كل عرض يوجد فاصل هادئ قدره ثانيتان، وسرعة الحركة تتغير تلقائيًا مع الاختيار.</p><label class="field"><span>زمن ظهور المفاجآت</span><select id="surpriseTimingSetting" class="setting-select"><option value="3" ${state.settings.surpriseTiming==='3'?'selected':''}>كل 3 ثوانٍ</option><option value="5" ${state.settings.surpriseTiming==='5'?'selected':''}>كل 5 ثوانٍ</option><option value="10" ${state.settings.surpriseTiming==='10'?'selected':''}>كل 10 ثوانٍ</option><option value="20" ${state.settings.surpriseTiming==='20'?'selected':''}>كل 20 ثانية</option><option value="30" ${state.settings.surpriseTiming==='30'?'selected':''}>كل 30 ثانية</option><option value="random-fast" ${state.settings.surpriseTiming==='random-fast'?'selected':''}>عشوائي سريع</option><option value="random-slow" ${state.settings.surpriseTiming==='random-slow'?'selected':''}>عشوائي بطيء</option></select></label><div class="meta" id="surpriseTimingHint">الحالي: ${surpriseTimingLabel()}</div></div><div class="card"><h3>📱 التواصل</h3><div class="formgrid">${field('setOsama','رقم أسامة',state.settings.osamaPhone,'tel')}${field('setRania','رقم رانيا',state.settings.raniaPhone,'tel')}${field('setWA','رابط واتساب',state.settings.whatsappUrl,'url')}</div><button class="btn primary" data-action="settingsSave" style="margin-top:10px">حفظ</button></div><div class="card"><h3>💾 النسخة الاحتياطية والأمان</h3><p>النسخة تحفظ بيانات OsRa ومراجع الصور وتواريخ التقاط EXIF والإخفاء والاستبعاد واختيار ألبومات صورة اليوم ومعاينات مصغرة خفيفة، وليست الملفات الأصلية.</p><p class="meta">نسخة البيانات القديمة تظل كما هي. مصدر الصور عالي الجودة منفصل عنها ولا يدخل في قاعدة OsRa اليومية.</p><div class="actions"><button class="btn primary" data-action="chooseBackup">📁 تحديد مكان الحفظ</button><button class="btn" data-action="backup">💾 حفظ نسخة الآن</button><button class="btn" data-action="restore">↩ استرجاع ملف كامل</button><button class="btn" data-action="restoreMerge">📦 استيراد ودمج نسخة</button><button class="btn" data-action="restoreSafety">🛟 استرجاع آخر نسخة أمان</button></div><div class="meta">${backupFileHandle?`ملف النسخة: ${esc(backupFileHandle.name||'محدد')}${backupMeta.lastSavedAt?' — آخر حفظ: '+new Date(backupMeta.lastSavedAt).toLocaleString('ar-EG'):''}`:'لم تحدد ملفًا ثابتًا بعد. عند الحفظ الأول سيطلب منك OsRa اختيار المكان.'}</div></div><div class="card"><h3>🖼️ مصدر الصور عالي الجودة</h3><p>ينشئ OsRa مجلدًا مستقلًا بصور حتى 2048px وجودة JPEG 88 تقريبًا. هذا المصدر بديل خفيف عن الأصل، ولا يغيّر الأصل ولا يحمّل الصور العالية داخل OsRa أثناء الاستخدام.</p><p class="meta">يدخل فقط الصور الموجودة في ألبومات ظاهرة. الصور المخفية أو التي أزلتها من الألبومات أو المستبعدة من الفهرس لا تُنسخ كملفات هنا؛ تبقى معلوماتها فقط داخل Backup البيانات.</p><div class="actions"><button class="btn primary" data-action="buildHQSource">🖼️ إنشاء / تحديث مصدر HQ</button><button class="btn" data-action="hqZip">📦 إنشاء ZIP للمشاركة</button><button class="btn" data-action="linkHQSource">🔗 ربط مصدر HQ موجود</button>${hqSourceHandle?`<button class="btn" data-action="clearHQSource">فصل مصدر HQ</button>`:''}</div><div class="meta">${hqSourceHandle?`مصدر HQ مرتبط: ${esc(hqSourceMeta.name||'OsRa_HQ_Source')} — ${hqIndex.size} صورة، والربط يقرأ manifest فقط بدون فحص الصور.`:'لا يوجد مصدر HQ مرتبط حاليًا.'}</div><div class="notice" style="margin-top:10px">جودة HQ الحالية ثابتة عند 2048px تقريبًا / JPEG 88؛ لم نضف جودة أعلى لأنها غالبًا تزيد الحجم أكثر من الفائدة على الهاتف.</div></div></div></div>`}
+function pageSettings(){const ex=state.excludedPhotos.length;return `<div class="inner">${scanProgressCard()}${linkProgressCard()}${hqBuildProgressCard()}${hqLastBuildCard()}${dataRecoveryCard()}${reindexRestorePool.length?`<div class="card scan-progress-card"><h3>↻ إعادة فهرسة مستبعدة معلقة</h3><p>هناك ${reindexRestorePool.length} صورة ما زالت في قائمة الاسترجاع الآمن. شغّل «السماح بها وإعادة فحصها» لإكمالها.</p></div>`:''}<div class="kicker">⚙ المزيد</div><h1 class="title">إعدادات OsRa</h1><div class="cards"><div class="card"><h3>📁 مكتبات الصور</h3><p>${sources.length?`تم ربط ${sources.length} مجلد${sources.length===1?'':'ات'} — المصدر الأساسي: ${esc(sourceLabel(sources[0]))}`:'غير مرتبطة'}</p><div class="actions"><button class="btn primary" data-action="folder">＋ إضافة مجلد / ألبوم</button><button class="btn" data-action="scan">↻ فحص المجلد المحدد</button><button class="btn" data-action="matchAlbumsByName">🔤 مطابقة الألبومات بالأسماء</button><button class="btn primary" data-action="linkAllSources">⚡ ربط كل المصادر — سريع وذكي + تقرير</button>${state.settings.hideScanProgressCard?`<button class="btn" data-action="showScanProgressCard">↶ إظهار قائمة متابعة الفحص</button>`:''}<button class="btn" data-action="diag">تشخيص</button><button class="btn" data-action="duplicateManager">🔎 مراجعة التكرارات عند الطلب</button>${lastLinkReport?`<button class="btn" data-action="linkReport">🧾 آخر تقرير ربط</button>`:''}</div><p class="meta">${visiblePhotoCount()} صورة داخل الألبومات الظاهرة — ${allPhotos().length} سجل صور محفوظ إجمالًا. «ربط كل المصادر — سريع وذكي + تقرير» يتحقق من الروابط الحالية أولًا ثم يربط الأصول الحقيقية مصدرًا بعد الآخر، ولا يحفظ مصدرًا جديدًا إذا ربط صفر صور، ويجعل الصور المتبقية هي هدف المصدر التالي فقط. لا ينشئ صورًا أو ألبومات ولا يولّد صورًا مصغرة، وعند انتهاء المصادر يدويًا يمكن استخدام المطابقة البصرية كحل أخير وبموافقة المستخدم فقط، ثم يعرض تقريرًا نهائيًا واضحًا لكل صورة بقيت بلا أصل.</p></div>${sourcesPanel()}<div class="card"><h3>🧹 الصور المستبعدة من الفهرس</h3><p>${ex} صورة مستبعدة حاليًا. الأصل يبقى في مجلد الهاتف ولا يُحذف.</p><p class="meta">إعادة الفحص العادي لا تعيد أي صورة مستبعدة. هذا الزر وحده هو الذي يرفع الاستبعاد، ثم يعيد إدخال الصور التي تجد أصولها مع محاولة استرجاع ترتيبها وألبوماتها السابقة.</p><button class="btn" data-action="restoreExcluded" ${ex||reindexRestorePool.length?'':'disabled'}>↻ السماح بها وإعادة فحصها</button></div><div class="card"><h3>📅 التواريخ</h3><div class="formgrid">${field('setStart','بداية قصتنا',state.settings.startDate,'date')}${field('setEng','تاريخ الخطوبة',state.settings.engagementDate,'date')}${field('setBirth','عيد ميلاد رانيا',state.settings.birthdayRania,'date')}</div></div>${countdownsPanel()}<div class="card surprise-settings-card"><h3>🎉 المفاجآت والاحتفالات</h3><p class="meta">وقت الظهور هو الفاصل الفعلي بين بداية كل مفاجأة والتي تليها. وسرعة الحركة إعداد مستقل.</p><label class="field"><span>وقت الظهور والفاصل الزمني</span><select id="surpriseTimingSetting" class="setting-select"><option value="3" ${state.settings.surpriseTiming==='3'?'selected':''}>كل 3 ثوانٍ</option><option value="5" ${state.settings.surpriseTiming==='5'?'selected':''}>كل 5 ثوانٍ</option><option value="10" ${state.settings.surpriseTiming==='10'?'selected':''}>كل 10 ثوانٍ</option><option value="20" ${state.settings.surpriseTiming==='20'?'selected':''}>كل 20 ثانية</option><option value="30" ${state.settings.surpriseTiming==='30'?'selected':''}>كل 30 ثانية</option></select></label><label class="field"><span>سرعة حركة المفاجأة</span><select id="surpriseSpeedSetting" class="setting-select"><option value="fast" ${state.settings.surpriseSpeed==='fast'?'selected':''}>سريع</option><option value="normal" ${state.settings.surpriseSpeed==='normal'?'selected':''}>متوسط</option><option value="slow" ${state.settings.surpriseSpeed==='slow'?'selected':''}>بطيء</option><option value="random-all" ${state.settings.surpriseSpeed==='random-all'?'selected':''}>عشوائي للكل</option></select></label><div class="meta" id="surpriseTimingHint">الفاصل: ${surpriseTimingLabel()} • الحركة: ${surpriseSpeedLabel()}</div></div><div class="card"><h3>📱 التواصل</h3><div class="formgrid">${field('setOsama','رقم أسامة',state.settings.osamaPhone,'tel')}${field('setRania','رقم رانيا',state.settings.raniaPhone,'tel')}${field('setWA','رابط واتساب',state.settings.whatsappUrl,'url')}</div><button class="btn primary" data-action="settingsSave" style="margin-top:10px">حفظ</button></div><div class="card"><h3>💾 النسخة الاحتياطية والأمان</h3><p>النسخة تحفظ بيانات OsRa ومراجع الصور وتواريخ التقاط EXIF والإخفاء والاستبعاد واختيار ألبومات صورة اليوم ومعاينات مصغرة خفيفة، وليست الملفات الأصلية.</p><p class="meta">نسخة البيانات القديمة تظل كما هي. مصدر الصور عالي الجودة منفصل عنها ولا يدخل في قاعدة OsRa اليومية.</p><div class="actions"><button class="btn primary" data-action="chooseBackup">📁 تحديد مكان الحفظ</button><button class="btn" data-action="backup">💾 حفظ نسخة الآن</button><button class="btn" data-action="restore">↩ استرجاع ملف كامل</button><button class="btn" data-action="restoreMerge">📦 استيراد ودمج نسخة</button><button class="btn" data-action="restoreSafety">🛟 استرجاع آخر نسخة أمان</button></div><div class="meta">${backupFileHandle?`ملف النسخة: ${esc(backupFileHandle.name||'محدد')}${backupMeta.lastSavedAt?' — آخر حفظ: '+new Date(backupMeta.lastSavedAt).toLocaleString('ar-EG'):''}`:'لم تحدد ملفًا ثابتًا بعد. عند الحفظ الأول سيطلب منك OsRa اختيار المكان.'}</div></div><div class="card"><h3>🖼️ مصدر الصور عالي الجودة</h3><p>ينشئ OsRa مجلدًا مستقلًا بصور حتى 2048px وجودة JPEG 88 تقريبًا. هذا المصدر بديل خفيف عن الأصل، ولا يغيّر الأصل ولا يحمّل الصور العالية داخل OsRa أثناء الاستخدام.</p><p class="meta">يدخل فقط الصور الموجودة في ألبومات ظاهرة. الصور المخفية أو التي أزلتها من الألبومات أو المستبعدة من الفهرس لا تُنسخ كملفات هنا؛ تبقى معلوماتها فقط داخل Backup البيانات.</p><div class="actions"><button class="btn primary" data-action="buildHQSource">🖼️ إنشاء / تحديث مصدر HQ</button><button class="btn" data-action="hqZip">📦 إنشاء ZIP للمشاركة</button><button class="btn" data-action="linkHQSource">🔗 ربط مصدر HQ موجود</button>${hqSourceHandle?`<button class="btn" data-action="clearHQSource">فصل مصدر HQ</button>`:''}</div><div class="meta">${hqSourceHandle?`مصدر HQ مرتبط: ${esc(hqSourceMeta.name||'OsRa_HQ_Source')} — ${hqIndex.size} صورة، والربط يقرأ manifest فقط بدون فحص الصور.`:'لا يوجد مصدر HQ مرتبط حاليًا.'}</div><div class="notice" style="margin-top:10px">جودة HQ الحالية ثابتة عند 2048px تقريبًا / JPEG 88؛ لم نضف جودة أعلى لأنها غالبًا تزيد الحجم أكثر من الفائدة على الهاتف.</div></div></div></div>`}
 function field(id,l,v,t){return `<div class="field"><label>${l}</label><input id="${id}" type="${t}" value="${esc(v||'')}"></div>`}
 function pageAbout(){return `<div class="inner"><div class="kicker">♥ عن OsRa</div><h1 class="title">عن البرنامج</h1><div class="card dedication-card"><div class="about-text"><p><b>إلى أحب إنسانة إلى قلبي</b> ♥️💛❤️</p><p>إلى تلك التي أضاءت سماء حياتي،<br>بل هي التي جعلت لحياتي سماء.</p><p>إهداء إلى جميلتي، وحبيبتي، وملاكي الصغير...<br>إلى القلب العجيب، والوجه الجميل، والابتسامة الرقيقة المنعشة،<br>يا من يسكنكِ كل شيء جميل.</p><p>يا من بها رقة وصفاء وطهارة السماء،<br>مع قوة وعنفوان ورهوان 😉 الأرض<br>التقيا وتلاقيا.</p><p>إهداء إلى تلك اليد الصغيرة،<br>التي تحمل حبًا كبيرًا،<br>وتتفتح بلمساتها أزهار سماوية،<br>مانحةً إياها الأبدية والحب والجمال.</p><p>إلى صوت همساتك،<br>وضحكاتك العفوية،<br>وإلى غمازة الخد اليمين...</p><p>أرسل قلبي وحبي، دائمًا وأبدًا،<br>لروحي... يا روحي، يا رنووووشي 😍😘</p><p>يا من أحببتها للمنتهى،<br>وأحبها، وسأحبها...</p><p><b>أحبك جدًا، وجداً، وجداًااا... ❤️</b></p><p><b>رانيا...<br>حبيبتي، ورفيقة دربي،<br>وأجمل ما أعطاني إِلهُ السَّمَاءِ.</b> ❤️</p></div></div><div class="security-note"><b>خصوصية OsRa</b><br>الصور الأصلية تبقى في مجلدكم المحلي. OsRa لا يرفع الصور إلى خادم، والمعاينات المخزنة هي داخل مساحة الموقع المحلية على الجهاز.</div></div>`}
 function pageCalendar(){
@@ -1441,7 +1509,15 @@ document.addEventListener('click',e=>{if(e.target.id==='runGlobal'){
  for(const v of state.verses.filter(x=>[x.text,x.ref].join(' ').toLocaleLowerCase().includes(q)))o.push({type:'verse',id:v.id,icon:'☼',label:v.ref||'آية',meta:''});
  $('#globalOut').innerHTML=o.length?o.map(x=>`<button class="card search-result" data-action="searchResult" data-type="${x.type}" data-id="${x.id}" data-query="${esc(x.query||raw)}" style="width:100%;text-align:right;border:0;cursor:pointer"><b>${x.icon} ${esc(x.label)}</b>${x.meta?`<small class="meta">${esc(x.meta)}</small>`:''}${x.snippet?`<div class="search-snippet">${x.snippet}</div>`:''}<div class="meta">اضغط لفتح النتيجة</div></button>`).join(''):`<div class="empty">لا توجد نتائج.</div>`
  }});
-document.addEventListener('change',async e=>{if(e.target?.id==='surpriseTimingSetting'){const value=e.target.value;state.settings.surpriseTiming=value;await save();if(surprisesAreEnabled())startRomanticTicker();const h=document.getElementById('surpriseTimingHint');if(h)h.textContent='الحالي: '+surpriseTimingLabel();toast('تم ضبط وتيرة المفاجآت: '+surpriseTimingLabel())}});
+document.addEventListener('change',async e=>{
+ if(e.target?.id==='surpriseTimingSetting'||e.target?.id==='surpriseSpeedSetting'){
+  if(e.target.id==='surpriseTimingSetting')state.settings.surpriseTiming=e.target.value;
+  if(e.target.id==='surpriseSpeedSetting')state.settings.surpriseSpeed=e.target.value;
+  normalizeState();await save();if(surprisesAreEnabled())startRomanticTicker();
+  const h=document.getElementById('surpriseTimingHint');if(h)h.textContent='الفاصل: '+surpriseTimingLabel()+' • الحركة: '+surpriseSpeedLabel();
+  toast('تم ضبط المفاجآت: '+surpriseTimingLabel()+' • '+surpriseSpeedLabel());
+ }
+});
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvent=e;$('#installBtn').hidden=false});window.addEventListener('appinstalled',()=>{installEvent=null;$('#installBtn').hidden=true});$('#installBtn').onclick=async()=>{if(!installEvent){toast('التثبيت غير متاح حاليًا من هذا المتصفح.');return}const e=installEvent;installEvent=null;await e.prompt();try{const r=await e.userChoice;$('#installBtn').hidden=r.outcome==='accepted'}catch{$('#installBtn').hidden=false}};
 $('#soundBtn')?.addEventListener('click',setSound);
 $('#surpriseBtn')?.addEventListener('click',toggleSurprises);

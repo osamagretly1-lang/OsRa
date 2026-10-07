@@ -495,3 +495,17 @@ body.birthday-day .topbar{padding-top:68px}
  .rs-message{font-size:clamp(21px,6.2vw,46px)!important;line-height:1.24!important}
  .scene-giantcenter .rs-message{font-size:clamp(30px,8.8vw,64px)!important}
 }
+
+
+/* R33 — separate surprise timing from movement speed; safe readable overlay + touch-drag. */
+.romantic-scene-layer .rs-card{pointer-events:auto!important;touch-action:none;user-select:text;-webkit-user-select:text;max-width:calc(100vw - 22px)!important;max-height:calc(100vh - 105px)!important;box-sizing:border-box;overflow:visible!important}
+.romantic-scene-layer .rs-message{font-size:clamp(20px,7vw,40px);line-height:1.24;max-width:100%;overflow-wrap:anywhere;word-break:normal;text-align:center}
+.romantic-scene-layer .rs-card.user-dragged{transition:none!important;animation:none!important}
+.romantic-scene-layer .rs-card.user-dragged,.romantic-scene-layer .rs-card.user-dragged *{cursor:grabbing}
+.surprise-speed-fast .rs-card{transition-duration:.62s!important}.surprise-speed-fast .rs-decor{animation-duration:1.45s!important}.surprise-speed-fast .rs-ring{animation-duration:3.4s!important}
+.surprise-speed-normal .rs-card{transition-duration:1.05s!important}.surprise-speed-normal .rs-decor{animation-duration:2.5s!important}.surprise-speed-normal .rs-ring{animation-duration:5.6s!important}
+.surprise-speed-slow .rs-card{transition-duration:1.58s!important}.surprise-speed-slow .rs-decor{animation-duration:4.9s!important}.surprise-speed-slow .rs-ring{animation-duration:8.4s!important}
+@media(max-width:600px){
+ .romantic-scene-layer .rs-card{max-width:calc(100vw - 18px)!important;max-height:calc(100vh - 92px)!important;padding:13px 12px 17px!important}
+ .romantic-scene-layer .rs-message{font-size:clamp(18px,7vw,34px);line-height:1.26}
+}
