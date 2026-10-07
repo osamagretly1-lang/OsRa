@@ -40,3 +40,6 @@ R28 change: restored the original home-page three-card layout. The third card is
 
 
 R29 update: full-screen romantic surprise engine with 28 presentation modes, larger readable messages, varied flowers/hearts/kisses/balloons, occasion-day integration, and anti-repeat style selection. Birthday/home layout/data behavior from R28 preserved.
+
+
+R35 patch: restored message-first surprise cadence; added random-fast movement mode; boot celebration now uses birthday-style moving large+mini ribbons plus bottom burst/top rain for ~3 seconds; cache build bumped.

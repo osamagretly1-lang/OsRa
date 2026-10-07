@@ -527,3 +527,32 @@ body.birthday-day .topbar{padding-top:68px}
 .boot-splash{background:radial-gradient(circle at 50% 40%,rgba(255,250,243,.985),rgba(229,212,198,.975) 64%,rgba(219,195,180,.97))!important;}
 .boot-joy-ribbon{position:fixed!important;top:8px!important;left:50%!important;right:auto!important;transform:translateX(-50%)!important;width:min(94vw,760px)!important;z-index:100001!important}
 .boot-splash.boot-done .boot-joy-ribbon{transform:translateX(-50%) translateY(-8px)!important}
+
+
+/* R35 — restore the fast surprise feel + exact birthday-style moving boot ribbons. */
+.boot-splash{background:transparent!important}
+.boot-joy-ribbon-large{height:58px!important;top:0!important;left:0!important;width:100vw!important;transform:none!important;border-radius:0!important;box-shadow:0 5px 25px rgba(128,26,48,.34)!important;background:linear-gradient(90deg,#9e1b35,#e52f63 28%,#f48a4c 50%,#e52f63 72%,#9e1b35)!important;border-bottom:2px solid rgba(255,255,255,.45)!important}
+.boot-joy-ribbon-large span{font-size:clamp(18px,4.5vw,30px)!important;line-height:58px!important;font-weight:1000!important;text-shadow:0 3px 12px rgba(60,13,26,.34)!important;animation:birthdayTicker 20s linear infinite!important}
+.boot-joy-ribbon-mini{left:50%!important;top:61px!important;height:24px!important;width:min(270px,58vw)!important;border-radius:999px!important;box-shadow:0 5px 18px rgba(74,31,74,.20)!important;background:linear-gradient(90deg,#9e1b35,#e52f63 40%,#7b3f8c 72%,#9e1b35)!important;overflow:hidden!important}
+.boot-joy-ribbon-mini span{font-size:12px!important;line-height:22px!important;font-weight:900!important;text-shadow:0 2px 7px rgba(60,13,26,.26)!important;animation:birthdayTicker 11s linear infinite!important}
+.boot-heart-loader{margin-top:7px!important}
+#bootCelebration{position:fixed;inset:0;z-index:100002;pointer-events:none;overflow:hidden}
+.boot-celeb-item,.boot-dog-item{position:absolute;display:block;will-change:transform,opacity}
+.boot-bottom-item{bottom:-50px;opacity:0;animation:bootBottomBurst var(--dur) cubic-bezier(.12,.78,.18,1) var(--delay) forwards}
+.boot-rain-item{top:-48px;opacity:0;animation:bootTopRain var(--dur) cubic-bezier(.17,.7,.22,1) var(--delay) forwards}
+.boot-dog-item{bottom:-92px;width:52px;height:42px;opacity:0;animation:bootDogBurst var(--dur) cubic-bezier(.13,.74,.17,1) var(--delay) forwards}
+.boot-dog-item svg{width:100%;height:100%;display:block;filter:drop-shadow(0 5px 9px rgba(47,31,41,.18))}
+@keyframes bootBottomBurst{0%{opacity:0;transform:translate3d(0,0,0) scale(.25) rotate(0)}12%{opacity:1}62%{opacity:1;transform:translate3d(var(--dx),-43vh,0) scale(1.12) rotate(18deg)}100%{opacity:0;transform:translate3d(calc(var(--dx)*.55),-64vh,0) scale(.82) rotate(35deg)}}
+@keyframes bootTopRain{0%{opacity:0;transform:translate3d(0,-2vh,0) rotate(-12deg) scale(.6)}12%{opacity:.9}100%{opacity:0;transform:translate3d(var(--dx),58vh,0) rotate(300deg) scale(1.08)}}
+@keyframes bootDogBurst{0%{opacity:0;transform:translate3d(0,12vh,0) scale(.4) rotate(-8deg)}18%{opacity:1}58%{opacity:1;transform:translate3d(var(--dx),-36vh,0) scale(1.08) rotate(7deg)}100%{opacity:0;transform:translate3d(calc(var(--dx)*.5),-49vh,0) scale(.72) rotate(14deg)}}
+.boot-celeb-done{opacity:0;transition:opacity .45s ease}
+/* Random-fast = quick movement, while the selected interval remains the real trigger interval. */
+.surprise-speed-fast .rs-card,.surprise-speed-random-fast .rs-card{transition-duration:.58s!important}
+.surprise-speed-random-fast .rs-card{transition-duration:var(--rf-card-duration,.52s)!important}
+@media(max-width:600px){
+ .boot-joy-ribbon-large{height:48px!important}
+ .boot-joy-ribbon-large span{font-size:clamp(16px,5.4vw,24px)!important;line-height:48px!important}
+ .boot-joy-ribbon-mini{top:50px!important;height:20px!important;width:58vw!important}
+ .boot-joy-ribbon-mini span{font-size:10px!important;line-height:18px!important}
+ .boot-book{margin-top:18vh!important}
+}

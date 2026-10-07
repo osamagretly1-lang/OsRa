@@ -163,7 +163,7 @@ function normalizeState(){
   state.settings.surpriseTiming=legacyTiming==='random-fast'?'5':'20';
  }
  if(!['3','5','10','20','30','60','180'].includes(String(state.settings.surpriseTiming||'')))state.settings.surpriseTiming='10';
- if(!['fast','normal','slow','random-all'].includes(String(state.settings.surpriseSpeed||'')))state.settings.surpriseSpeed='normal';
+ if(!['fast','normal','slow','random-fast','random-all'].includes(String(state.settings.surpriseSpeed||'')))state.settings.surpriseSpeed='normal';
  if(!Array.isArray(state.settings.customSurpriseMessages))state.settings.customSurpriseMessages=[];
  state.settings.customSurpriseMessages=[...new Set(state.settings.customSurpriseMessages.map(x=>String(x||'').trim()).filter(Boolean))].slice(0,100);
  if(typeof state.settings.albumMiniView!=='boolean')state.settings.albumMiniView=false;
@@ -192,18 +192,23 @@ function surpriseTimingProfile(){
  let interval=map[m]||10000;
  let randomSpeedKey=speedKey;
  let randomTimingKey=m;
- if(speedKey==='random-all'){
+ let factor=null;
+ if(speedKey==='random-fast'){
+  // Fast-random changes movement speed only. The chosen time interval remains exact.
+  factor=1.28+Math.random()*.62;
+  randomSpeedKey='random-fast';
+ }else if(speedKey==='random-all'){
   const timingKeys=['3','5','10','20','30','60','180'];
   randomTimingKey=timingKeys[Math.floor(Math.random()*timingKeys.length)];
   interval=map[randomTimingKey];
   const keys=['fast','normal','slow'];
   randomSpeedKey=keys[Math.floor(Math.random()*keys.length)];
  }
- const motion=motionMap[randomSpeedKey]||motionMap.normal;
+ const motion=factor===null?(motionMap[randomSpeedKey]||motionMap.normal):{factor,key:'fast'};
  return {interval,speed:motion.factor,key:motion.key,timingKey:randomTimingKey,speedKey:randomSpeedKey,randomAll:speedKey==='random-all'};
 }
 function surpriseTimingLabel(){const m=String(state.settings.surpriseTiming||'10');return ({'3':'كل 3 ثوانٍ','5':'كل 5 ثوانٍ','10':'كل 10 ثوانٍ','20':'كل 20 ثانية','30':'كل 30 ثانية','60':'كل دقيقة','180':'كل 3 دقائق'})[m]||'كل 10 ثوانٍ'}
-function surpriseSpeedLabel(){const m=String(state.settings.surpriseSpeed||'normal');return ({fast:'سريع',normal:'متوسط',slow:'بطيء','random-all':'عشوائي للكل'})[m]||'متوسط'}
+function surpriseSpeedLabel(){const m=String(state.settings.surpriseSpeed||'normal');return ({fast:'سريع',normal:'متوسط',slow:'بطيء','random-fast':'عشوائي سريع','random-all':'عشوائي للكل'})[m]||'متوسط'}
 function initBootRibbon(){
  const el=document.getElementById('bootJoyRibbon');
  if(el){
@@ -239,6 +244,42 @@ function initBootRibbon(){
    loader.appendChild(s);
   }
  }
+}
+function initBootCelebration(){
+ const layer=document.getElementById('bootCelebration');
+ if(!layer)return;
+ layer.innerHTML='';
+ const glyphs=['❤️','💖','💕','💗','💛','🌹','🌷','🌸','💐','💋','😘','✨','🎀','🎉','🎈'];
+ const dog=typeof romanticWhiteDogSvg==='function'?romanticWhiteDogSvg():'';
+ for(let i=0;i<26;i++){
+  const s=document.createElement('span');s.className='boot-celeb-item boot-bottom-item';
+  s.textContent=glyphs[Math.floor(Math.random()*glyphs.length)];
+  s.style.left=`${4+Math.random()*92}%`;
+  s.style.setProperty('--dx',`${-16+Math.random()*32}vw`);
+  s.style.setProperty('--delay',`${(Math.random()*.75).toFixed(2)}s`);
+  s.style.setProperty('--dur',`${(1.9+Math.random()*1.35).toFixed(2)}s`);
+  s.style.fontSize=`${18+Math.random()*24}px`;
+  layer.appendChild(s);
+ }
+ for(let i=0;i<22;i++){
+  const s=document.createElement('span');s.className='boot-celeb-item boot-rain-item';
+  s.textContent=glyphs[Math.floor(Math.random()*glyphs.length)];
+  s.style.left=`${Math.random()*100}%`;
+  s.style.setProperty('--dx',`${-9+Math.random()*18}vw`);
+  s.style.setProperty('--delay',`${(Math.random()*1.25).toFixed(2)}s`);
+  s.style.setProperty('--dur',`${(1.8+Math.random()*1.4).toFixed(2)}s`);
+  s.style.fontSize=`${14+Math.random()*20}px`;
+  layer.appendChild(s);
+ }
+ for(let i=0;i<4;i++){
+  const s=document.createElement('span');s.className='boot-dog-item';s.innerHTML=dog;
+  s.style.left=`${15+Math.random()*70}%`;
+  s.style.setProperty('--delay',`${(.25+i*.42).toFixed(2)}s`);
+  s.style.setProperty('--dur',`${(2.15+Math.random()*.55).toFixed(2)}s`);
+  layer.appendChild(s);
+ }
+ setTimeout(()=>{layer.classList.add('boot-celeb-done')},2550);
+ setTimeout(()=>{layer.remove()},3150);
 }
 function clearSurpriseLayers(){['romanticSceneLayer','romanticMessageBubble','romanticLongLayer','romanticBalloonLayer','romanticEffectLayer','romanticFloatLayer','occasionCelebration'].forEach(id=>{const el=document.getElementById(id);if(el)el.remove()});const ticker=document.getElementById('romanticTicker');if(ticker){ticker.classList.remove('show');const tx=document.getElementById('romanticTickerText');if(tx)tx.textContent=''}clearTimeout(romanticTickerCloseTimer);clearTimeout(romanticKissTimer);romanticKissTimer=null;clearTimeout(romanticDelightTimer);romanticDelightTimer=null;occasionCelebrationBusy=false;romanticLongBusy=false}
 async function toggleSurprises(){state.settings.surprisesEnabled=!surprisesAreEnabled();await save();if(!surprisesAreEnabled())clearSurpriseLayers();updateSurpriseButton();updateBirthdayUi();if(surprisesAreEnabled()){startRomanticTicker();maybeRunOccasionCelebrations();}renderNoAnim();}
@@ -774,10 +815,9 @@ function showRomanticLongMessage(){
 }
 function showRomanticMessage(profile=surpriseTimingProfile()){
  if(!surprisesAreEnabled())return;
- if(Math.random()<0.10){showMessageBalloon(randomSurpriseMessage());return}
- if(Math.random()<0.12){showRomanticLongMessage();return}
- const pool=surpriseMessagePool();
- let message=randomSurpriseMessage();
+ if(Math.random()<0.08){showMessageBalloon(randomSurpriseMessage());return}
+ if(Math.random()<0.08 && !romanticLongBusy){showRomanticLongMessage();return}
+ const message=randomSurpriseMessage();
  lastRomanticSceneMessage=message;
  showRomanticScene(message,{style:romanticScenePickStyle(),occasion:occasionJoyActive(),profile});
 }
@@ -800,18 +840,26 @@ function showRomanticEffect(profile=surpriseTimingProfile()){
 }
 function startRomanticTicker(){
  if(!surprisesAreEnabled())return;
- if(romanticTickerTimer)clearTimeout(romanticTickerTimer);if(romanticDelightTimer)clearTimeout(romanticDelightTimer);
- const schedule=delay=>{romanticDelightTimer=setTimeout(()=>{
+ if(romanticTickerTimer)clearTimeout(romanticTickerTimer);
+ if(romanticDelightTimer)clearTimeout(romanticDelightTimer);
+ const schedule=delay=>{
+  romanticDelightTimer=setTimeout(()=>{
+   if(!surprisesAreEnabled())return;
    const prof=surpriseTimingProfile();
-   const r=Math.random();
-   if(r<0.58){showRomanticMessage(prof);localStorage.setItem('osra-romantic-day-message',today())}
-   else if(r<0.78){showRomanticEffect(prof)}
-   else{const kind=Math.random();showRomanticFloat(kind<.34?'balloon':kind<.62?'rose':'heart',prof)}
-   // The selected timing is the actual trigger-to-trigger interval. No hidden 2-second addition.
+   // Every tick produces an actual message. Decorative effects remain secondary so messages never disappear.
+   showRomanticMessage(prof);
+   localStorage.setItem('osra-romantic-day-message',today());
+   if(Math.random()<0.28)setTimeout(()=>showRomanticEffect(prof),120);
+   if(Math.random()<0.22){const kind=Math.random();setTimeout(()=>showRomanticFloat(kind<.34?'balloon':kind<.62?'rose':'heart',prof),170)}
+   // This is the real next trigger interval selected in Settings.
    const next=Math.max(3000,Math.round(prof.interval));
    schedule(next);
- },Math.max(0,delay))};
- const first=Math.min(2500,Math.max(1200,2000));schedule(first);tryScheduleKissBalloon();
+  },Math.max(0,delay));
+ };
+ // First surprise after opening, then exact selected cadence thereafter.
+ const first=Math.min(2500,Math.max(1400,2000));
+ schedule(first);
+ tryScheduleKissBalloon();
 }
 function countdownForm(existing=null){const x=existing||{title:'',date:'',emoji:'⏳',showHome:true,annual:false};modal(`<h2>${existing?'تعديل':'إضافة'} عداد / موعد</h2>${field('cTitle','اسم الموعد',x.title,'text')}${field('cDate','التاريخ',x.date,'date')}${field('cEmoji','الرمز (اختياري)',x.emoji,'text')}<label class="field" style="display:flex;align-items:center;gap:8px"><span><input id="cAnnual" type="checkbox" ${x.annual?'checked':''}> يتكرر سنويًا</span></label><label class="field" style="display:flex;align-items:center;gap:8px"><span><input id="cHome" type="checkbox" ${x.showHome?'checked':''}> إظهار العداد في الرئيسية</span></label><div class="actions"><button class="btn primary" data-action="saveCountdown" data-id="${existing?.id||''}">حفظ</button><button class="btn" data-action="closeModal">إلغاء</button></div>`)}
 async function saveCountdown(i){const title=$('#cTitle').value.trim();const date=$('#cDate').value;const emoji=$('#cEmoji').value.trim()||'⏳';if(!title||!date){toast('اكتب اسم الموعد والتاريخ.');return}let x=i?state.settings.countdowns.find(v=>v.id===i):null;if(!x){x={id:id('cnt'),title:'',date:'',emoji:'⏳',showHome:true,annual:false};state.settings.countdowns.unshift(x)}x.title=title;x.date=date;x.emoji=emoji;x.annual=!!$('#cAnnual')?.checked;x.showHome=!!$('#cHome')?.checked;await save();closeModal();toast('تم حفظ العداد.');renderNoAnim()}
@@ -829,7 +877,7 @@ async function saveSettings(){
  if(speedEl)state.settings.surpriseSpeed=speedEl.value;
  normalizeState();await save();soundOn=!!state.settings.soundEnabled;updateSoundButton();updateSurpriseButton();toast('تم حفظ الإعدادات.');renderNoAnim(true);
 }
-function pageSettings(){const ex=state.excludedPhotos.length;return `<div class="inner">${scanProgressCard()}${linkProgressCard()}${hqBuildProgressCard()}${hqLastBuildCard()}${dataRecoveryCard()}${reindexRestorePool.length?`<div class="card scan-progress-card"><h3>↻ إعادة فهرسة مستبعدة معلقة</h3><p>هناك ${reindexRestorePool.length} صورة ما زالت في قائمة الاسترجاع الآمن. شغّل «السماح بها وإعادة فحصها» لإكمالها.</p></div>`:''}<div class="kicker">⚙ المزيد</div><h1 class="title">إعدادات OsRa</h1><div class="cards"><div class="card"><h3>📁 مكتبات الصور</h3><p>${sources.length?`تم ربط ${sources.length} مجلد${sources.length===1?'':'ات'} — المصدر الأساسي: ${esc(sourceLabel(sources[0]))}`:'غير مرتبطة'}</p><div class="actions"><button class="btn primary" data-action="folder">＋ إضافة مجلد / ألبوم</button><button class="btn" data-action="scan">↻ فحص المجلد المحدد</button><button class="btn" data-action="matchAlbumsByName">🔤 مطابقة الألبومات بالأسماء</button><button class="btn primary" data-action="linkAllSources">⚡ ربط كل المصادر — سريع وذكي + تقرير</button>${state.settings.hideScanProgressCard?`<button class="btn" data-action="showScanProgressCard">↶ إظهار قائمة متابعة الفحص</button>`:''}<button class="btn" data-action="diag">تشخيص</button><button class="btn" data-action="duplicateManager">🔎 مراجعة التكرارات عند الطلب</button>${lastLinkReport?`<button class="btn" data-action="linkReport">🧾 آخر تقرير ربط</button>`:''}</div><p class="meta">${visiblePhotoCount()} صورة داخل الألبومات الظاهرة — ${allPhotos().length} سجل صور محفوظ إجمالًا. «ربط كل المصادر — سريع وذكي + تقرير» يتحقق من الروابط الحالية أولًا ثم يربط الأصول الحقيقية مصدرًا بعد الآخر، ولا يحفظ مصدرًا جديدًا إذا ربط صفر صور، ويجعل الصور المتبقية هي هدف المصدر التالي فقط. لا ينشئ صورًا أو ألبومات ولا يولّد صورًا مصغرة، وعند انتهاء المصادر يدويًا يمكن استخدام المطابقة البصرية كحل أخير وبموافقة المستخدم فقط، ثم يعرض تقريرًا نهائيًا واضحًا لكل صورة بقيت بلا أصل.</p></div>${sourcesPanel()}<div class="card"><h3>🧹 الصور المستبعدة من الفهرس</h3><p>${ex} صورة مستبعدة حاليًا. الأصل يبقى في مجلد الهاتف ولا يُحذف.</p><p class="meta">إعادة الفحص العادي لا تعيد أي صورة مستبعدة. هذا الزر وحده هو الذي يرفع الاستبعاد، ثم يعيد إدخال الصور التي تجد أصولها مع محاولة استرجاع ترتيبها وألبوماتها السابقة.</p><button class="btn" data-action="restoreExcluded" ${ex||reindexRestorePool.length?'':'disabled'}>↻ السماح بها وإعادة فحصها</button></div><div class="card"><h3>📅 التواريخ</h3><div class="formgrid">${field('setStart','بداية قصتنا',state.settings.startDate,'date')}${field('setEng','تاريخ الخطوبة',state.settings.engagementDate,'date')}${field('setBirth','عيد ميلاد رانيا',state.settings.birthdayRania,'date')}</div></div>${countdownsPanel()}<div class="card surprise-settings-card"><h3>🎉 المفاجآت والاحتفالات</h3><p class="meta">وقت الظهور هو الفاصل الفعلي بين بداية كل مفاجأة والتي تليها. وسرعة الحركة إعداد مستقل.</p><label class="field"><span>وقت الظهور والفاصل الزمني</span><select id="surpriseTimingSetting" class="setting-select"><option value="3" ${state.settings.surpriseTiming==='3'?'selected':''}>كل 3 ثوانٍ</option><option value="5" ${state.settings.surpriseTiming==='5'?'selected':''}>كل 5 ثوانٍ</option><option value="10" ${state.settings.surpriseTiming==='10'?'selected':''}>كل 10 ثوانٍ</option><option value="20" ${state.settings.surpriseTiming==='20'?'selected':''}>كل 20 ثانية</option><option value="30" ${state.settings.surpriseTiming==='30'?'selected':''}>كل 30 ثانية</option><option value="60" ${state.settings.surpriseTiming==='60'?'selected':''}>كل دقيقة</option><option value="180" ${state.settings.surpriseTiming==='180'?'selected':''}>كل 3 دقائق</option></select></label><label class="field"><span>سرعة حركة المفاجأة</span><select id="surpriseSpeedSetting" class="setting-select"><option value="fast" ${state.settings.surpriseSpeed==='fast'?'selected':''}>سريع</option><option value="normal" ${state.settings.surpriseSpeed==='normal'?'selected':''}>متوسط</option><option value="slow" ${state.settings.surpriseSpeed==='slow'?'selected':''}>بطيء</option><option value="random-all" ${state.settings.surpriseSpeed==='random-all'?'selected':''}>عشوائي للكل</option></select></label><div class="meta" id="surpriseTimingHint">الفاصل: ${surpriseTimingLabel()} • الحركة: ${surpriseSpeedLabel()}</div></div><div class="card surprise-custom-messages-card"><h3>💌 رسائل المفاجآت العشوائية</h3><p class="meta">أي رسالة تضيفها هنا تدخل مباشرة في قائمة الرسائل التي تظهر عشوائيًا، وتُحفظ مع بيانات OsRa.</p><div class="actions" style="margin-bottom:10px"><button class="btn primary" data-action="addSurpriseMessage">＋ إضافة رسالة</button></div><div class="cards">${(state.settings.customSurpriseMessages||[]).length?(state.settings.customSurpriseMessages||[]).map((msg,idx)=>`<div class="card surprise-custom-message-item"><div style="flex:1;min-width:0"><b>💌</b> <span style="overflow-wrap:anywhere">${esc(msg)}</span></div><div class="actions"><button class="btn small" data-action="editSurpriseMessage" data-id="${idx}">تعديل</button><button class="btn small danger" data-action="deleteSurpriseMessage" data-id="${idx}">حذف</button></div></div>`).join(''):`<div class="empty">لم تضف رسائل مخصصة بعد.</div>`}</div></div><div class="card"><h3>📱 التواصل</h3><div class="formgrid">${field('setOsama','رقم أسامة',state.settings.osamaPhone,'tel')}${field('setRania','رقم رانيا',state.settings.raniaPhone,'tel')}${field('setWA','رابط واتساب',state.settings.whatsappUrl,'url')}</div><button class="btn primary" data-action="settingsSave" style="margin-top:10px">حفظ</button></div><div class="card"><h3>💾 النسخة الاحتياطية والأمان</h3><p>النسخة تحفظ بيانات OsRa ومراجع الصور وتواريخ التقاط EXIF والإخفاء والاستبعاد واختيار ألبومات صورة اليوم ومعاينات مصغرة خفيفة، وليست الملفات الأصلية.</p><p class="meta">نسخة البيانات القديمة تظل كما هي. مصدر الصور عالي الجودة منفصل عنها ولا يدخل في قاعدة OsRa اليومية.</p><div class="actions"><button class="btn primary" data-action="chooseBackup">📁 تحديد مكان الحفظ</button><button class="btn" data-action="backup">💾 حفظ نسخة الآن</button><button class="btn" data-action="restore">↩ استرجاع ملف كامل</button><button class="btn" data-action="restoreMerge">📦 استيراد ودمج نسخة</button><button class="btn" data-action="restoreSafety">🛟 استرجاع آخر نسخة أمان</button></div><div class="meta">${backupFileHandle?`ملف النسخة: ${esc(backupFileHandle.name||'محدد')}${backupMeta.lastSavedAt?' — آخر حفظ: '+new Date(backupMeta.lastSavedAt).toLocaleString('ar-EG'):''}`:'لم تحدد ملفًا ثابتًا بعد. عند الحفظ الأول سيطلب منك OsRa اختيار المكان.'}</div></div><div class="card"><h3>🖼️ مصدر الصور عالي الجودة</h3><p>ينشئ OsRa مجلدًا مستقلًا بصور حتى 2048px وجودة JPEG 88 تقريبًا. هذا المصدر بديل خفيف عن الأصل، ولا يغيّر الأصل ولا يحمّل الصور العالية داخل OsRa أثناء الاستخدام.</p><p class="meta">يدخل فقط الصور الموجودة في ألبومات ظاهرة. الصور المخفية أو التي أزلتها من الألبومات أو المستبعدة من الفهرس لا تُنسخ كملفات هنا؛ تبقى معلوماتها فقط داخل Backup البيانات.</p><div class="actions"><button class="btn primary" data-action="buildHQSource">🖼️ إنشاء / تحديث مصدر HQ</button><button class="btn" data-action="hqZip">📦 إنشاء ZIP للمشاركة</button><button class="btn" data-action="linkHQSource">🔗 ربط مصدر HQ موجود</button>${hqSourceHandle?`<button class="btn" data-action="clearHQSource">فصل مصدر HQ</button>`:''}</div><div class="meta">${hqSourceHandle?`مصدر HQ مرتبط: ${esc(hqSourceMeta.name||'OsRa_HQ_Source')} — ${hqIndex.size} صورة، والربط يقرأ manifest فقط بدون فحص الصور.`:'لا يوجد مصدر HQ مرتبط حاليًا.'}</div><div class="notice" style="margin-top:10px">جودة HQ الحالية ثابتة عند 2048px تقريبًا / JPEG 88؛ لم نضف جودة أعلى لأنها غالبًا تزيد الحجم أكثر من الفائدة على الهاتف.</div></div></div></div>`}
+function pageSettings(){const ex=state.excludedPhotos.length;return `<div class="inner">${scanProgressCard()}${linkProgressCard()}${hqBuildProgressCard()}${hqLastBuildCard()}${dataRecoveryCard()}${reindexRestorePool.length?`<div class="card scan-progress-card"><h3>↻ إعادة فهرسة مستبعدة معلقة</h3><p>هناك ${reindexRestorePool.length} صورة ما زالت في قائمة الاسترجاع الآمن. شغّل «السماح بها وإعادة فحصها» لإكمالها.</p></div>`:''}<div class="kicker">⚙ المزيد</div><h1 class="title">إعدادات OsRa</h1><div class="cards"><div class="card"><h3>📁 مكتبات الصور</h3><p>${sources.length?`تم ربط ${sources.length} مجلد${sources.length===1?'':'ات'} — المصدر الأساسي: ${esc(sourceLabel(sources[0]))}`:'غير مرتبطة'}</p><div class="actions"><button class="btn primary" data-action="folder">＋ إضافة مجلد / ألبوم</button><button class="btn" data-action="scan">↻ فحص المجلد المحدد</button><button class="btn" data-action="matchAlbumsByName">🔤 مطابقة الألبومات بالأسماء</button><button class="btn primary" data-action="linkAllSources">⚡ ربط كل المصادر — سريع وذكي + تقرير</button>${state.settings.hideScanProgressCard?`<button class="btn" data-action="showScanProgressCard">↶ إظهار قائمة متابعة الفحص</button>`:''}<button class="btn" data-action="diag">تشخيص</button><button class="btn" data-action="duplicateManager">🔎 مراجعة التكرارات عند الطلب</button>${lastLinkReport?`<button class="btn" data-action="linkReport">🧾 آخر تقرير ربط</button>`:''}</div><p class="meta">${visiblePhotoCount()} صورة داخل الألبومات الظاهرة — ${allPhotos().length} سجل صور محفوظ إجمالًا. «ربط كل المصادر — سريع وذكي + تقرير» يتحقق من الروابط الحالية أولًا ثم يربط الأصول الحقيقية مصدرًا بعد الآخر، ولا يحفظ مصدرًا جديدًا إذا ربط صفر صور، ويجعل الصور المتبقية هي هدف المصدر التالي فقط. لا ينشئ صورًا أو ألبومات ولا يولّد صورًا مصغرة، وعند انتهاء المصادر يدويًا يمكن استخدام المطابقة البصرية كحل أخير وبموافقة المستخدم فقط، ثم يعرض تقريرًا نهائيًا واضحًا لكل صورة بقيت بلا أصل.</p></div>${sourcesPanel()}<div class="card"><h3>🧹 الصور المستبعدة من الفهرس</h3><p>${ex} صورة مستبعدة حاليًا. الأصل يبقى في مجلد الهاتف ولا يُحذف.</p><p class="meta">إعادة الفحص العادي لا تعيد أي صورة مستبعدة. هذا الزر وحده هو الذي يرفع الاستبعاد، ثم يعيد إدخال الصور التي تجد أصولها مع محاولة استرجاع ترتيبها وألبوماتها السابقة.</p><button class="btn" data-action="restoreExcluded" ${ex||reindexRestorePool.length?'':'disabled'}>↻ السماح بها وإعادة فحصها</button></div><div class="card"><h3>📅 التواريخ</h3><div class="formgrid">${field('setStart','بداية قصتنا',state.settings.startDate,'date')}${field('setEng','تاريخ الخطوبة',state.settings.engagementDate,'date')}${field('setBirth','عيد ميلاد رانيا',state.settings.birthdayRania,'date')}</div></div>${countdownsPanel()}<div class="card surprise-settings-card"><h3>🎉 المفاجآت والاحتفالات</h3><p class="meta">وقت الظهور هو الفاصل الفعلي بين بداية كل مفاجأة والتي تليها. وسرعة الحركة إعداد مستقل.</p><label class="field"><span>وقت الظهور والفاصل الزمني</span><select id="surpriseTimingSetting" class="setting-select"><option value="3" ${state.settings.surpriseTiming==='3'?'selected':''}>كل 3 ثوانٍ</option><option value="5" ${state.settings.surpriseTiming==='5'?'selected':''}>كل 5 ثوانٍ</option><option value="10" ${state.settings.surpriseTiming==='10'?'selected':''}>كل 10 ثوانٍ</option><option value="20" ${state.settings.surpriseTiming==='20'?'selected':''}>كل 20 ثانية</option><option value="30" ${state.settings.surpriseTiming==='30'?'selected':''}>كل 30 ثانية</option><option value="60" ${state.settings.surpriseTiming==='60'?'selected':''}>كل دقيقة</option><option value="180" ${state.settings.surpriseTiming==='180'?'selected':''}>كل 3 دقائق</option></select></label><label class="field"><span>سرعة حركة المفاجأة</span><select id="surpriseSpeedSetting" class="setting-select"><option value="fast" ${state.settings.surpriseSpeed==='fast'?'selected':''}>سريع</option><option value="normal" ${state.settings.surpriseSpeed==='normal'?'selected':''}>متوسط</option><option value="slow" ${state.settings.surpriseSpeed==='slow'?'selected':''}>بطيء</option><option value="random-fast" ${state.settings.surpriseSpeed==='random-fast'?'selected':''}>عشوائي سريع</option><option value="random-all" ${state.settings.surpriseSpeed==='random-all'?'selected':''}>عشوائي للكل</option></select></label><div class="meta" id="surpriseTimingHint">الفاصل: ${surpriseTimingLabel()} • الحركة: ${surpriseSpeedLabel()}</div></div><div class="card surprise-custom-messages-card"><h3>💌 رسائل المفاجآت العشوائية</h3><p class="meta">أي رسالة تضيفها هنا تدخل مباشرة في قائمة الرسائل التي تظهر عشوائيًا، وتُحفظ مع بيانات OsRa.</p><div class="actions" style="margin-bottom:10px"><button class="btn primary" data-action="addSurpriseMessage">＋ إضافة رسالة</button></div><div class="cards">${(state.settings.customSurpriseMessages||[]).length?(state.settings.customSurpriseMessages||[]).map((msg,idx)=>`<div class="card surprise-custom-message-item"><div style="flex:1;min-width:0"><b>💌</b> <span style="overflow-wrap:anywhere">${esc(msg)}</span></div><div class="actions"><button class="btn small" data-action="editSurpriseMessage" data-id="${idx}">تعديل</button><button class="btn small danger" data-action="deleteSurpriseMessage" data-id="${idx}">حذف</button></div></div>`).join(''):`<div class="empty">لم تضف رسائل مخصصة بعد.</div>`}</div></div><div class="card"><h3>📱 التواصل</h3><div class="formgrid">${field('setOsama','رقم أسامة',state.settings.osamaPhone,'tel')}${field('setRania','رقم رانيا',state.settings.raniaPhone,'tel')}${field('setWA','رابط واتساب',state.settings.whatsappUrl,'url')}</div><button class="btn primary" data-action="settingsSave" style="margin-top:10px">حفظ</button></div><div class="card"><h3>💾 النسخة الاحتياطية والأمان</h3><p>النسخة تحفظ بيانات OsRa ومراجع الصور وتواريخ التقاط EXIF والإخفاء والاستبعاد واختيار ألبومات صورة اليوم ومعاينات مصغرة خفيفة، وليست الملفات الأصلية.</p><p class="meta">نسخة البيانات القديمة تظل كما هي. مصدر الصور عالي الجودة منفصل عنها ولا يدخل في قاعدة OsRa اليومية.</p><div class="actions"><button class="btn primary" data-action="chooseBackup">📁 تحديد مكان الحفظ</button><button class="btn" data-action="backup">💾 حفظ نسخة الآن</button><button class="btn" data-action="restore">↩ استرجاع ملف كامل</button><button class="btn" data-action="restoreMerge">📦 استيراد ودمج نسخة</button><button class="btn" data-action="restoreSafety">🛟 استرجاع آخر نسخة أمان</button></div><div class="meta">${backupFileHandle?`ملف النسخة: ${esc(backupFileHandle.name||'محدد')}${backupMeta.lastSavedAt?' — آخر حفظ: '+new Date(backupMeta.lastSavedAt).toLocaleString('ar-EG'):''}`:'لم تحدد ملفًا ثابتًا بعد. عند الحفظ الأول سيطلب منك OsRa اختيار المكان.'}</div></div><div class="card"><h3>🖼️ مصدر الصور عالي الجودة</h3><p>ينشئ OsRa مجلدًا مستقلًا بصور حتى 2048px وجودة JPEG 88 تقريبًا. هذا المصدر بديل خفيف عن الأصل، ولا يغيّر الأصل ولا يحمّل الصور العالية داخل OsRa أثناء الاستخدام.</p><p class="meta">يدخل فقط الصور الموجودة في ألبومات ظاهرة. الصور المخفية أو التي أزلتها من الألبومات أو المستبعدة من الفهرس لا تُنسخ كملفات هنا؛ تبقى معلوماتها فقط داخل Backup البيانات.</p><div class="actions"><button class="btn primary" data-action="buildHQSource">🖼️ إنشاء / تحديث مصدر HQ</button><button class="btn" data-action="hqZip">📦 إنشاء ZIP للمشاركة</button><button class="btn" data-action="linkHQSource">🔗 ربط مصدر HQ موجود</button>${hqSourceHandle?`<button class="btn" data-action="clearHQSource">فصل مصدر HQ</button>`:''}</div><div class="meta">${hqSourceHandle?`مصدر HQ مرتبط: ${esc(hqSourceMeta.name||'OsRa_HQ_Source')} — ${hqIndex.size} صورة، والربط يقرأ manifest فقط بدون فحص الصور.`:'لا يوجد مصدر HQ مرتبط حاليًا.'}</div><div class="notice" style="margin-top:10px">جودة HQ الحالية ثابتة عند 2048px تقريبًا / JPEG 88؛ لم نضف جودة أعلى لأنها غالبًا تزيد الحجم أكثر من الفائدة على الهاتف.</div></div></div></div>`}
 function field(id,l,v,t){return `<div class="field"><label>${l}</label><input id="${id}" type="${t}" value="${esc(v||'')}"></div>`}
 function pageAbout(){return `<div class="inner"><div class="kicker">♥ عن OsRa</div><h1 class="title">عن البرنامج</h1><div class="card dedication-card"><div class="about-text"><p><b>إلى أحب إنسانة إلى قلبي</b> ♥️💛❤️</p><p>إلى تلك التي أضاءت سماء حياتي،<br>بل هي التي جعلت لحياتي سماء.</p><p>إهداء إلى جميلتي، وحبيبتي، وملاكي الصغير...<br>إلى القلب العجيب، والوجه الجميل، والابتسامة الرقيقة المنعشة،<br>يا من يسكنكِ كل شيء جميل.</p><p>يا من بها رقة وصفاء وطهارة السماء،<br>مع قوة وعنفوان ورهوان 😉 الأرض<br>التقيا وتلاقيا.</p><p>إهداء إلى تلك اليد الصغيرة،<br>التي تحمل حبًا كبيرًا،<br>وتتفتح بلمساتها أزهار سماوية،<br>مانحةً إياها الأبدية والحب والجمال.</p><p>إلى صوت همساتك،<br>وضحكاتك العفوية،<br>وإلى غمازة الخد اليمين...</p><p>أرسل قلبي وحبي، دائمًا وأبدًا،<br>لروحي... يا روحي، يا رنووووشي 😍😘</p><p>يا من أحببتها للمنتهى،<br>وأحبها، وسأحبها...</p><p><b>أحبك جدًا، وجداً، وجداًااا... ❤️</b></p><p><b>رانيا...<br>حبيبتي، ورفيقة دربي،<br>وأجمل ما أعطاني إِلهُ السَّمَاءِ.</b> ❤️</p></div></div><div class="security-note"><b>خصوصية OsRa</b><br>الصور الأصلية تبقى في مجلدكم المحلي. OsRa لا يرفع الصور إلى خادم، والمعاينات المخزنة هي داخل مساحة الموقع المحلية على الجهاز.</div></div>`}
 function pageCalendar(){
@@ -1610,9 +1658,9 @@ async function ensureLatestOsRa(){
     location.reload();
   },{once:true});
   try{
-    const reg=await navigator.serviceWorker.register('./sw.js?build=osra110-20261008-r34-boot-hearts-custom-messages',{updateViaCache:'none'});
+    const reg=await navigator.serviceWorker.register('./sw.js?build=osra111-20261008-r35-fast-surprises-boot-celebration',{updateViaCache:'none'});
     await reg.update().catch(()=>{});
     if(reg.waiting) reg.waiting.postMessage({type:'SKIP_WAITING'});
   }catch(e){console.warn('OsRa service worker update skipped',e)}
 }
-(async()=>{try{initBootRibbon();ensureLatestOsRa().catch(()=>{});await dbOpen();await load();renderNoAnim();updateSoundButton();updateSurpriseButton();initBirthdayUi();hideBootSplash();startRomanticTicker();if(navigator.storage?.persist)navigator.storage.persist().catch(()=>{});setTimeout(async()=>{await runDeferredStartupMaintenance();await shareTarget();await maybeAutoFileBackup();},500);setInterval(()=>{maybeAutoFileBackup().catch(()=>{})},6*60*60*1000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&scanCheckpoint?.status==='running')persistScanProgress();if(document.visibilityState==='visible'){setTimeout(()=>{maybeAutoFileBackup().catch(()=>{})},120)}})}catch(e){console.error(e);hideBootSplash();toast('تعذر تشغيل OsRa.')}})();
+(async()=>{try{initBootRibbon();initBootCelebration();ensureLatestOsRa().catch(()=>{});await dbOpen();await load();renderNoAnim();updateSoundButton();updateSurpriseButton();initBirthdayUi();hideBootSplash();startRomanticTicker();if(navigator.storage?.persist)navigator.storage.persist().catch(()=>{});setTimeout(async()=>{await runDeferredStartupMaintenance();await shareTarget();await maybeAutoFileBackup();},500);setInterval(()=>{maybeAutoFileBackup().catch(()=>{})},6*60*60*1000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&scanCheckpoint?.status==='running')persistScanProgress();if(document.visibilityState==='visible'){setTimeout(()=>{maybeAutoFileBackup().catch(()=>{})},120)}})}catch(e){console.error(e);hideBootSplash();toast('تعذر تشغيل OsRa.')}})();
