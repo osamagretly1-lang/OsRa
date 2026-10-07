@@ -627,3 +627,122 @@ body.birthday-day .topbar{padding-top:68px}
   100%{opacity:0;transform:translate3d(calc(var(--dx)*.5),-68vh,0) scale(.78) rotate(16deg)}
 }
 @media(max-width:600px){.boot-open-dog{width:44px;height:34px}.boot-open-item{filter:drop-shadow(0 4px 8px rgba(55,32,46,.11))}}
+
+/* R38 — elegant 3/2/1 countdown before the post-open celebration. */
+#bootAfterOpenCelebration{z-index:10002}
+.boot-open-countdown{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:4;opacity:1;transition:opacity .45s ease}
+.boot-open-countdown-text{font-family:Tahoma,Arial,sans-serif;font-weight:1000;font-size:clamp(92px,22vw,190px);line-height:1;text-align:center;letter-spacing:-3px;color:#9e1b35;text-shadow:0 7px 24px rgba(72,20,36,.16),0 0 1px rgba(255,255,255,.9);transform:scale(.72);opacity:0;will-change:transform,opacity;}
+.boot-open-countdown-text.boot-open-countdown-pop{animation:bootOpenCountdownPop .82s cubic-bezier(.16,.8,.2,1) both}
+.boot-open-countdown-text.celebrate{font-size:clamp(54px,12vw,105px);letter-spacing:0;color:#b71c4a;text-shadow:0 8px 26px rgba(100,24,50,.17),0 0 18px rgba(255,255,255,.65)}
+.boot-open-countdown-hide{opacity:0}
+.boot-open-countdown-hide .boot-open-countdown-text{animation:bootOpenCountdownFade .48s ease forwards!important}
+@keyframes bootOpenCountdownPop{0%{opacity:0;transform:scale(.55) translateY(10px)}58%{opacity:1;transform:scale(1.08) translateY(0)}100%{opacity:1;transform:scale(1)}}
+@keyframes bootOpenCountdownFade{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(1.12)}}
+@media(max-width:600px){
+ .boot-open-countdown-text{font-size:clamp(82px,25vw,145px)}
+ .boot-open-countdown-text.celebrate{font-size:clamp(42px,13vw,76px)}
+}
+@media(prefers-reduced-motion:reduce){
+ .boot-open-countdown-text.boot-open-countdown-pop{animation:none!important;opacity:1;transform:none}
+}
+
+/* R38 — restore the classic loading label; R34's hidden loader rule must not override it. */
+.boot-splash .boot-loading{display:block!important}
+.boot-splash .boot-progress{display:none!important}
+
+/* R39 — giant full-screen 3/2/1 countdown with fast pop + particle breakup. */
+#bootAfterOpenCelebration{z-index:10002;overflow:hidden;}
+#bootAfterOpenCelebration .boot-open-countdown{z-index:20;}
+.boot-open-countdown-text{
+  position:relative;
+  width:100vw;
+  height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:0;
+  font-family:Tahoma,Arial,sans-serif;
+  font-weight:1000;
+  font-size:clamp(180px,48vw,620px);
+  line-height:.82;
+  letter-spacing:-.055em;
+  color:#a30d35;
+  -webkit-text-stroke:8px rgba(255,255,255,.98);
+  paint-order:stroke fill;
+  text-shadow:
+    0 0 0 #7e0929,
+    0 0 7px rgba(255,255,255,.95),
+    0 14px 36px rgba(70,16,40,.28);
+  transform:scale(.42);
+  opacity:0;
+  will-change:transform,opacity,filter;
+}
+.boot-open-countdown-text.boot-open-countdown-pop{
+  animation:bootR39CountdownIn .62s cubic-bezier(.12,.88,.18,1) both;
+}
+.boot-open-countdown-text.boot-open-countdown-exit{
+  animation:bootR39CountdownOut .28s cubic-bezier(.45,.02,.8,.2) both!important;
+}
+.boot-open-countdown-text.celebrate{
+  width:100vw;height:100vh;
+  font-size:clamp(72px,15vw,250px);
+  letter-spacing:-.015em;
+  -webkit-text-stroke:6px rgba(255,255,255,.96);
+  color:#c21d52;
+  text-shadow:0 0 0 #8c1037,0 0 20px rgba(255,255,255,.96),0 14px 40px rgba(70,16,40,.25);
+}
+@keyframes bootR39CountdownIn{
+  0%{opacity:0;transform:scale(.34) rotate(-3deg);filter:blur(7px)}
+  38%{opacity:1;transform:scale(1.13) rotate(1deg);filter:blur(0)}
+  68%{opacity:1;transform:scale(.96) rotate(0)}
+  100%{opacity:1;transform:scale(1) rotate(0)}
+}
+@keyframes bootR39CountdownOut{
+  0%{opacity:1;transform:scale(1)}
+  28%{opacity:1;transform:scale(1.18) rotate(2deg)}
+  100%{opacity:0;transform:scale(1.52) rotate(-4deg);filter:blur(2px)}
+}
+.boot-countdown-explosion{
+  position:fixed;
+  width:0;height:0;
+  z-index:25;
+  pointer-events:none;
+}
+.boot-countdown-shard{
+  position:absolute;
+  left:0;top:0;
+  transform:translate(-50%,-50%);
+  color:#b51a46;
+  text-shadow:0 3px 10px rgba(60,20,36,.22);
+  opacity:0;
+  animation:bootR39Shard .72s cubic-bezier(.15,.7,.2,1) forwards;
+  will-change:transform,opacity;
+}
+@keyframes bootR39Shard{
+  0%{opacity:1;transform:translate(-50%,-50%) scale(1.1) rotate(0)}
+  100%{opacity:0;transform:translate(calc(-50% + var(--x)),calc(-50% + var(--y))) scale(.15) rotate(var(--r))}
+}
+.boot-countdown-flash{
+  position:absolute;
+  width:28px;height:28px;
+  left:-14px;top:-14px;
+  border-radius:50%;
+  background:rgba(255,255,255,.92);
+  box-shadow:0 0 24px 12px rgba(255,217,230,.72),0 0 70px 28px rgba(255,255,255,.5);
+  animation:bootR39Flash .34s ease-out forwards;
+}
+@keyframes bootR39Flash{
+  0%{opacity:1;transform:scale(.4)}
+  100%{opacity:0;transform:scale(5.5)}
+}
+/* Keep the countdown animated even when the device asks for reduced motion; this intro is user-requested UI. */
+@media(prefers-reduced-motion:reduce){
+  .boot-open-countdown-text.boot-open-countdown-pop{animation:bootR39CountdownIn .62s cubic-bezier(.12,.88,.18,1) both!important;opacity:1}
+  .boot-open-countdown-text.boot-open-countdown-exit{animation:bootR39CountdownOut .28s cubic-bezier(.45,.02,.8,.2) both!important}
+  .boot-countdown-shard{animation:bootR39Shard .72s cubic-bezier(.15,.7,.2,1) forwards!important}
+  .boot-countdown-flash{animation:bootR39Flash .34s ease-out forwards!important}
+}
+@media(max-width:600px){
+  .boot-open-countdown-text{-webkit-text-stroke:6px rgba(255,255,255,.98);font-size:clamp(170px,61vw,430px)}
+  .boot-open-countdown-text.celebrate{font-size:clamp(60px,17vw,150px);-webkit-text-stroke:5px rgba(255,255,255,.96)}
+}

@@ -45,4 +45,4 @@ R29 update: full-screen romantic surprise engine with 28 presentation modes, lar
 R35 patch: restored message-first surprise cadence; added random-fast movement mode; boot celebration now uses birthday-style moving large+mini ribbons plus bottom burst/top rain for ~3 seconds; cache build bumped.
 
 
-R37: classic centered startup restored (logo, OsRa, Rania ♥ Osama, loading text) with one calm red top ribbon; post-open 10-second layered celebration; random surprises resume only after the celebration.
+R39: classic startup preserved; added a large 3→2→1→احتفاااااال countdown after the loading screen, then a 7-second post-open celebration; random surprises resume only after the full 10-second sequence.

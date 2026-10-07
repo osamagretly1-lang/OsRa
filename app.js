@@ -1,5 +1,5 @@
 window.__osraBootAt=performance.now();
-const OSRA_BUILD='OsRa v113 — 2026-10-08 — R37 CLASSIC BOOT + POST-OPEN CELEBRATION + FAST SURPRISES';
+const OSRA_BUILD='OsRa v115 — 2026-10-08 — R39 GIANT COUNTDOWN + POST-OPEN CELEBRATION + FAST SURPRISES';
 const DB='OsRaDB', VER=100, THUMB_VERSION=6, THUMB_MAX_BYTES=160*1024;
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 const DEFAULT={settings:{startDate:'',engagementDate:'',birthdayRania:'',osamaPhone:'',raniaPhone:'',whatsappUrl:'',libraryName:'',soundEnabled:false,surprisesEnabled:true,dailyAlbumIds:null,albumOrderMode:'manual',albumMiniView:false,messagesOrder:'desc',hideScanProgressCard:false,countdowns:[],surpriseTiming:'10',surpriseSpeed:'normal',customSurpriseMessages:[]},memories:[],events:[],dreams:[],verses:[],prayers:[],messages:[],excludedPhotos:[]};
@@ -250,7 +250,57 @@ function runPostOpenCelebration(){
  if(!layer)return;
  layer.innerHTML='';
  if(!surprisesAreEnabled()){setTimeout(()=>startRomanticTicker(),220);return}
- const glyphs=['❤️','💖','💕','💗','💛','🌹','🌷','🌸','💐','💋','😘','✨','🎀','🎉','🎈'];
+ const glyphs=['❤️','💖','💕','💗','💛','🌹','🌷','🌸','💐','💋','😘','✨','🎀','🎉','🎈','🐶'];
+ const countdown=document.createElement('div');
+ countdown.className='boot-open-countdown';
+ const countText=document.createElement('div');
+ countText.className='boot-open-countdown-text';
+ countdown.appendChild(countText);
+ layer.appendChild(countdown);
+
+ const showCount=(value,extra='')=>{
+   countText.className=`boot-open-countdown-text ${extra}`.trim();
+   countText.textContent=value;
+   countText.setAttribute('data-text',value);
+   void countText.offsetWidth;
+   countText.classList.add('boot-open-countdown-pop');
+ };
+ const explodeCount=()=>{
+   if(!document.body.contains(layer))return;
+   const rect=countText.getBoundingClientRect();
+   const cx=rect.left+rect.width/2, cy=rect.top+rect.height/2;
+   const shell=document.createElement('div');
+   shell.className='boot-countdown-explosion';
+   shell.style.left=`${cx}px`;shell.style.top=`${cy}px`;
+   const pieces=['✦','✧','♥','•','✿','❀','⋆','·'];
+   for(let i=0;i<34;i++){
+     const shard=document.createElement('span');
+     shard.className='boot-countdown-shard';
+     shard.textContent=pieces[i%pieces.length];
+     const a=Math.random()*Math.PI*2;
+     const d=90+Math.random()*280;
+     shard.style.setProperty('--x',`${Math.cos(a)*d}px`);
+     shard.style.setProperty('--y',`${Math.sin(a)*d}px`);
+     shard.style.setProperty('--r',`${-180+Math.random()*360}deg`);
+     shard.style.fontSize=`${10+Math.random()*34}px`;
+     shard.style.animationDelay=`${(Math.random()*.06).toFixed(2)}s`;
+     shell.appendChild(shard);
+   }
+   const flash=document.createElement('span');flash.className='boot-countdown-flash';shell.appendChild(flash);
+   layer.appendChild(shell);
+   countText.classList.remove('boot-open-countdown-pop');
+   countText.classList.add('boot-open-countdown-exit');
+   setTimeout(()=>shell.remove(),760);
+ };
+ showCount('3');
+ // The first 3 seconds are always the countdown, directly over the home page.
+ setTimeout(()=>{explodeCount();},720);
+ setTimeout(()=>{showCount('2');},1000);
+ setTimeout(()=>{explodeCount();},1720);
+ setTimeout(()=>{showCount('1');},2000);
+ setTimeout(()=>{explodeCount();},2720);
+ setTimeout(()=>{beginCelebration();},3000);
+
  const addRain=(count,cls,durBase,spread=100)=>{
   for(let i=0;i<count;i++){
    const s=document.createElement('span');s.className=`boot-open-item boot-open-rain ${cls}`;
@@ -288,29 +338,42 @@ function runPostOpenCelebration(){
    layer.appendChild(s);
   }
  };
- // 0–2s: dense rain + a first upward burst.
- addRain(52,'rain-heavy',1.8);
- addBurst(34,3.2);
- // Two small white smiling dogs join the first burst.
- for(let i=0;i<2;i++){
-  const s=document.createElement('span');s.className='boot-open-item boot-open-dog';s.innerHTML=romanticWhiteDogSvg();
-  s.style.left=`${18+i*56}%`;
-  s.style.setProperty('--dx',`${-10+Math.random()*20}vw`);
-  s.style.setProperty('--delay',`${(.25+i*.35).toFixed(2)}s`);
-  s.style.setProperty('--dur',`${(3.4+Math.random()*.5).toFixed(2)}s`);
-  layer.appendChild(s);
+ const addDogs=()=>{
+  for(let i=0;i<3;i++){
+   const s=document.createElement('span');s.className='boot-open-item boot-open-dog';s.innerHTML=romanticWhiteDogSvg();
+   s.style.left=`${12+i*38}%`;
+   s.style.setProperty('--dx',`${-10+Math.random()*20}vw`);
+   s.style.setProperty('--delay',`${(.15+i*.35).toFixed(2)}s`);
+   s.style.setProperty('--dur',`${(3.0+Math.random()*.8).toFixed(2)}s`);
+   layer.appendChild(s);
+  }
+ };
+ function beginCelebration(){
+   if(!document.body.contains(layer)||!surprisesAreEnabled())return;
+   countdown.classList.add('boot-open-countdown-celebrate');
+   showCount('احتفااااااال 🎉','celebrate');
+   // 0–2s: dense rain + strong upward burst.
+   addRain(58,'rain-heavy',1.7);
+   addBurst(38,3.0);
+   addDogs();
+   setTimeout(()=>{
+     if(!document.body.contains(layer)||!surprisesAreEnabled())return;
+     addRain(24,'rain-soft',2.6);
+   },2000);
+   // 4–7s: rich mixed flow.
+   setTimeout(()=>{
+     if(!document.body.contains(layer)||!surprisesAreEnabled())return;
+     addRain(32,'rain-soft',3.5);addBurst(26,4.0);addMix(40);
+   },4000);
+   setTimeout(()=>{countdown.classList.add('boot-open-countdown-hide');},800);
+   // 3s countdown + 7s celebration = 10s total post-open intro.
+   setTimeout(()=>{
+     if(!layer)return;
+     layer.classList.add('boot-open-fade');
+     setTimeout(()=>{layer.innerHTML='';layer.classList.remove('boot-open-fade');},600);
+     if(surprisesAreEnabled())startRomanticTicker();
+   },7000);
  }
- // 2–5s: rain becomes lighter while the remaining burst continues to fade.
- setTimeout(()=>{if(!document.body.contains(layer)||!surprisesAreEnabled())return;addRain(22,'rain-soft',2.7);},2000);
- // 5–10s: a final rich mixed flow, intentionally varied in size and movement.
- setTimeout(()=>{if(!document.body.contains(layer)||!surprisesAreEnabled())return;addRain(28,'rain-soft',3.6);addBurst(22,4.2);addMix(34);},5000);
- // End cleanly, then start the normal random-message system.
- setTimeout(()=>{
-  if(!layer)return;
-  layer.classList.add('boot-open-fade');
-  setTimeout(()=>{layer.innerHTML='';layer.classList.remove('boot-open-fade');},600);
-  if(surprisesAreEnabled())startRomanticTicker();
- },10000);
 }
 function clearSurpriseLayers(){['romanticSceneLayer','romanticMessageBubble','romanticLongLayer','romanticBalloonLayer','romanticEffectLayer','romanticFloatLayer','occasionCelebration'].forEach(id=>{const el=document.getElementById(id);if(el)el.remove()});document.querySelectorAll('[id^="romanticSceneLayer-"]').forEach(el=>el.remove());const ticker=document.getElementById('romanticTicker');if(ticker){ticker.classList.remove('show');const tx=document.getElementById('romanticTickerText');if(tx)tx.textContent=''}clearTimeout(romanticTickerCloseTimer);clearTimeout(romanticKissTimer);romanticKissTimer=null;clearTimeout(romanticDelightTimer);romanticDelightTimer=null;occasionCelebrationBusy=false;romanticLongBusy=false}
 async function toggleSurprises(){state.settings.surprisesEnabled=!surprisesAreEnabled();await save();if(!surprisesAreEnabled()){clearSurpriseLayers();document.getElementById('bootAfterOpenCelebration')?.replaceChildren();}updateSurpriseButton();updateBirthdayUi();if(surprisesAreEnabled()){startRomanticTicker();maybeRunOccasionCelebrations();}renderNoAnim();}
@@ -1693,7 +1756,7 @@ async function ensureLatestOsRa(){
     location.reload();
   },{once:true});
   try{
-    const reg=await navigator.serviceWorker.register('./sw.js?build=osra112-20261008-r36-refined-boot-fast-surprises',{updateViaCache:'none'});
+    const reg=await navigator.serviceWorker.register('./sw.js?build=osra114-20261008-r39-giant-countdown-explosion',{updateViaCache:'none'});
     await reg.update().catch(()=>{});
     if(reg.waiting) reg.waiting.postMessage({type:'SKIP_WAITING'});
   }catch(e){console.warn('OsRa service worker update skipped',e)}

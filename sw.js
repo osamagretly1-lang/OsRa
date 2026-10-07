@@ -1,10 +1,10 @@
-const BUILD='osra113-20261008-r37-classic-boot-post-celebration-fast-surprises';
-const CACHE=`OsRa-v113-${BUILD}`;
+const BUILD='osra115-20261008-r39-giant-countdown-explosion';
+const CACHE=`OsRa-v115-${BUILD}`;
 const APP=[
   './',
   './index.html',
   './style.css',
-  './app.js?v=osra113-r37-classic-boot-post-celebration-fast-surprises',
+  './app.js?v=osra115-r39-giant-countdown-explosion',
   './manifest.json',
   './icon.svg',
   './icon-192.png',
