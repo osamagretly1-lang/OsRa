@@ -1,10 +1,10 @@
-const BUILD='osra115-20261008-r39-giant-countdown-explosion';
-const CACHE=`OsRa-v115-${BUILD}`;
+const BUILD='osra116-20261008-r40-restored-surprise-deck';
+const CACHE=`OsRa-v116-${BUILD}`;
 const APP=[
   './',
   './index.html',
   './style.css',
-  './app.js?v=osra115-r39-giant-countdown-explosion',
+  './app.js?v=osra116-r40-restored-surprise-deck',
   './manifest.json',
   './icon.svg',
   './icon-192.png',

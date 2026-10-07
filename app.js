@@ -6,7 +6,7 @@ const DEFAULT={settings:{startDate:'',engagementDate:'',birthdayRania:'',osamaPh
 const thumbCache=new Map();const THUMB_CACHE_MAX=96;let thumbHydrateQueue=new Set(),thumbHydrateTimer=0;
 let excludedCacheSource=null,excludedCacheSet=new Set();
 let db,state=structuredClone(DEFAULT),libraryHandle=null,backupFileHandle=null,backupMeta={lastSavedAt:0,lastAutoFileAt:0},hqSourceHandle=null,hqSourceMeta={name:'',manifestVersion:1},hqIndex=new Map(),hqBuildCheckpoint=null,hqBuildSelection=null,hqBuildStopRequested=false,photos=new Map(),sources=[],activeSourceId=null,scanProgresses={},permissionCache=new Set(),permissionDeniedCache=new Set(),searchState={query:'',messageId:'',fromSection:'home'},section='home',busy=false,scanLock=false,scanStopRequested=false,scanCheckpoint=null,scanProgressWrite=Promise.resolve(),dragSelectMode=false,dragSelecting=false,dragSelectValue=true,dragVisited=new Set(),dragPointerId=null,dragScrollTimer=null,dragLastX=0,dragLastY=0,dragLongPressTimer=null,dragPending=false,dragPendingPhoto='',dragPendingItem=null,dragPendingX=0,dragPendingY=0,quickTapHandledUntil=0,reindexRestorePool=[],duplicateModalGroups=[],installEvent=null,soundOn=false,audioCtx=null,lb={ids:[],i:0,url:null,thumbUrl:null,loadToken:0,timer:null,touchX:null,touchY:null,zoom:1,panX:0,panY:0,dragX:null,dragY:null,dragPanX:0,dragPanY:0,pinchStart:0,pinchBase:1,lastTap:0,lastTapX:0,lastTapY:0,flipBusy:false,flipTimer:null,flipUrls:[]},currentMemoryId=null,selectedPhotos=new Set(),selectedMemories=new Set(),calendarDate=today(),calendarCursor=null,safetyTimer=null,recoveryCandidate=null,recoveryNoticeHidden=false,pendingFolderRoot=null,pendingFolderName='',albumBookIndex=0,albumBookBusy=false,albumBookTimer=null,albumBookToken=0;
-let lastLinkReport=null,linkProgresses={},linkProgressTimer=null,linkRunStartedAt=0,albumReviewState=null,manualLinkSession=null,visualLinkSession=null,visualLinkStopRequested=false,romanticTickerTimer=null,romanticTickerCloseTimer=null,romanticDelightTimer=null,romanticKissTimer=null,romanticKissShownKey='',romanticLongBusy=false,occasionCelebrationBusy=false;
+let lastLinkReport=null,linkProgresses={},linkProgressTimer=null,linkRunStartedAt=0,albumReviewState=null,manualLinkSession=null,visualLinkSession=null,visualLinkStopRequested=false,romanticTickerTimer=null,romanticTickerCloseTimer=null,romanticDelightTimer=null,romanticKissTimer=null,romanticKissShownKey='',romanticLongBusy=false,romanticMessageCycle=0,romanticLongNextAt=4+Math.floor(Math.random()*3),occasionCelebrationBusy=false;
 const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const id=p=>p+'-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);
 function isImage(n){return /\.(jpe?g|png|webp|gif|avif|heic|heif|tif?f|bmp)$/i.test(String(n||''))}
@@ -375,7 +375,7 @@ function runPostOpenCelebration(){
    },7000);
  }
 }
-function clearSurpriseLayers(){['romanticSceneLayer','romanticMessageBubble','romanticLongLayer','romanticBalloonLayer','romanticEffectLayer','romanticFloatLayer','occasionCelebration'].forEach(id=>{const el=document.getElementById(id);if(el)el.remove()});document.querySelectorAll('[id^="romanticSceneLayer-"]').forEach(el=>el.remove());const ticker=document.getElementById('romanticTicker');if(ticker){ticker.classList.remove('show');const tx=document.getElementById('romanticTickerText');if(tx)tx.textContent=''}clearTimeout(romanticTickerCloseTimer);clearTimeout(romanticKissTimer);romanticKissTimer=null;clearTimeout(romanticDelightTimer);romanticDelightTimer=null;occasionCelebrationBusy=false;romanticLongBusy=false}
+function clearSurpriseLayers(){['romanticSceneLayer','romanticMessageBubble','romanticLongLayer','romanticBalloonLayer','romanticEffectLayer','romanticFloatLayer','occasionCelebration'].forEach(id=>{const el=document.getElementById(id);if(el)el.remove()});document.querySelectorAll('[id^="romanticSceneLayer-"]').forEach(el=>el.remove());const ticker=document.getElementById('romanticTicker');if(ticker){ticker.classList.remove('show');const tx=document.getElementById('romanticTickerText');if(tx)tx.textContent=''}clearTimeout(romanticTickerCloseTimer);clearTimeout(romanticKissTimer);romanticKissTimer=null;clearTimeout(romanticDelightTimer);romanticDelightTimer=null;occasionCelebrationBusy=false;romanticLongBusy=false;romanticMessageCycle=0;romanticLongNextAt=4+Math.floor(Math.random()*3)}
 async function toggleSurprises(){state.settings.surprisesEnabled=!surprisesAreEnabled();await save();if(!surprisesAreEnabled()){clearSurpriseLayers();document.getElementById('bootAfterOpenCelebration')?.replaceChildren();}updateSurpriseButton();updateBirthdayUi();if(surprisesAreEnabled()){startRomanticTicker();maybeRunOccasionCelebrations();}renderNoAnim();}
 function dataRecoveryCard(){if(!recoveryCandidate)return '';const score=recoveryScore(recoveryCandidate);if(score<=recoveryScore(state))return '';return `<div class="card recovery-card"><h3>🛟 نسخة أمان أفضل متاحة</h3><p>OsRa وجد نسخة أمان تحتوي، بحسب المقارنة الداخلية، على بيانات أكثر من الحالة الحالية.</p><div class="meta">تاريخ النسخة: ${esc(recoveryLabel(recoveryCandidate))}</div><div class="actions"><button class="btn primary" data-action="restoreLocalRecovery">استعادة النسخة</button><button class="btn" data-action="hideRecoveryNotice">إخفاء هذا التنبيه</button></div><p class="meta">لن يتم الاستبدال تلقائيًا. الاستعادة لا تحذف الصور الأصلية من الهاتف، ولا تتم إلا بعد ضغطك على زر الاستعادة.</p></div>`}
 function scanProgressText(cp){if(!cp)return'';const n=cp.processed||cp.count||0,a=cp.added||0,u=cp.updated||0,m=cp.moved||0,e=cp.excluded||0;return `تم فحص ${n} صورة${a?` — ${a} جديدة`:''}${u?` — ${u} محدثة`:''}${m?` — ${m} منقولة`:''}${e?` — ${e} مستبعدة`:''}`}
@@ -792,129 +792,78 @@ function showRomanticFloat(kind='random',profile=surpriseTimingProfile()){
  }
 }
 function romanticWhiteDogSvg(){return `<svg class="romantic-white-dog" viewBox="0 0 96 72" aria-hidden="true"><ellipse cx="48" cy="57" rx="34" ry="9" fill="rgba(30,18,25,.14)"/><path d="M29 25c-8-11-1-20 8-11l7 7c4-3 11-4 17-1l7-8c9-9 16 0 8 12 4 5 6 11 4 20-3 13-16 20-32 20S18 57 18 44c0-7 4-14 11-19Z" fill="#fff" stroke="#e5d9df" stroke-width="2"/><circle cx="38" cy="38" r="2.7" fill="#392b31"/><circle cx="58" cy="38" r="2.7" fill="#392b31"/><ellipse cx="48" cy="46" rx="7" ry="5" fill="#392b31"/><path d="M42 52c4 4 8 4 12 0" fill="none" stroke="#392b31" stroke-width="2" stroke-linecap="round"/><path d="M24 28 16 19c-4-5-7 1-5 9l9 9" fill="#fff" stroke="#e5d9df" stroke-width="2"/><path d="M72 28 80 19c4-5 7 1 5 9l-9 9" fill="#fff" stroke="#e5d9df" stroke-width="2"/></svg>`}
-function showRomanticLongMessage(){if(!surprisesAreEnabled()||romanticLongBusy)return;romanticLongBusy=true;renderRomanticTickerMessage(ROMANTIC_LONG_MESSAGE,Math.floor(Math.random()*5),10500);setTimeout(()=>{let layer=document.getElementById('romanticLongLayer');if(layer)layer.remove();layer=document.createElement('div');layer.id='romanticLongLayer';layer.className='romantic-long-layer';layer.innerHTML=`<div class="romantic-long-sign"><div class="romantic-sign-face">${esc(ROMANTIC_LONG_MESSAGE)}</div></div><div class="romantic-dog-target">${romanticWhiteDogSvg()}</div>`;document.body.appendChild(layer);setTimeout(()=>{layer.classList.add('landed')},4200);setTimeout(()=>{layer.classList.add('romantic-long-fade')},9000);setTimeout(()=>{layer.remove();romanticLongBusy=false},12000)},3900)}
-function showRomanticBubble(message){if(!surprisesAreEnabled())return;
-
- const old=document.getElementById('romanticMessageBubble');if(old)old.remove();
- const layer=document.createElement('div');layer.id='romanticMessageBubble';layer.className='romantic-message-bubble';
- const side=Math.random()<.5?'from-left':'from-right';
- layer.classList.add(side);
- layer.innerHTML=`<div class="romantic-bubble-card"><span class="romantic-bubble-spark">✦</span><div class="romantic-bubble-text">${esc(message)}</div><span class="romantic-bubble-tail">♥</span></div>`;
- document.body.appendChild(layer);setTimeout(()=>layer.classList.add('settled'),70);setTimeout(()=>layer.classList.add('leaving'),4700);setTimeout(()=>layer.remove(),6000);
-}
-function showRomanticMessageTwice(message){if(!surprisesAreEnabled())return;renderRomanticTickerMessage(message,Math.floor(Math.random()*5),6200);setTimeout(()=>showRomanticBubble(message),3600)}
-
-/* R28/R29-style romantic surprise engine: many full-screen presentation modes. */
-const ROMANTIC_SCENE_STYLES=[
- 'ribbon','spotlight','postcard','burst','neon','heartframe','flowerframe','balloons','orbit','stamp','sticker','cloud','shooting','curtain','split','bottomwave','topwave','giantcenter','sidecard','tiltcard','bubblefield','confetti','rain','ticket','polaroid','halo','bootribbon','dogsign'
-];
-let lastRomanticSceneStyle='',lastRomanticSceneMessage='';
-const ROMANTIC_SCENE_EMOJIS=['❤️','💖','💕','💛','💗','🌹','🌷','🌸','💐','💋','😘','🥰','🫂','🎀','✨','⭐','🎈','💞','🌺','🩷'];
-function romanticScenePickStyle(){
- const choices=ROMANTIC_SCENE_STYLES.filter(x=>x!==lastRomanticSceneStyle);
- const v=choices[Math.floor(Math.random()*choices.length)]||ROMANTIC_SCENE_STYLES[0];
- lastRomanticSceneStyle=v;return v;
-}
-let lastRomanticMotion='';
-const ROMANTIC_MOTION_STYLES=['drop','rise','slide-left','slide-right','zoom','spin','bounce','float-left','float-right','soft'];
-function romanticMotionPick(){
- const choices=ROMANTIC_MOTION_STYLES.filter(x=>x!==lastRomanticMotion);
- const v=choices[Math.floor(Math.random()*choices.length)]||'soft';
- lastRomanticMotion=v;return v;
-}
-function romanticSceneDecor(count=9){
- const out=[];
- for(let i=0;i<count;i++){
-  const e=ROMANTIC_SCENE_EMOJIS[Math.floor(Math.random()*ROMANTIC_SCENE_EMOJIS.length)];
-  const x=2+Math.random()*96,y=4+Math.random()*90,r=-28+Math.random()*56,sc=.72+Math.random()*.78,d=(1.2+Math.random()*2.8).toFixed(2),delay=(Math.random()*.55).toFixed(2);
-  out.push(`<span class="rs-decor d${i%6}" style="left:${x.toFixed(2)}%;top:${y.toFixed(2)}%;--r:${r.toFixed(1)}deg;--sc:${sc.toFixed(2)};--sd:${d}s;--delay:${delay}s">${e}</span>`);
- }
- return out.join('');
-}
-function fitRomanticSceneCard(layer){
- const card=layer?.querySelector('.rs-card');
- const msg=layer?.querySelector('.rs-message');
- if(!card||!msg)return;
- const vw=Math.max(280,window.innerWidth||360),vh=Math.max(420,window.innerHeight||640);
- const len=Array.from(msg.textContent||'').length;
- const target=Math.max(18,Math.min(46, len>150?19:len>110?21:len>85?23:len>60?26:len>40?30:len>24?34:40));
- msg.style.fontSize=`${target}px`;
- msg.style.lineHeight=len>90?'1.28':'1.22';
- msg.style.maxWidth='100%';
- const maxH=Math.max(210,Math.min(560,vh-105));
- card.style.maxWidth=`${Math.max(240,Math.min(760,vw-22))}px`;
- card.style.maxHeight='none';
- card.style.overflow='visible';
- // Fit the whole message into the viewport before placement; only very unusual text falls back to scrolling.
- let fs=target;
- for(let n=0;n<14;n++){
-  msg.style.fontSize=`${fs}px`;
-  if(card.scrollHeight<=maxH || fs<=16)break;
-  fs-=1;
- }
- card.style.maxHeight=`${maxH}px`;
- // Keep the resting position completely on-screen, while preserving the chosen style/motion.
- const w=card.offsetWidth||Math.min(760,vw-22),h=card.offsetHeight||Math.min(560,vh-105);
- const initialX=vw*(.18+Math.random()*.64),initialY=vh*(.22+Math.random()*.56);
- const safeX=Math.max(w/2+11,Math.min(vw-w/2-11,initialX));
- const safeY=Math.max(h/2+54,Math.min(vh-h/2-16,initialY));
- card.style.left=`${safeX}px`;
- card.style.top=`${safeY}px`;
- card.dataset.ready='1';
-}
-function clampRomanticSceneCard(layer){
- const card=layer?.querySelector('.rs-card');
- if(!card)return;
- const vw=window.innerWidth||360,vh=window.innerHeight||640,rect=card.getBoundingClientRect();
- const marginX=10,topSafe=Math.min(74,vh*.12),bottomSafe=10;
- const dx=(rect.left<marginX?marginX-rect.left:rect.right>vw-marginX?vw-marginX-rect.right:0);
- const dy=(rect.top<topSafe?topSafe-rect.top:rect.bottom>vh-bottomSafe?vh-bottomSafe-rect.bottom:0);
- if(dx||dy){
-  const curX=parseFloat(card.style.left)||vw/2,curY=parseFloat(card.style.top)||vh/2;
-  card.style.left=`${curX+dx}px`;card.style.top=`${curY+dy}px`;
- }
-}
-function enableRomanticCardDrag(layer){
- const card=layer?.querySelector('.rs-card');
- if(!card||card.dataset.dragReady)return;
- card.dataset.dragReady='1';
- let dragging=false,startX=0,startY=0,startLeft=0,startTop=0,pid=null;
- const stop=()=>{dragging=false;pid=null;card.classList.remove('user-dragged')};
- card.addEventListener('pointerdown',e=>{if(!layer.classList.contains('is-visible'))return;dragging=true;pid=e.pointerId;startX=e.clientX;startY=e.clientY;startLeft=parseFloat(card.style.left)||window.innerWidth/2;startTop=parseFloat(card.style.top)||window.innerHeight/2;card.setPointerCapture?.(e.pointerId);card.classList.add('user-dragged');e.preventDefault()},{passive:false});
- card.addEventListener('pointermove',e=>{if(!dragging||pid!==e.pointerId)return;const w=card.offsetWidth||0,h=card.offsetHeight||0,vw=window.innerWidth,vh=window.innerHeight;let x=startLeft+e.clientX-startX,y=startTop+e.clientY-startY;x=Math.max(w/2+8,Math.min(vw-w/2-8,x));y=Math.max(h/2+48,Math.min(vh-h/2-8,y));card.style.left=`${x}px`;card.style.top=`${y}px`});
- ['pointerup','pointercancel','lostpointercapture'].forEach(ev=>card.addEventListener(ev,stop));
+function romanticSceneHtml(message,style,occasion=false){
+ const second=['💖','🌹','💋','🫂','🎈','✨','🌸','💐','💕'][Math.floor(Math.random()*9)];
+ const third=['❤️','🌸','💕','🥰','⭐','💛','🌷','😘','🎀'][Math.floor(Math.random()*9)];
+ const len=Array.from(String(message||'')).length;
+ const scale=len>92?0.66:len>64?0.75:len>40?0.84:len>24?0.93:1.02;
+ const left=(8+Math.random()*84).toFixed(1), top=(10+Math.random()*68).toFixed(1);
+ return `<div class="romantic-scene-backdrop"></div><div class="romantic-scene-shower">${romanticSceneDecor(10)}</div><div class="romantic-scene-core"><div class="rs-card" style="left:${left}%;top:${top}%;--msg-scale:${scale}"><div class="rs-message">${esc(message)}</div><div class="rs-mini-row"><span>${second}</span><span>${third}</span><span>♥</span></div></div><div class="rs-ring r1">♥</div><div class="rs-ring r2">♥</div></div>`;
 }
 function showRomanticScene(message,opts={}){
- if(!surprisesAreEnabled())return;
- const old=document.getElementById('romanticSceneLayer');if(old&&!opts.allowOverlap)old.remove();
+ if(!surprisesAreEnabled())return null;
+ const oldLayer=document.getElementById('romanticSceneLayer');if(oldLayer&&!opts.allowOverlap)oldLayer.remove();
  const style=opts.style||romanticScenePickStyle();
  const motion=opts.motion||romanticMotionPick();
  const prof=opts.profile||surpriseTimingProfile();
- const layer=document.createElement('div');layer.id=opts.allowOverlap?`romanticSceneLayer-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,6)}`:'romanticSceneLayer';layer.className=`romantic-scene-layer scene-${style} motion-${motion} surprise-speed-${prof.key}${opts.occasion?' scene-occasion':''}`;
- layer.setAttribute('aria-hidden','true');layer.innerHTML=romanticSceneHtml(message,style,!!opts.occasion);document.body.appendChild(layer);
- requestAnimationFrame(()=>{fitRomanticSceneCard(layer);layer.classList.add('is-visible');enableRomanticCardDrag(layer);setTimeout(()=>{clampRomanticSceneCard(layer)},Math.max(90,Math.min(450,650/prof.speed)));setTimeout(()=>{clampRomanticSceneCard(layer)},Math.max(250,Math.min(900,1100/prof.speed)));});
- const baseLife=opts.occasion?9200:(style==='dogsign'?7800:5600);const maxByCadence=prof.interval<10000?Math.max(2600,Math.floor(prof.interval*.92)):12000;const life=Math.round(Math.max(2600,Math.min(12000,baseLife,maxByCadence)));layer.style.setProperty('--surprise-speed',String(prof.speed));
- setTimeout(()=>layer.classList.add('is-leaving'),Math.max(1700,life-1100));
+ const layer=document.createElement('div');
+ layer.id=opts.allowOverlap?`romanticSceneLayer-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,6)}`:'romanticSceneLayer';
+ layer.className=`romantic-scene-layer scene-${style} motion-${motion} surprise-speed-${prof.key}${opts.occasion?' scene-occasion':''}`;
+ layer.setAttribute('aria-hidden','true');
+ layer.innerHTML=romanticSceneHtml(message,style,!!opts.occasion);
+ document.body.appendChild(layer);
+ requestAnimationFrame(()=>{
+  fitRomanticSceneCard(layer);layer.classList.add('is-visible');enableRomanticCardDrag(layer);
+  setTimeout(()=>clampRomanticSceneCard(layer),Math.max(90,Math.min(450,650/prof.speed)));
+  setTimeout(()=>clampRomanticSceneCard(layer),Math.max(250,Math.min(900,1100/prof.speed)));
+ });
+ const baseLife=opts.occasion?9800:(style==='dogsign'?11200:8200);
+ const life=Math.round(Math.max(6500,Math.min(opts.allowOverlap?10500:11200,baseLife)));
+ layer.style.setProperty('--surprise-speed',String(prof.speed));
+ setTimeout(()=>layer.classList.add('is-leaving'),Math.max(4300,life-1100));
  setTimeout(()=>layer.remove(),life);
+ return {life,style,motion};
 }
 function showRomanticLongMessage(){
- if(romanticLongBusy)return;romanticLongBusy=true;
+ if(!surprisesAreEnabled()||romanticLongBusy)return false;
+ romanticLongBusy=true;
  const longStyle=Math.random()<.5?'dogsign':'polaroid';
  if(longStyle==='dogsign'){
-  renderRomanticTickerMessage(ROMANTIC_LONG_MESSAGE,Math.floor(Math.random()*5),10500);
-  setTimeout(()=>{let layer=document.getElementById('romanticLongLayer');if(layer)layer.remove();layer=document.createElement('div');layer.id='romanticLongLayer';layer.className='romantic-long-layer';layer.innerHTML=`<div class="romantic-long-sign"><div class="romantic-sign-face">${esc(ROMANTIC_LONG_MESSAGE)}</div></div><div class="romantic-dog-target">${romanticWhiteDogSvg()}</div>`;document.body.appendChild(layer);setTimeout(()=>{layer.classList.add('landed')},4200);setTimeout(()=>{layer.classList.add('romantic-long-fade')},12800);setTimeout(()=>{layer.remove();romanticLongBusy=false},20000)},3900);
+  renderRomanticTickerMessage(ROMANTIC_LONG_MESSAGE,Math.floor(Math.random()*5),10000);
+  setTimeout(()=>{
+   let layer=document.getElementById('romanticLongLayer');if(layer)layer.remove();
+   layer=document.createElement('div');layer.id='romanticLongLayer';layer.className='romantic-long-layer';
+   layer.innerHTML=`<div class="romantic-long-sign"><div class="romantic-sign-face">${esc(ROMANTIC_LONG_MESSAGE)}</div></div><div class="romantic-dog-target">${romanticWhiteDogSvg()}</div>`;
+   document.body.appendChild(layer);
+   setTimeout(()=>layer.classList.add('landed'),4200);
+   setTimeout(()=>layer.classList.add('romantic-long-fade'),9000);
+   setTimeout(()=>{layer.remove();romanticLongBusy=false;romanticLongNextAt=4+Math.floor(Math.random()*3);romanticMessageCycle=0},11200);
+  },900);
  }else{
-  showRomanticScene(ROMANTIC_LONG_MESSAGE,{style:'polaroid',profile:surpriseTimingProfile()});setTimeout(()=>{romanticLongBusy=false},9800);
+  showRomanticScene(ROMANTIC_LONG_MESSAGE,{style:'polaroid',profile:surpriseTimingProfile()});
+  setTimeout(()=>{romanticLongBusy=false;romanticLongNextAt=4+Math.floor(Math.random()*3);romanticMessageCycle=0},9800);
  }
+ return true;
 }
+
 function showRomanticMessage(profile=surpriseTimingProfile()){
- if(!surprisesAreEnabled())return;
- if(Math.random()<0.08){showMessageBalloon(randomSurpriseMessage());return}
- if(Math.random()<0.08 && !romanticLongBusy){showRomanticLongMessage();return}
- const message=randomSurpriseMessage();
- lastRomanticSceneMessage=message;
- showRomanticScene(message,{style:romanticScenePickStyle(),occasion:occasionJoyActive(),profile,allowOverlap:profile.speedKey==='random-fast'&&Math.random()<.38});
+ if(!surprisesAreEnabled())return 'off';
+ if(!romanticLongBusy){
+  romanticMessageCycle++;
+  if(romanticMessageCycle>=romanticLongNextAt){
+   if(showRomanticLongMessage())return 'long';
+  }
+ }
+ const isFast=profile.speedKey==='random-fast';
+ if(Math.random()<(isFast?.13:.09)){
+  const m=randomSurpriseMessage();showMessageBalloon(m);
+ }else{
+  const message=randomSurpriseMessage();lastRomanticSceneMessage=message;
+  showRomanticScene(message,{style:romanticScenePickStyle(),motion:romanticMotionPick(),occasion:occasionJoyActive(),profile,allowOverlap:isFast&&Math.random()<.55});
+ }
+ return 'message';
 }
+
 function showMessageBalloon(message){
  if(!surprisesAreEnabled())return;
  let layer=document.getElementById('romanticBalloonLayer');if(layer)layer.remove();layer=document.createElement('div');layer.id='romanticBalloonLayer';layer.className='romantic-balloon-layer';const sparks=['✨','💖','🌹','💕','🥰','🎀','💛','😘'];layer.innerHTML=`<div class="romantic-balloon-wrap"><div class="romantic-balloon"><span class="romantic-balloon-knot"></span><span class="romantic-balloon-text">${esc(message)}</span></div></div>${sparks.map((x,i)=>`<span class="balloon-pop-spark s${i}">${x}</span>`).join('')}`;document.body.appendChild(layer);setTimeout(()=>layer.classList.add('pop'),4200);setTimeout(()=>layer.classList.add('fade'),6500);setTimeout(()=>layer.remove(),9800)
@@ -934,31 +883,32 @@ function showRomanticEffect(profile=surpriseTimingProfile()){
 }
 function startRomanticTicker(){
  if(!surprisesAreEnabled())return;
- if(romanticTickerTimer)clearTimeout(romanticTickerTimer);
- if(romanticDelightTimer)clearTimeout(romanticDelightTimer);
- const schedule=delay=>{
+ clearTimeout(romanticTickerTimer);clearTimeout(romanticDelightTimer);
+ const schedule=(delay)=>{
   romanticDelightTimer=setTimeout(()=>{
    if(!surprisesAreEnabled())return;
    const prof=surpriseTimingProfile();
-   // Every tick produces an actual message. Decorative effects remain secondary so messages never disappear.
-   showRomanticMessage(prof);
+   const result=showRomanticMessage(prof);
+   if(result==='off')return;
    localStorage.setItem('osra-romantic-day-message',today());
-   if(prof.key==='fast' && prof.speedKey==='random-fast' && Math.random()<0.42){
-    const extra={...prof,speed:Math.max(1.5,prof.speed*(.92+Math.random()*.26)),key:'random-fast'};
-    setTimeout(()=>showRomanticMessage(extra),420+Math.random()*620);
+   if(prof.speedKey==='random-fast'&&Math.random()<.48){
+    const extra={...prof,speed:Math.max(1.5,prof.speed*(.96+Math.random()*.34)),key:'fast'};
+    setTimeout(()=>{if(surprisesAreEnabled()&&!romanticLongBusy)showRomanticMessage(extra)},430+Math.random()*900);
    }
-   if(Math.random()<0.28)setTimeout(()=>showRomanticEffect(prof),120);
-   if(Math.random()<0.22){const kind=Math.random();setTimeout(()=>showRomanticFloat(kind<.34?'balloon':kind<.62?'rose':'heart',prof),170)}
-   // This is the real next trigger interval selected in Settings.
-   const next=Math.max(3000,Math.round(prof.interval));
+   const effectChance=prof.speedKey==='random-fast'?.86:.48;
+   const floatChance=prof.speedKey==='random-fast'?.72:.42;
+   if(Math.random()<effectChance)setTimeout(()=>showRomanticEffect(prof),100+Math.random()*260);
+   if(Math.random()<floatChance){const k=Math.random();setTimeout(()=>showRomanticFloat(k<.25?'balloon':k<.55?'rose':k<.78?'heart':'random',prof),120+Math.random()*300)}
+   const next=result==='long'?Math.max(10500,Math.min(13000,prof.interval||10000)):Math.max(3000,Math.round(prof.interval));
    schedule(next);
   },Math.max(0,delay));
+  romanticTickerTimer=romanticDelightTimer;
  };
- // First surprise after opening, then exact selected cadence thereafter.
- const first=Math.min(2500,Math.max(1400,2000));
- schedule(first);
+ // The first surprise is deliberately separated from the 10-second opening celebration; this is only a start offset.
+ schedule(1200);
  tryScheduleKissBalloon();
 }
+
 function countdownForm(existing=null){const x=existing||{title:'',date:'',emoji:'⏳',showHome:true,annual:false};modal(`<h2>${existing?'تعديل':'إضافة'} عداد / موعد</h2>${field('cTitle','اسم الموعد',x.title,'text')}${field('cDate','التاريخ',x.date,'date')}${field('cEmoji','الرمز (اختياري)',x.emoji,'text')}<label class="field" style="display:flex;align-items:center;gap:8px"><span><input id="cAnnual" type="checkbox" ${x.annual?'checked':''}> يتكرر سنويًا</span></label><label class="field" style="display:flex;align-items:center;gap:8px"><span><input id="cHome" type="checkbox" ${x.showHome?'checked':''}> إظهار العداد في الرئيسية</span></label><div class="actions"><button class="btn primary" data-action="saveCountdown" data-id="${existing?.id||''}">حفظ</button><button class="btn" data-action="closeModal">إلغاء</button></div>`)}
 async function saveCountdown(i){const title=$('#cTitle').value.trim();const date=$('#cDate').value;const emoji=$('#cEmoji').value.trim()||'⏳';if(!title||!date){toast('اكتب اسم الموعد والتاريخ.');return}let x=i?state.settings.countdowns.find(v=>v.id===i):null;if(!x){x={id:id('cnt'),title:'',date:'',emoji:'⏳',showHome:true,annual:false};state.settings.countdowns.unshift(x)}x.title=title;x.date=date;x.emoji=emoji;x.annual=!!$('#cAnnual')?.checked;x.showHome=!!$('#cHome')?.checked;await save();closeModal();toast('تم حفظ العداد.');renderNoAnim()}
 function editCountdown(i){const x=state.settings.countdowns.find(v=>v.id===i);if(x)countdownForm(x)}
