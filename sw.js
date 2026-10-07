@@ -1,10 +1,10 @@
-const BUILD='osra111-20261008-r35-fast-surprises-boot-celebration';
-const CACHE=`OsRa-v111-${BUILD}`;
+const BUILD='osra112-20261008-r36-refined-boot-fast-surprises';
+const CACHE=`OsRa-v112-${BUILD}`;
 const APP=[
   './',
   './index.html',
   './style.css',
-  './app.js?v=osra111-r35-fast-surprises-boot-celebration',
+  './app.js?v=osra112-r36-refined-boot-fast-surprises',
   './manifest.json',
   './icon.svg',
   './icon-192.png',

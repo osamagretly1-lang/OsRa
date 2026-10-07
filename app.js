@@ -1,5 +1,5 @@
 window.__osraBootAt=performance.now();
-const OSRA_BUILD='OsRa v110 — 2026-10-08 — R34 BOOT HEARTS + CUSTOM SURPRISE MESSAGES + TIMING';
+const OSRA_BUILD='OsRa v112 — 2026-10-08 — R36 REFINED BOOT + FAST SURPRISES';
 const DB='OsRaDB', VER=100, THUMB_VERSION=6, THUMB_MAX_BYTES=160*1024;
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 const DEFAULT={settings:{startDate:'',engagementDate:'',birthdayRania:'',osamaPhone:'',raniaPhone:'',whatsappUrl:'',libraryName:'',soundEnabled:false,surprisesEnabled:true,dailyAlbumIds:null,albumOrderMode:'manual',albumMiniView:false,messagesOrder:'desc',hideScanProgressCard:false,countdowns:[],surpriseTiming:'10',surpriseSpeed:'normal',customSurpriseMessages:[]},memories:[],events:[],dreams:[],verses:[],prayers:[],messages:[],excludedPhotos:[]};
@@ -251,35 +251,35 @@ function initBootCelebration(){
  layer.innerHTML='';
  const glyphs=['❤️','💖','💕','💗','💛','🌹','🌷','🌸','💐','💋','😘','✨','🎀','🎉','🎈'];
  const dog=typeof romanticWhiteDogSvg==='function'?romanticWhiteDogSvg():'';
- for(let i=0;i<26;i++){
+ for(let i=0;i<16;i++){
   const s=document.createElement('span');s.className='boot-celeb-item boot-bottom-item';
   s.textContent=glyphs[Math.floor(Math.random()*glyphs.length)];
   s.style.left=`${4+Math.random()*92}%`;
   s.style.setProperty('--dx',`${-16+Math.random()*32}vw`);
   s.style.setProperty('--delay',`${(Math.random()*.75).toFixed(2)}s`);
   s.style.setProperty('--dur',`${(1.9+Math.random()*1.35).toFixed(2)}s`);
-  s.style.fontSize=`${18+Math.random()*24}px`;
+  s.style.fontSize=`${16+Math.random()*20}px`;
   layer.appendChild(s);
  }
- for(let i=0;i<22;i++){
+ for(let i=0;i<12;i++){
   const s=document.createElement('span');s.className='boot-celeb-item boot-rain-item';
   s.textContent=glyphs[Math.floor(Math.random()*glyphs.length)];
   s.style.left=`${Math.random()*100}%`;
   s.style.setProperty('--dx',`${-9+Math.random()*18}vw`);
   s.style.setProperty('--delay',`${(Math.random()*1.25).toFixed(2)}s`);
   s.style.setProperty('--dur',`${(1.8+Math.random()*1.4).toFixed(2)}s`);
-  s.style.fontSize=`${14+Math.random()*20}px`;
+  s.style.fontSize=`${13+Math.random()*16}px`;
   layer.appendChild(s);
  }
- for(let i=0;i<4;i++){
+ for(let i=0;i<2;i++){
   const s=document.createElement('span');s.className='boot-dog-item';s.innerHTML=dog;
   s.style.left=`${15+Math.random()*70}%`;
   s.style.setProperty('--delay',`${(.25+i*.42).toFixed(2)}s`);
   s.style.setProperty('--dur',`${(2.15+Math.random()*.55).toFixed(2)}s`);
   layer.appendChild(s);
  }
- setTimeout(()=>{layer.classList.add('boot-celeb-done')},2550);
- setTimeout(()=>{layer.remove()},3150);
+ setTimeout(()=>{layer.classList.add('boot-celeb-done')},2350);
+ setTimeout(()=>{layer.remove()},2850);
 }
 function clearSurpriseLayers(){['romanticSceneLayer','romanticMessageBubble','romanticLongLayer','romanticBalloonLayer','romanticEffectLayer','romanticFloatLayer','occasionCelebration'].forEach(id=>{const el=document.getElementById(id);if(el)el.remove()});const ticker=document.getElementById('romanticTicker');if(ticker){ticker.classList.remove('show');const tx=document.getElementById('romanticTickerText');if(tx)tx.textContent=''}clearTimeout(romanticTickerCloseTimer);clearTimeout(romanticKissTimer);romanticKissTimer=null;clearTimeout(romanticDelightTimer);romanticDelightTimer=null;occasionCelebrationBusy=false;romanticLongBusy=false}
 async function toggleSurprises(){state.settings.surprisesEnabled=!surprisesAreEnabled();await save();if(!surprisesAreEnabled())clearSurpriseLayers();updateSurpriseButton();updateBirthdayUi();if(surprisesAreEnabled()){startRomanticTicker();maybeRunOccasionCelebrations();}renderNoAnim();}
@@ -1658,7 +1658,7 @@ async function ensureLatestOsRa(){
     location.reload();
   },{once:true});
   try{
-    const reg=await navigator.serviceWorker.register('./sw.js?build=osra111-20261008-r35-fast-surprises-boot-celebration',{updateViaCache:'none'});
+    const reg=await navigator.serviceWorker.register('./sw.js?build=osra112-20261008-r36-refined-boot-fast-surprises',{updateViaCache:'none'});
     await reg.update().catch(()=>{});
     if(reg.waiting) reg.waiting.postMessage({type:'SKIP_WAITING'});
   }catch(e){console.warn('OsRa service worker update skipped',e)}

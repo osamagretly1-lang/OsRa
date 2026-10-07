@@ -529,12 +529,24 @@ body.birthday-day .topbar{padding-top:68px}
 .boot-splash.boot-done .boot-joy-ribbon{transform:translateX(-50%) translateY(-8px)!important}
 
 
-/* R35 — restore the fast surprise feel + exact birthday-style moving boot ribbons. */
-.boot-splash{background:transparent!important}
-.boot-joy-ribbon-large{height:58px!important;top:0!important;left:0!important;width:100vw!important;transform:none!important;border-radius:0!important;box-shadow:0 5px 25px rgba(128,26,48,.34)!important;background:linear-gradient(90deg,#9e1b35,#e52f63 28%,#f48a4c 50%,#e52f63 72%,#9e1b35)!important;border-bottom:2px solid rgba(255,255,255,.45)!important}
-.boot-joy-ribbon-large span{font-size:clamp(18px,4.5vw,30px)!important;line-height:58px!important;font-weight:1000!important;text-shadow:0 3px 12px rgba(60,13,26,.34)!important;animation:birthdayTicker 20s linear infinite!important}
-.boot-joy-ribbon-mini{left:50%!important;top:61px!important;height:24px!important;width:min(270px,58vw)!important;border-radius:999px!important;box-shadow:0 5px 18px rgba(74,31,74,.20)!important;background:linear-gradient(90deg,#9e1b35,#e52f63 40%,#7b3f8c 72%,#9e1b35)!important;overflow:hidden!important}
-.boot-joy-ribbon-mini span{font-size:12px!important;line-height:22px!important;font-weight:900!important;text-shadow:0 2px 7px rgba(60,13,26,.26)!important;animation:birthdayTicker 11s linear infinite!important}
+/* R36 — refined boot: calm centered book, elegant birthday-style ribbons, subtle 2–3s celebration. */
+.boot-splash{background:radial-gradient(circle at 50% 42%,rgba(255,251,247,.985),rgba(239,225,215,.975) 62%,rgba(224,205,194,.96))!important;place-items:center!important;align-content:center!important;display:grid!important;pointer-events:none!important}
+.boot-book{margin-top:0!important;filter:drop-shadow(0 10px 18px rgba(55,32,46,.14));animation-duration:2.8s!important}
+.boot-joy-ribbon-large{height:50px!important;top:0!important;left:0!important;width:100vw!important;transform:none!important;border-radius:0!important;box-shadow:0 4px 18px rgba(128,26,48,.20)!important;background:linear-gradient(90deg,#9e1b35,#dc3b61 28%,#ef8652 50%,#dc3b61 72%,#9e1b35)!important;border-bottom:1px solid rgba(255,255,255,.42)!important;opacity:.96!important}
+.boot-joy-ribbon-large span{font-size:clamp(17px,4.2vw,27px)!important;line-height:50px!important;font-weight:1000!important;text-shadow:0 2px 9px rgba(60,13,26,.24)!important;animation:birthdayTicker 22s linear infinite!important}
+.boot-joy-ribbon-mini{left:50%!important;top:54px!important;height:20px!important;width:min(220px,52vw)!important;border-radius:999px!important;box-shadow:0 4px 12px rgba(74,31,74,.14)!important;background:linear-gradient(90deg,#9e1b35,#df5678 42%,#7b3f8c 72%,#9e1b35)!important;overflow:hidden!important;opacity:.9!important}
+.boot-joy-ribbon-mini span{font-size:10px!important;line-height:18px!important;font-weight:900!important;text-shadow:0 1px 6px rgba(60,13,26,.20)!important;animation:birthdayTicker 13s linear infinite!important}
+#bootCelebration{opacity:.78!important}
+.boot-bottom-item{animation-duration:var(--dur)!important}
+.boot-rain-item{animation-duration:var(--dur)!important}
+.boot-dog-item{width:46px!important;height:37px!important;filter:drop-shadow(0 3px 7px rgba(47,31,41,.13))}
+@media(max-width:600px){
+ .boot-joy-ribbon-large{height:42px!important}
+ .boot-joy-ribbon-large span{font-size:clamp(15px,5vw,22px)!important;line-height:42px!important}
+ .boot-joy-ribbon-mini{top:46px!important;height:18px!important;width:54vw!important}
+ .boot-joy-ribbon-mini span{font-size:9px!important;line-height:16px!important}
+ .boot-book{margin-top:0!important}
+}
 .boot-heart-loader{margin-top:7px!important}
 #bootCelebration{position:fixed;inset:0;z-index:100002;pointer-events:none;overflow:hidden}
 .boot-celeb-item,.boot-dog-item{position:absolute;display:block;will-change:transform,opacity}
