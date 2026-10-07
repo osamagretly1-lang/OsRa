@@ -1,3 +1,18 @@
+OsRa v101 — R25 safe multi-source linking + visual fallback + occasion celebration + romantic ticker
+
+Base preserved: OsRa v100 R24 family; IndexedDB version remains 100 to protect existing data.
+
+R25 changes:
+- Safe album/source linking validates a manually selected folder before saving it; zero matches are rejected.
+- One OsRa album can link to multiple real source folders; each new source searches only the photos still missing originals.
+- Manual linking continues until the user explicitly says there are no more sources. Visual matching appears only as the final optional fallback.
+- Visual matching supports one folder, multiple folders, or a parent folder searched recursively; results are suggestions only and require user approval.
+- Link reports include aggregate results plus per-source scan/match/verification counts where available.
+- HQ build warns explicitly about missing originals and never silently hides skipped photos; existing multi-source HQ collection logic is preserved.
+- Custom occasion countdowns can celebrate automatically on their date with lightweight fireworks/hearts/flowers/kisses. The small button is `🎉 احتفل 🥳` and becomes `🎉 احتفل nicht 😔` only for the current day when muted. Birthday greeting/content remains separate and unchanged.
+- Romantic ticker messages appear infrequently in the top bar, each shown twice with randomized playful right-to-left animation.
+- Added the missing Save Event handler required by the existing “محطات في قصتنا” UI.
+
 OsRa v100 — r24 FINAL + SIMPLE DUPLICATE CANCEL + SOURCE UI
 
 OsRa HQ Source — final safe build

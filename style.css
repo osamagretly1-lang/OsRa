@@ -209,29 +209,72 @@ button,input,textarea,select{font:inherit}button{cursor:pointer}.topbar{position
 
 .duplicate-choice-grid{display:grid;gap:8px;margin-top:10px}.duplicate-choice-grid .card{margin:0}
 
+/* R25 — occasional romantic ticker + occasion-day celebration. */
+.romantic-ticker{position:fixed;top:54px;left:0;right:0;height:46px;z-index:19;pointer-events:none;overflow:hidden;display:grid;place-items:center;opacity:0;visibility:hidden}
+.romantic-ticker.show{opacity:1;visibility:visible}
+.romantic-ticker span{position:absolute;white-space:nowrap;font-weight:900;font-size:clamp(15px,3.7vw,25px);color:var(--rose);text-shadow:0 5px 12px rgba(55,32,46,.16);will-change:transform,opacity}
+.romantic-ticker.show span{animation:romanticTickerRide 3.55s cubic-bezier(.17,.75,.22,1) both}
+.romantic-ticker span[data-variant="1"]{animation-name:romanticTickerDrop}
+.romantic-ticker span[data-variant="2"]{animation-name:romanticTickerBounce}
+.romantic-ticker span[data-variant="3"]{animation-name:romanticTickerPop}
+.romantic-ticker span[data-variant="4"]{animation-name:romanticTickerWiggle}
+@keyframes romanticTickerRide{0%{transform:translate3d(72vw,-14px,0) rotate(3deg) scale(.88);opacity:0}12%{opacity:1}52%{transform:translate3d(0,0,0) rotate(-1deg) scale(1.02);opacity:1}78%{transform:translate3d(-44vw,4px,0) rotate(1deg) scale(1);opacity:.98}100%{transform:translate3d(-120vw,15px,0) rotate(-3deg) scale(.92);opacity:0}}
+@keyframes romanticTickerDrop{0%{transform:translate3d(74vw,-62px,0) rotate(12deg) scale(.9);opacity:0}18%{opacity:1}42%{transform:translate3d(12vw,8px,0) rotate(-5deg) scale(1.05)}54%{transform:translate3d(4vw,-6px,0) rotate(4deg) scale(1)}78%{transform:translate3d(-46vw,0,0) rotate(-2deg);opacity:1}100%{transform:translate3d(-120vw,12px,0) rotate(2deg);opacity:0}}
+@keyframes romanticTickerBounce{0%{transform:translate3d(78vw,20px,0) scale(.55);opacity:0}14%{opacity:1}32%{transform:translate3d(22vw,-8px,0) scale(1.14)}42%{transform:translate3d(8vw,7px,0) scale(.96)}56%{transform:translate3d(0,0,0) scale(1.03)}80%{transform:translate3d(-46vw,3px,0) scale(1);opacity:.98}100%{transform:translate3d(-120vw,18px,0) scale(.9);opacity:0}}
+@keyframes romanticTickerPop{0%{transform:translate3d(77vw,0,0) scale(.15) rotate(-18deg);opacity:0}18%{opacity:1}34%{transform:translate3d(26vw,0,0) scale(1.25) rotate(8deg)}49%{transform:translate3d(6vw,0,0) scale(.92) rotate(-4deg)}64%{transform:translate3d(0,0,0) scale(1.06) rotate(2deg)}82%{transform:translate3d(-48vw,-2px,0) scale(1);opacity:1}100%{transform:translate3d(-120vw,-8px,0) scale(.88);opacity:0}}
+@keyframes romanticTickerWiggle{0%{transform:translate3d(76vw,0,0) rotate(0);opacity:0}13%{opacity:1}36%{transform:translate3d(23vw,0,0) rotate(-8deg)}44%{transform:translate3d(11vw,0,0) rotate(7deg)}52%{transform:translate3d(2vw,0,0) rotate(-4deg)}61%{transform:translate3d(0,0,0) rotate(2deg)}82%{transform:translate3d(-48vw,7px,0) rotate(-1deg);opacity:1}100%{transform:translate3d(-120vw,11px,0) rotate(3deg);opacity:0}}
+.occasion-celebration{position:fixed;inset:0;z-index:9998;pointer-events:none;overflow:hidden;contain:paint}
+.occasion-spark,.occasion-confetti{position:absolute;display:block;top:auto;bottom:-12vh;font-size:clamp(22px,5vw,46px);filter:drop-shadow(0 8px 12px rgba(55,32,46,.12));will-change:transform,opacity}
+.occasion-spark{animation:occasionFirework 2.7s cubic-bezier(.18,.78,.22,1) both}
+.occasion-confetti{animation:occasionFall 3.6s cubic-bezier(.18,.72,.23,1) both}
+.occasion-celebration-out{opacity:0;transition:opacity .65s ease}
+@keyframes occasionFirework{0%{transform:translate3d(0,18vh,0) scale(.28) rotate(-10deg);opacity:0}16%{opacity:1}52%{transform:translate3d(calc((50vw - 50%) * .14),-48vh,0) scale(1.02) rotate(7deg);opacity:1}74%{transform:translate3d(0,-56vh,0) scale(1.14) rotate(0);opacity:.94}100%{transform:translate3d(calc((50vw - 50%) * -.05),-68vh,0) scale(.72) rotate(-5deg);opacity:0}}
+@keyframes occasionFall{0%{transform:translate3d(0,-12vh,0) rotate(-14deg) scale(.76);opacity:0}10%{opacity:1}36%{transform:translate3d(6vw,18vh,0) rotate(30deg) scale(1.05);opacity:1}62%{transform:translate3d(-5vw,48vh,0) rotate(-24deg) scale(.98)}82%{transform:translate3d(7vw,77vh,0) rotate(36deg) scale(.9);opacity:.86}100%{transform:translate3d(-2vw,115vh,0) rotate(-55deg) scale(.68);opacity:0}}
+.occasion-celebrate-btn{font-weight:900;white-space:nowrap}
+@media(max-width:520px){.romantic-ticker{top:50px;height:42px}.romantic-ticker span{font-size:14px}.occasion-spark{font-size:28px}.occasion-confetti{font-size:24px}}
+@media(prefers-reduced-motion:reduce){.romantic-ticker.show span{animation:none!important;opacity:1}.occasion-celebration{display:none!important}}
 
-/* R24 birthday day layer: active only on Rania's birthday, hidden in the full-screen photo viewer. */
-.birthday-banner{position:fixed;top:0;left:0;right:0;height:44px;z-index:200;background:linear-gradient(90deg,#b71c1c,#e53935 48%,#b71c1c);color:#fff;display:block;border-bottom:2px solid rgba(255,255,255,.22);box-shadow:0 3px 14px rgba(80,15,20,.28);overflow:hidden;direction:ltr;pointer-events:none}
-.birthday-banner[hidden],#birthday-effects[hidden]{display:none!important}
-.birthday-ticker-wrap{width:100%;height:44px;overflow:hidden;white-space:nowrap}
-.birthday-ticker-content{display:inline-block;min-width:max-content;padding-inline:8vw;font-size:15px;font-weight:800;line-height:44px;animation:birthdayTicker 20s linear infinite}
-@keyframes birthdayTicker{0%{transform:translate3d(100vw,0,0)}100%{transform:translate3d(-100%,0,0)}}
-#birthday-effects{position:fixed;top:44px;right:0;bottom:0;left:0;z-index:198;overflow:hidden;pointer-events:none}
-.birthday-fall-item{position:absolute;top:-42px;opacity:0;filter:drop-shadow(0 3px 5px rgba(95,25,45,.16));animation:birthdayFall 6s linear forwards;will-change:transform,opacity;user-select:none}
-@keyframes birthdayFall{0%{opacity:0;transform:translate3d(0,-30px,0) rotate(-8deg) scale(.8)}10%{opacity:.96}88%{opacity:.86}100%{opacity:0;transform:translate3d(var(--drift),calc(100vh + 80px),0) rotate(360deg) scale(1.08)}}
-body.birthday-day .topbar{padding-top:54px}
-body.birthday-lightbox-open .birthday-banner,body.birthday-lightbox-open #birthday-effects{display:none!important}
-.birthday-home-button{animation:birthdayHomePulse 2s ease-in-out infinite;box-shadow:0 6px 20px rgba(211,47,47,.22)}
-@keyframes birthdayHomePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.025)}}
-.birthday-dog-dialog{width:min(410px,calc(100% - 22px));max-width:410px;border:0;border-radius:26px;padding:0;background:transparent;overflow:visible}
-.birthday-dog-dialog::backdrop{background:rgba(25,10,18,.62);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
-.birthday-dog-card{position:relative;background:linear-gradient(180deg,#fffdf9,#fff4ea);border:1px solid rgba(108,70,100,.18);border-radius:26px;padding:22px 14px 8px;box-shadow:0 24px 60px rgba(42,20,34,.3);overflow:hidden}
-.birthday-dog-card::after{content:'♥  🌹  💕  💋  🌸  ❤️  💐';display:block;text-align:center;font-size:20px;letter-spacing:5px;padding:0 0 7px;animation:birthdaySparkle 1.8s ease-in-out infinite}
-@keyframes birthdaySparkle{0%,100%{opacity:.6;transform:translateY(0)}50%{opacity:1;transform:translateY(-2px)}}
-.birthday-dog-close{position:absolute;top:10px;left:10px;width:34px;height:34px;border:0;border-radius:50%;background:#f0e7e1;color:#5c4b55;font-size:24px;line-height:1;z-index:4}
-.birthday-dog-wrap{display:grid;place-items:center;height:385px}
-.birthday-dog-svg{width:min(100%,330px);height:100%;overflow:visible}
-.birthday-dog-raised-group{transform-origin:183px 198px;animation:birthdayDogWave 2.5s ease-in-out infinite}
-@keyframes birthdayDogWave{0%,100%{transform:rotate(0)}50%{transform:rotate(-5deg)}}
-@media(max-width:560px){body.birthday-day .topbar{padding-top:52px}.birthday-ticker-content{font-size:14px}.birthday-dog-wrap{height:350px}.birthday-dog-svg{width:310px}}
-@media(prefers-reduced-motion:reduce){.birthday-ticker-content,.birthday-fall-item,.birthday-home-button,.birthday-dog-raised-group,.birthday-dog-card::after{animation:none!important}.birthday-fall-item{display:none!important}}
+
+/* R26 — daily romantic micro-effects, slow surprise sign, and night-only balloon. */
+.romantic-float-layer{position:fixed;inset:0;z-index:9996;pointer-events:none;overflow:hidden;contain:paint}
+.romantic-float-item{position:absolute;top:-7vh;display:block;filter:drop-shadow(0 7px 10px rgba(55,32,46,.12));will-change:transform,opacity;animation:romanticFloatDown 5.4s cubic-bezier(.18,.72,.22,1) both}
+@keyframes romanticFloatDown{0%{transform:translate3d(0,-6vh,0) rotate(-16deg) scale(.72);opacity:0}12%{opacity:1}34%{transform:translate3d(var(--sway),23vh,0) rotate(18deg) scale(1)}56%{transform:translate3d(calc(var(--sway) * -.65),51vh,0) rotate(-22deg) scale(.96)}78%{transform:translate3d(var(--sway),80vh,0) rotate(28deg) scale(.9);opacity:.92}100%{transform:translate3d(calc(var(--sway) * -.45),113vh,0) rotate(-36deg) scale(.75);opacity:0}}
+.romantic-long-layer{position:fixed;inset:0;z-index:9997;pointer-events:none;overflow:hidden;contain:paint}
+.romantic-long-sign{position:absolute;top:-28vh;right:-5vw;width:min(84vw,580px);padding:15px 18px 18px;border-radius:14px 10px 16px 9px;background:linear-gradient(180deg,#fffaf2,#f8e8d8);border:2px solid rgba(170,112,98,.26);box-shadow:0 18px 38px rgba(55,32,46,.2);transform-origin:88% 12%;transform:translate3d(0,0,0) rotate(14deg);opacity:0;animation:romanticSignDrop 14.5s cubic-bezier(.16,.78,.2,1) both}
+.romantic-long-sign::before,.romantic-long-sign::after{content:'';position:absolute;top:6px;width:8px;height:8px;border-radius:50%;background:#f0c7c9}.romantic-long-sign::before{left:10px}.romantic-long-sign::after{right:12px}
+.romantic-sign-face{font-weight:900;font-size:clamp(15px,3.8vw,25px);line-height:1.55;text-align:center;color:#6a4a57;text-shadow:0 1px 0 #fff}
+.romantic-dog-target{position:absolute;left:50%;bottom:5.5vh;transform:translateX(-50%) scale(.86);opacity:.95;filter:drop-shadow(0 9px 13px rgba(55,32,46,.14));transition:transform .3s ease}
+.romantic-white-dog{width:62px;height:auto;display:block}
+.romantic-long-layer.landed .romantic-dog-target{transform:translateX(-50%) scale(1.02) rotate(-2deg);animation:dogBounce .68s ease both}
+@keyframes dogBounce{0%{transform:translateX(-50%) scale(.86)}45%{transform:translateX(-50%) scale(1.08)}70%{transform:translateX(-50%) scale(.97) rotate(2deg)}100%{transform:translateX(-50%) scale(1.02) rotate(-2deg)}}
+@keyframes romanticSignDrop{0%{transform:translate3d(0,-8vh,0) rotate(14deg) scale(.84);opacity:0}9%{opacity:1}26%{transform:translate3d(-2vw,19vh,0) rotate(-10deg) scale(1)}41%{transform:translate3d(-5vw,37vh,0) rotate(7deg) scale(1.03)}56%{transform:translate3d(-11vw,53vh,0) rotate(-3deg) scale(1.01)}68%{transform:translate3d(-14vw,63vh,0) rotate(2deg) scale(.98)}76%{transform:translate3d(-15vw,67vh,0) rotate(-1deg) scale(.95);opacity:1}90%{transform:translate3d(-15vw,67vh,0) rotate(-1deg) scale(.94);opacity:.95}100%{transform:translate3d(-16vw,72vh,0) rotate(-4deg) scale(.86);opacity:0}}
+.romantic-long-layer.romantic-long-fade .romantic-long-sign,.romantic-long-layer.romantic-long-fade .romantic-dog-target{opacity:0;transition:opacity 1.2s ease}
+.romantic-balloon-layer{position:fixed;inset:0;z-index:9995;pointer-events:none;display:grid;place-items:center;overflow:hidden;contain:paint}
+.romantic-balloon-wrap{position:absolute;left:50%;bottom:-20vh;transform:translateX(-50%);animation:kissBalloonRise 4.4s cubic-bezier(.16,.78,.2,1) both}
+.romantic-balloon{position:relative;width:min(72vw,310px);height:min(78vw,340px);display:grid;place-items:center;text-align:center;padding:46px 34px 65px;border-radius:48% 52% 51% 49% / 46% 45% 55% 54%;background:radial-gradient(circle at 34% 28%,#fff8fb 0 8%,#f7c7df 9% 40%,#df91bd 70%,#c86ca5 100%);box-shadow:inset -14px -16px 26px rgba(112,45,88,.14),0 22px 42px rgba(55,32,46,.19);transition:transform .7s ease,opacity 1s ease}
+.romantic-balloon::before{content:'';position:absolute;top:16%;left:20%;width:28%;height:17%;border-radius:50%;background:rgba(255,255,255,.45);transform:rotate(-28deg)}
+.romantic-balloon-knot{position:absolute;bottom:-17px;left:50%;width:23px;height:30px;background:#c46da5;clip-path:polygon(50% 100%,0 0,100% 0);transform:translateX(-50%)}
+.romantic-balloon::after{content:'';position:absolute;bottom:-115px;left:50%;width:2px;height:110px;background:rgba(96,67,86,.35);transform:translateX(-50%);border-radius:2px}
+.romantic-balloon-text{max-width:85%;font-weight:900;font-size:clamp(22px,6vw,38px);line-height:1.25;color:#fff;text-shadow:0 3px 12px rgba(72,28,57,.25);opacity:0;transform:scale(.65)}
+.romantic-balloon-layer.pop .romantic-balloon-wrap{animation:none;transform:translateX(-50%) scale(1.08)}
+.romantic-balloon-layer.pop .romantic-balloon{transform:scale(1.08);opacity:.94}
+.romantic-balloon-layer.pop .romantic-balloon-text{animation:balloonMessageReveal .8s cubic-bezier(.15,.85,.25,1) both}
+.romantic-balloon-layer.pop .romantic-balloon::before,.romantic-balloon-layer.pop .romantic-balloon::after,.romantic-balloon-layer.pop .romantic-balloon-knot{opacity:0}
+.romantic-balloon-layer.fade{opacity:0;transition:opacity 2s ease}
+@keyframes kissBalloonRise{0%{transform:translateX(-50%) translateY(0) rotate(-5deg) scale(.62);opacity:0}15%{opacity:1}38%{transform:translateX(-50%) translateY(-30vh) rotate(4deg) scale(.95)}64%{transform:translateX(-50%) translateY(-48vh) rotate(-3deg) scale(1)}100%{transform:translateX(-50%) translateY(-59vh) rotate(2deg) scale(1)}}
+@keyframes balloonMessageReveal{0%{opacity:0;transform:scale(.5) rotate(-8deg)}55%{opacity:1;transform:scale(1.13) rotate(2deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
+@media(max-width:520px){.romantic-long-sign{right:-14vw;width:92vw;padding:12px 13px}.romantic-sign-face{font-size:15px}.romantic-white-dog{width:54px}.romantic-balloon{width:74vw;height:80vw;padding:38px 25px 54px}.romantic-balloon-text{font-size:25px}}
+@media(prefers-reduced-motion:reduce){.romantic-float-item,.romantic-long-sign,.romantic-balloon-wrap{animation-duration:.01ms!important;animation-iteration-count:1!important}.romantic-balloon-layer{display:none!important}.romantic-long-layer{display:none!important}}
+
+
+.romantic-mini-balloon{width:30px;height:39px;border-radius:52% 48% 50% 50% / 58% 58% 42% 42%;background:radial-gradient(circle at 31% 26%,rgba(255,255,255,.82) 0 10%,rgba(255,255,255,0) 26%),hsl(330 78% 68%);filter:hue-rotate(var(--balloon-hue)) drop-shadow(0 7px 9px rgba(55,32,46,.12));transform-origin:50% 100%}
+.romantic-mini-balloon::after{content:'';position:absolute;left:50%;top:36px;width:2px;height:28px;background:rgba(75,57,68,.24);transform:translateX(-50%)}
+.romantic-mini-balloon i{position:absolute;left:50%;bottom:-4px;width:7px;height:9px;background:inherit;clip-path:polygon(50% 100%,0 0,100% 0);transform:translateX(-50%)}
+.romantic-long-sign{left:50%;right:auto;transform:translate(-42%,0) rotate(14deg)}
+@keyframes romanticSignDrop{0%{transform:translate(-38%,-8vh) rotate(14deg) scale(.84);opacity:0}9%{opacity:1}26%{transform:translate(-44%,19vh) rotate(-10deg) scale(1)}41%{transform:translate(-48%,37vh) rotate(7deg) scale(1.03)}56%{transform:translate(-50%,53vh) rotate(-3deg) scale(1.01)}68%{transform:translate(-50%,63vh) rotate(2deg) scale(.98)}76%{transform:translate(-50%,67vh) rotate(-1deg) scale(.95);opacity:1}90%{transform:translate(-50%,67vh) rotate(-1deg) scale(.94);opacity:.95}100%{transform:translate(-50%,72vh) rotate(-4deg) scale(.86);opacity:0}}
+.romantic-balloon-layer{transition:opacity 1.6s ease}
+.balloon-pop-spark{position:absolute;left:50%;top:50%;font-size:25px;opacity:0;z-index:2;transform:translate(-50%,-50%) scale(.2);filter:drop-shadow(0 6px 9px rgba(55,32,46,.13))}
+.romantic-balloon-layer.pop .balloon-pop-spark{animation:balloonSpark 1.25s cubic-bezier(.12,.78,.22,1) both}
+.balloon-pop-spark.s0{--dx:-25vw;--dy:-19vh}.balloon-pop-spark.s1{--dx:24vw;--dy:-22vh}.balloon-pop-spark.s2{--dx:-29vw;--dy:-4vh}.balloon-pop-spark.s3{--dx:28vw;--dy:3vh}.balloon-pop-spark.s4{--dx:-17vw;--dy:22vh}.balloon-pop-spark.s5{--dx:19vw;--dy:23vh}.balloon-pop-spark.s6{--dx:-7vw;--dy:-28vh}.balloon-pop-spark.s7{--dx:7vw;--dy:27vh}
+@keyframes balloonSpark{0%{opacity:0;transform:translate(-50%,-50%) scale(.15) rotate(-30deg)}22%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--dx)) ,calc(-50% + var(--dy))) scale(1.05) rotate(28deg)}}
+@media(max-width:520px){.romantic-long-sign{left:50%;right:auto;transform:translate(-42%,0) rotate(14deg);width:92vw}}
