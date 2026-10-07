@@ -1,10 +1,10 @@
-const BUILD='osra100-20261007-r24-fastthumbs-stable';
+const BUILD='osra100-20261007-r24-birthday-banner-dog';
 const CACHE=`OsRa-v100-${BUILD}`;
 const APP=[
   './',
   './index.html',
   './style.css',
-  './app.js?v=osra100-20261007-r24-fastthumbs-stable',
+  './app.js?v=osra100-20261007-r24-birthday-banner-dog',
   './manifest.json',
   './icon.svg',
   './icon-192.png',

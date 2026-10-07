@@ -208,3 +208,30 @@ button,input,textarea,select{font:inherit}button{cursor:pointer}.topbar{position
 @media(max-width:620px){.link-live-bar{left:8px;right:8px;bottom:8px;font-size:12px;padding:8px 10px}}
 
 .duplicate-choice-grid{display:grid;gap:8px;margin-top:10px}.duplicate-choice-grid .card{margin:0}
+
+
+/* R24 birthday day layer: active only on Rania's birthday, hidden in the full-screen photo viewer. */
+.birthday-banner{position:fixed;top:0;left:0;right:0;height:44px;z-index:200;background:linear-gradient(90deg,#b71c1c,#e53935 48%,#b71c1c);color:#fff;display:block;border-bottom:2px solid rgba(255,255,255,.22);box-shadow:0 3px 14px rgba(80,15,20,.28);overflow:hidden;direction:ltr;pointer-events:none}
+.birthday-banner[hidden],#birthday-effects[hidden]{display:none!important}
+.birthday-ticker-wrap{width:100%;height:44px;overflow:hidden;white-space:nowrap}
+.birthday-ticker-content{display:inline-block;min-width:max-content;padding-inline:8vw;font-size:15px;font-weight:800;line-height:44px;animation:birthdayTicker 20s linear infinite}
+@keyframes birthdayTicker{0%{transform:translate3d(100vw,0,0)}100%{transform:translate3d(-100%,0,0)}}
+#birthday-effects{position:fixed;top:44px;right:0;bottom:0;left:0;z-index:198;overflow:hidden;pointer-events:none}
+.birthday-fall-item{position:absolute;top:-42px;opacity:0;filter:drop-shadow(0 3px 5px rgba(95,25,45,.16));animation:birthdayFall 6s linear forwards;will-change:transform,opacity;user-select:none}
+@keyframes birthdayFall{0%{opacity:0;transform:translate3d(0,-30px,0) rotate(-8deg) scale(.8)}10%{opacity:.96}88%{opacity:.86}100%{opacity:0;transform:translate3d(var(--drift),calc(100vh + 80px),0) rotate(360deg) scale(1.08)}}
+body.birthday-day .topbar{padding-top:54px}
+body.birthday-lightbox-open .birthday-banner,body.birthday-lightbox-open #birthday-effects{display:none!important}
+.birthday-home-button{animation:birthdayHomePulse 2s ease-in-out infinite;box-shadow:0 6px 20px rgba(211,47,47,.22)}
+@keyframes birthdayHomePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.025)}}
+.birthday-dog-dialog{width:min(410px,calc(100% - 22px));max-width:410px;border:0;border-radius:26px;padding:0;background:transparent;overflow:visible}
+.birthday-dog-dialog::backdrop{background:rgba(25,10,18,.62);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.birthday-dog-card{position:relative;background:linear-gradient(180deg,#fffdf9,#fff4ea);border:1px solid rgba(108,70,100,.18);border-radius:26px;padding:22px 14px 8px;box-shadow:0 24px 60px rgba(42,20,34,.3);overflow:hidden}
+.birthday-dog-card::after{content:'♥  🌹  💕  💋  🌸  ❤️  💐';display:block;text-align:center;font-size:20px;letter-spacing:5px;padding:0 0 7px;animation:birthdaySparkle 1.8s ease-in-out infinite}
+@keyframes birthdaySparkle{0%,100%{opacity:.6;transform:translateY(0)}50%{opacity:1;transform:translateY(-2px)}}
+.birthday-dog-close{position:absolute;top:10px;left:10px;width:34px;height:34px;border:0;border-radius:50%;background:#f0e7e1;color:#5c4b55;font-size:24px;line-height:1;z-index:4}
+.birthday-dog-wrap{display:grid;place-items:center;height:385px}
+.birthday-dog-svg{width:min(100%,330px);height:100%;overflow:visible}
+.birthday-dog-raised-group{transform-origin:183px 198px;animation:birthdayDogWave 2.5s ease-in-out infinite}
+@keyframes birthdayDogWave{0%,100%{transform:rotate(0)}50%{transform:rotate(-5deg)}}
+@media(max-width:560px){body.birthday-day .topbar{padding-top:52px}.birthday-ticker-content{font-size:14px}.birthday-dog-wrap{height:350px}.birthday-dog-svg{width:310px}}
+@media(prefers-reduced-motion:reduce){.birthday-ticker-content,.birthday-fall-item,.birthday-home-button,.birthday-dog-raised-group,.birthday-dog-card::after{animation:none!important}.birthday-fall-item{display:none!important}}
