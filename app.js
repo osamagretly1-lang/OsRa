@@ -1,5 +1,5 @@
 window.__osraBootAt=performance.now();
-const OSRA_BUILD='OsRa v112 — 2026-10-08 — R36 REFINED BOOT + FAST SURPRISES';
+const OSRA_BUILD='OsRa v113 — 2026-10-08 — R37 CLASSIC BOOT + POST-OPEN CELEBRATION + FAST SURPRISES';
 const DB='OsRaDB', VER=100, THUMB_VERSION=6, THUMB_MAX_BYTES=160*1024;
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 const DEFAULT={settings:{startDate:'',engagementDate:'',birthdayRania:'',osamaPhone:'',raniaPhone:'',whatsappUrl:'',libraryName:'',soundEnabled:false,surprisesEnabled:true,dailyAlbumIds:null,albumOrderMode:'manual',albumMiniView:false,messagesOrder:'desc',hideScanProgressCard:false,countdowns:[],surpriseTiming:'10',surpriseSpeed:'normal',customSurpriseMessages:[]},memories:[],events:[],dreams:[],verses:[],prayers:[],messages:[],excludedPhotos:[]};
@@ -245,44 +245,75 @@ function initBootRibbon(){
   }
  }
 }
-function initBootCelebration(){
- const layer=document.getElementById('bootCelebration');
+function runPostOpenCelebration(){
+ const layer=document.getElementById('bootAfterOpenCelebration');
  if(!layer)return;
  layer.innerHTML='';
+ if(!surprisesAreEnabled()){setTimeout(()=>startRomanticTicker(),220);return}
  const glyphs=['❤️','💖','💕','💗','💛','🌹','🌷','🌸','💐','💋','😘','✨','🎀','🎉','🎈'];
- const dog=typeof romanticWhiteDogSvg==='function'?romanticWhiteDogSvg():'';
- for(let i=0;i<16;i++){
-  const s=document.createElement('span');s.className='boot-celeb-item boot-bottom-item';
-  s.textContent=glyphs[Math.floor(Math.random()*glyphs.length)];
-  s.style.left=`${4+Math.random()*92}%`;
-  s.style.setProperty('--dx',`${-16+Math.random()*32}vw`);
-  s.style.setProperty('--delay',`${(Math.random()*.75).toFixed(2)}s`);
-  s.style.setProperty('--dur',`${(1.9+Math.random()*1.35).toFixed(2)}s`);
-  s.style.fontSize=`${16+Math.random()*20}px`;
-  layer.appendChild(s);
- }
- for(let i=0;i<12;i++){
-  const s=document.createElement('span');s.className='boot-celeb-item boot-rain-item';
-  s.textContent=glyphs[Math.floor(Math.random()*glyphs.length)];
-  s.style.left=`${Math.random()*100}%`;
-  s.style.setProperty('--dx',`${-9+Math.random()*18}vw`);
-  s.style.setProperty('--delay',`${(Math.random()*1.25).toFixed(2)}s`);
-  s.style.setProperty('--dur',`${(1.8+Math.random()*1.4).toFixed(2)}s`);
-  s.style.fontSize=`${13+Math.random()*16}px`;
-  layer.appendChild(s);
- }
+ const addRain=(count,cls,durBase,spread=100)=>{
+  for(let i=0;i<count;i++){
+   const s=document.createElement('span');s.className=`boot-open-item boot-open-rain ${cls}`;
+   s.textContent=glyphs[Math.floor(Math.random()*glyphs.length)];
+   s.style.left=`${Math.random()*spread}%`;
+   s.style.setProperty('--dx',`${-18+Math.random()*36}vw`);
+   s.style.setProperty('--delay',`${(Math.random()*.65).toFixed(2)}s`);
+   s.style.setProperty('--dur',`${(durBase+Math.random()*1.15).toFixed(2)}s`);
+   s.style.fontSize=`${18+Math.random()*28}px`;
+   layer.appendChild(s);
+  }
+ };
+ const addBurst=(count,durBase)=>{
+  for(let i=0;i<count;i++){
+   const s=document.createElement('span');s.className='boot-open-item boot-open-burst';
+   s.textContent=glyphs[Math.floor(Math.random()*glyphs.length)];
+   s.style.setProperty('--left',`${4+Math.random()*92}%`);
+   s.style.setProperty('--dx',`${-18+Math.random()*36}vw`);
+   s.style.setProperty('--delay',`${(Math.random()*.6).toFixed(2)}s`);
+   s.style.setProperty('--dur',`${(durBase+Math.random()*1.1).toFixed(2)}s`);
+   s.style.fontSize=`${20+Math.random()*32}px`;
+   layer.appendChild(s);
+  }
+ };
+ const addMix=(count)=>{
+  for(let i=0;i<count;i++){
+   const s=document.createElement('span');s.className='boot-open-item boot-open-mix';
+   s.textContent=glyphs[Math.floor(Math.random()*glyphs.length)];
+   s.style.left=`${Math.random()*100}%`;
+   s.style.bottom=`${8+Math.random()*42}%`;
+   s.style.setProperty('--dx',`${-22+Math.random()*44}vw`);
+   s.style.setProperty('--delay',`${(Math.random()*1.1).toFixed(2)}s`);
+   s.style.setProperty('--dur',`${(2.3+Math.random()*2.5).toFixed(2)}s`);
+   s.style.fontSize=`${18+Math.random()*34}px`;
+   layer.appendChild(s);
+  }
+ };
+ // 0–2s: dense rain + a first upward burst.
+ addRain(52,'rain-heavy',1.8);
+ addBurst(34,3.2);
+ // Two small white smiling dogs join the first burst.
  for(let i=0;i<2;i++){
-  const s=document.createElement('span');s.className='boot-dog-item';s.innerHTML=dog;
-  s.style.left=`${15+Math.random()*70}%`;
-  s.style.setProperty('--delay',`${(.25+i*.42).toFixed(2)}s`);
-  s.style.setProperty('--dur',`${(2.15+Math.random()*.55).toFixed(2)}s`);
+  const s=document.createElement('span');s.className='boot-open-item boot-open-dog';s.innerHTML=romanticWhiteDogSvg();
+  s.style.left=`${18+i*56}%`;
+  s.style.setProperty('--dx',`${-10+Math.random()*20}vw`);
+  s.style.setProperty('--delay',`${(.25+i*.35).toFixed(2)}s`);
+  s.style.setProperty('--dur',`${(3.4+Math.random()*.5).toFixed(2)}s`);
   layer.appendChild(s);
  }
- setTimeout(()=>{layer.classList.add('boot-celeb-done')},2350);
- setTimeout(()=>{layer.remove()},2850);
+ // 2–5s: rain becomes lighter while the remaining burst continues to fade.
+ setTimeout(()=>{if(!document.body.contains(layer)||!surprisesAreEnabled())return;addRain(22,'rain-soft',2.7);},2000);
+ // 5–10s: a final rich mixed flow, intentionally varied in size and movement.
+ setTimeout(()=>{if(!document.body.contains(layer)||!surprisesAreEnabled())return;addRain(28,'rain-soft',3.6);addBurst(22,4.2);addMix(34);},5000);
+ // End cleanly, then start the normal random-message system.
+ setTimeout(()=>{
+  if(!layer)return;
+  layer.classList.add('boot-open-fade');
+  setTimeout(()=>{layer.innerHTML='';layer.classList.remove('boot-open-fade');},600);
+  if(surprisesAreEnabled())startRomanticTicker();
+ },10000);
 }
-function clearSurpriseLayers(){['romanticSceneLayer','romanticMessageBubble','romanticLongLayer','romanticBalloonLayer','romanticEffectLayer','romanticFloatLayer','occasionCelebration'].forEach(id=>{const el=document.getElementById(id);if(el)el.remove()});const ticker=document.getElementById('romanticTicker');if(ticker){ticker.classList.remove('show');const tx=document.getElementById('romanticTickerText');if(tx)tx.textContent=''}clearTimeout(romanticTickerCloseTimer);clearTimeout(romanticKissTimer);romanticKissTimer=null;clearTimeout(romanticDelightTimer);romanticDelightTimer=null;occasionCelebrationBusy=false;romanticLongBusy=false}
-async function toggleSurprises(){state.settings.surprisesEnabled=!surprisesAreEnabled();await save();if(!surprisesAreEnabled())clearSurpriseLayers();updateSurpriseButton();updateBirthdayUi();if(surprisesAreEnabled()){startRomanticTicker();maybeRunOccasionCelebrations();}renderNoAnim();}
+function clearSurpriseLayers(){['romanticSceneLayer','romanticMessageBubble','romanticLongLayer','romanticBalloonLayer','romanticEffectLayer','romanticFloatLayer','occasionCelebration'].forEach(id=>{const el=document.getElementById(id);if(el)el.remove()});document.querySelectorAll('[id^="romanticSceneLayer-"]').forEach(el=>el.remove());const ticker=document.getElementById('romanticTicker');if(ticker){ticker.classList.remove('show');const tx=document.getElementById('romanticTickerText');if(tx)tx.textContent=''}clearTimeout(romanticTickerCloseTimer);clearTimeout(romanticKissTimer);romanticKissTimer=null;clearTimeout(romanticDelightTimer);romanticDelightTimer=null;occasionCelebrationBusy=false;romanticLongBusy=false}
+async function toggleSurprises(){state.settings.surprisesEnabled=!surprisesAreEnabled();await save();if(!surprisesAreEnabled()){clearSurpriseLayers();document.getElementById('bootAfterOpenCelebration')?.replaceChildren();}updateSurpriseButton();updateBirthdayUi();if(surprisesAreEnabled()){startRomanticTicker();maybeRunOccasionCelebrations();}renderNoAnim();}
 function dataRecoveryCard(){if(!recoveryCandidate)return '';const score=recoveryScore(recoveryCandidate);if(score<=recoveryScore(state))return '';return `<div class="card recovery-card"><h3>🛟 نسخة أمان أفضل متاحة</h3><p>OsRa وجد نسخة أمان تحتوي، بحسب المقارنة الداخلية، على بيانات أكثر من الحالة الحالية.</p><div class="meta">تاريخ النسخة: ${esc(recoveryLabel(recoveryCandidate))}</div><div class="actions"><button class="btn primary" data-action="restoreLocalRecovery">استعادة النسخة</button><button class="btn" data-action="hideRecoveryNotice">إخفاء هذا التنبيه</button></div><p class="meta">لن يتم الاستبدال تلقائيًا. الاستعادة لا تحذف الصور الأصلية من الهاتف، ولا تتم إلا بعد ضغطك على زر الاستعادة.</p></div>`}
 function scanProgressText(cp){if(!cp)return'';const n=cp.processed||cp.count||0,a=cp.added||0,u=cp.updated||0,m=cp.moved||0,e=cp.excluded||0;return `تم فحص ${n} صورة${a?` — ${a} جديدة`:''}${u?` — ${u} محدثة`:''}${m?` — ${m} منقولة`:''}${e?` — ${e} مستبعدة`:''}`}
 function scanProgressCard(){const cp=scanCheckpoint;if(!cp||state.settings.hideScanProgressCard)return'';const running=cp.status==='running'||cp.status==='paused';if(!running)return'';const label=cp.lastRelPath?`آخر ملف وصل إليه الفحص: <b>${esc(cp.lastRelPath)}</b>`:'الفحص بدأ ولم يسجل أول صورة بعد.';return `<div class="card scan-progress-card"><h3>🔄 فحص الصور غير مكتمل</h3><p>${cp.status==='paused'?'الفحص متوقف ومحفوظ ويمكن استكماله.':'الفحص يعمل الآن، ويمكن إيقافه بأمان في أي لحظة.'}</p><div class="meta">${label}</div><div class="meta">${esc(scanProgressText(cp))}</div><div class="actions">${cp.status==='running'?`<button class="btn danger" data-action="stopScan">⏹ إيقاف الفحص</button>`:''}<button class="btn primary" data-action="resumeScan">استكمال الفحص</button><button class="btn" data-action="scanFresh">بدء فحص كامل</button><button class="btn" data-action="hideScanProgressCard">إخفاء القائمة</button></div></div>`}
@@ -698,7 +729,7 @@ function showRomanticFloat(kind='random',profile=surpriseTimingProfile()){
  }
 }
 function romanticWhiteDogSvg(){return `<svg class="romantic-white-dog" viewBox="0 0 96 72" aria-hidden="true"><ellipse cx="48" cy="57" rx="34" ry="9" fill="rgba(30,18,25,.14)"/><path d="M29 25c-8-11-1-20 8-11l7 7c4-3 11-4 17-1l7-8c9-9 16 0 8 12 4 5 6 11 4 20-3 13-16 20-32 20S18 57 18 44c0-7 4-14 11-19Z" fill="#fff" stroke="#e5d9df" stroke-width="2"/><circle cx="38" cy="38" r="2.7" fill="#392b31"/><circle cx="58" cy="38" r="2.7" fill="#392b31"/><ellipse cx="48" cy="46" rx="7" ry="5" fill="#392b31"/><path d="M42 52c4 4 8 4 12 0" fill="none" stroke="#392b31" stroke-width="2" stroke-linecap="round"/><path d="M24 28 16 19c-4-5-7 1-5 9l9 9" fill="#fff" stroke="#e5d9df" stroke-width="2"/><path d="M72 28 80 19c4-5 7 1 5 9l-9 9" fill="#fff" stroke="#e5d9df" stroke-width="2"/></svg>`}
-function showRomanticLongMessage(){if(!surprisesAreEnabled()||romanticLongBusy)return;romanticLongBusy=true;renderRomanticTickerMessage(ROMANTIC_LONG_MESSAGE,Math.floor(Math.random()*5),10500);setTimeout(()=>{let layer=document.getElementById('romanticLongLayer');if(layer)layer.remove();layer=document.createElement('div');layer.id='romanticLongLayer';layer.className='romantic-long-layer';layer.innerHTML=`<div class="romantic-long-sign"><div class="romantic-sign-face">${esc(ROMANTIC_LONG_MESSAGE)}</div></div><div class="romantic-dog-target">${romanticWhiteDogSvg()}</div>`;document.body.appendChild(layer);setTimeout(()=>{layer.classList.add('landed')},4200);setTimeout(()=>{layer.classList.add('romantic-long-fade')},12800);setTimeout(()=>{layer.remove();romanticLongBusy=false},20000)},3900)}
+function showRomanticLongMessage(){if(!surprisesAreEnabled()||romanticLongBusy)return;romanticLongBusy=true;renderRomanticTickerMessage(ROMANTIC_LONG_MESSAGE,Math.floor(Math.random()*5),10500);setTimeout(()=>{let layer=document.getElementById('romanticLongLayer');if(layer)layer.remove();layer=document.createElement('div');layer.id='romanticLongLayer';layer.className='romantic-long-layer';layer.innerHTML=`<div class="romantic-long-sign"><div class="romantic-sign-face">${esc(ROMANTIC_LONG_MESSAGE)}</div></div><div class="romantic-dog-target">${romanticWhiteDogSvg()}</div>`;document.body.appendChild(layer);setTimeout(()=>{layer.classList.add('landed')},4200);setTimeout(()=>{layer.classList.add('romantic-long-fade')},9000);setTimeout(()=>{layer.remove();romanticLongBusy=false},12000)},3900)}
 function showRomanticBubble(message){if(!surprisesAreEnabled())return;
 
  const old=document.getElementById('romanticMessageBubble');if(old)old.remove();
@@ -792,15 +823,15 @@ function enableRomanticCardDrag(layer){
 }
 function showRomanticScene(message,opts={}){
  if(!surprisesAreEnabled())return;
- const old=document.getElementById('romanticSceneLayer');if(old)old.remove();
+ const old=document.getElementById('romanticSceneLayer');if(old&&!opts.allowOverlap)old.remove();
  const style=opts.style||romanticScenePickStyle();
  const motion=opts.motion||romanticMotionPick();
  const prof=opts.profile||surpriseTimingProfile();
- const layer=document.createElement('div');layer.id='romanticSceneLayer';layer.className=`romantic-scene-layer scene-${style} motion-${motion} surprise-speed-${prof.key}${opts.occasion?' scene-occasion':''}`;
+ const layer=document.createElement('div');layer.id=opts.allowOverlap?`romanticSceneLayer-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,6)}`:'romanticSceneLayer';layer.className=`romantic-scene-layer scene-${style} motion-${motion} surprise-speed-${prof.key}${opts.occasion?' scene-occasion':''}`;
  layer.setAttribute('aria-hidden','true');layer.innerHTML=romanticSceneHtml(message,style,!!opts.occasion);document.body.appendChild(layer);
  requestAnimationFrame(()=>{fitRomanticSceneCard(layer);layer.classList.add('is-visible');enableRomanticCardDrag(layer);setTimeout(()=>{clampRomanticSceneCard(layer)},Math.max(90,Math.min(450,650/prof.speed)));setTimeout(()=>{clampRomanticSceneCard(layer)},Math.max(250,Math.min(900,1100/prof.speed)));});
- const baseLife=opts.occasion?9200:(style==='dogsign'?11800:7600);const life=Math.round(Math.max(4200,Math.min(12500,baseLife/prof.speed)));layer.style.setProperty('--surprise-speed',String(prof.speed));
- setTimeout(()=>layer.classList.add('is-leaving'),Math.max(4500,life-1800));
+ const baseLife=opts.occasion?9200:(style==='dogsign'?7800:5600);const maxByCadence=prof.interval<10000?Math.max(2600,Math.floor(prof.interval*.92)):12000;const life=Math.round(Math.max(2600,Math.min(12000,baseLife,maxByCadence)));layer.style.setProperty('--surprise-speed',String(prof.speed));
+ setTimeout(()=>layer.classList.add('is-leaving'),Math.max(1700,life-1100));
  setTimeout(()=>layer.remove(),life);
 }
 function showRomanticLongMessage(){
@@ -810,7 +841,7 @@ function showRomanticLongMessage(){
   renderRomanticTickerMessage(ROMANTIC_LONG_MESSAGE,Math.floor(Math.random()*5),10500);
   setTimeout(()=>{let layer=document.getElementById('romanticLongLayer');if(layer)layer.remove();layer=document.createElement('div');layer.id='romanticLongLayer';layer.className='romantic-long-layer';layer.innerHTML=`<div class="romantic-long-sign"><div class="romantic-sign-face">${esc(ROMANTIC_LONG_MESSAGE)}</div></div><div class="romantic-dog-target">${romanticWhiteDogSvg()}</div>`;document.body.appendChild(layer);setTimeout(()=>{layer.classList.add('landed')},4200);setTimeout(()=>{layer.classList.add('romantic-long-fade')},12800);setTimeout(()=>{layer.remove();romanticLongBusy=false},20000)},3900);
  }else{
-  showRomanticScene(ROMANTIC_LONG_MESSAGE,{style:'polaroid'});setTimeout(()=>{romanticLongBusy=false},8200);
+  showRomanticScene(ROMANTIC_LONG_MESSAGE,{style:'polaroid',profile:surpriseTimingProfile()});setTimeout(()=>{romanticLongBusy=false},9800);
  }
 }
 function showRomanticMessage(profile=surpriseTimingProfile()){
@@ -819,11 +850,11 @@ function showRomanticMessage(profile=surpriseTimingProfile()){
  if(Math.random()<0.08 && !romanticLongBusy){showRomanticLongMessage();return}
  const message=randomSurpriseMessage();
  lastRomanticSceneMessage=message;
- showRomanticScene(message,{style:romanticScenePickStyle(),occasion:occasionJoyActive(),profile});
+ showRomanticScene(message,{style:romanticScenePickStyle(),occasion:occasionJoyActive(),profile,allowOverlap:profile.speedKey==='random-fast'&&Math.random()<.38});
 }
 function showMessageBalloon(message){
  if(!surprisesAreEnabled())return;
- let layer=document.getElementById('romanticBalloonLayer');if(layer)layer.remove();layer=document.createElement('div');layer.id='romanticBalloonLayer';layer.className='romantic-balloon-layer';const sparks=['✨','💖','🌹','💕','🥰','🎀','💛','😘'];layer.innerHTML=`<div class="romantic-balloon-wrap"><div class="romantic-balloon"><span class="romantic-balloon-knot"></span><span class="romantic-balloon-text">${esc(message)}</span></div></div>${sparks.map((x,i)=>`<span class="balloon-pop-spark s${i}">${x}</span>`).join('')}`;document.body.appendChild(layer);setTimeout(()=>layer.classList.add('pop'),4200);setTimeout(()=>layer.classList.add('fade'),19000);setTimeout(()=>layer.remove(),33000)
+ let layer=document.getElementById('romanticBalloonLayer');if(layer)layer.remove();layer=document.createElement('div');layer.id='romanticBalloonLayer';layer.className='romantic-balloon-layer';const sparks=['✨','💖','🌹','💕','🥰','🎀','💛','😘'];layer.innerHTML=`<div class="romantic-balloon-wrap"><div class="romantic-balloon"><span class="romantic-balloon-knot"></span><span class="romantic-balloon-text">${esc(message)}</span></div></div>${sparks.map((x,i)=>`<span class="balloon-pop-spark s${i}">${x}</span>`).join('')}`;document.body.appendChild(layer);setTimeout(()=>layer.classList.add('pop'),4200);setTimeout(()=>layer.classList.add('fade'),6500);setTimeout(()=>layer.remove(),9800)
 }
 function inKissWindow(){const d=new Date();const mins=d.getHours()*60+d.getMinutes();return mins>=23*60||mins<60}
 function tryScheduleKissBalloon(){if(!surprisesAreEnabled())return;clearTimeout(romanticKissTimer);const key=`${today()}-kiss-balloon`;if(localStorage.getItem('osra-kiss-balloon-shown')===key)return;const d=new Date(),mins=d.getHours()*60+d.getMinutes();if(mins>=23*60||mins<60){const delay=5200+Math.random()*4200;romanticKissTimer=setTimeout(()=>{if(!inKissWindow()||localStorage.getItem('osra-kiss-balloon-shown')===key)return;localStorage.setItem('osra-kiss-balloon-shown',key);const msg=ROMANTIC_KISS_MESSAGES[Math.random()<0.55?0:1+Math.floor(Math.random()*(ROMANTIC_KISS_MESSAGES.length-1))];showRomanticScene(msg,{style:Math.random()<.55?'balloons':'giantcenter'});},delay);return}if(mins<23*60){const until23=(23*60-mins)*60000-d.getSeconds()*1000;romanticKissTimer=setTimeout(()=>tryScheduleKissBalloon(),Math.max(30000,until23));return}const tomorrow=new Date(d);tomorrow.setDate(tomorrow.getDate()+1);tomorrow.setHours(23,0,5,0);romanticKissTimer=setTimeout(()=>tryScheduleKissBalloon(),Math.max(60000,tomorrow-d))}
@@ -849,6 +880,10 @@ function startRomanticTicker(){
    // Every tick produces an actual message. Decorative effects remain secondary so messages never disappear.
    showRomanticMessage(prof);
    localStorage.setItem('osra-romantic-day-message',today());
+   if(prof.key==='fast' && prof.speedKey==='random-fast' && Math.random()<0.42){
+    const extra={...prof,speed:Math.max(1.5,prof.speed*(.92+Math.random()*.26)),key:'random-fast'};
+    setTimeout(()=>showRomanticMessage(extra),420+Math.random()*620);
+   }
    if(Math.random()<0.28)setTimeout(()=>showRomanticEffect(prof),120);
    if(Math.random()<0.22){const kind=Math.random();setTimeout(()=>showRomanticFloat(kind<.34?'balloon':kind<.62?'rose':'heart',prof),170)}
    // This is the real next trigger interval selected in Settings.
@@ -886,7 +921,7 @@ function pageCalendar(){
  const dayM=visibleMemories().filter(m=>memoryOnAnnualDay(m,calendarDate));const dayE=state.events.filter(e=>e.date===calendarDate);const dayP=visiblePics.filter(p=>p.capturedAt?.slice(0,10)===calendarDate);return `<div class="inner"><div class="kicker">📅 التقويم</div><h1 class="title">ذكرياتنا حسب التاريخ</h1><div class="calendar-head"><button class="btn" data-action="calendarPrev">‹ الشهر السابق</button><h3>${calendarCursor.toLocaleDateString('ar-EG',{year:'numeric',month:'long'})}</h3><button class="btn" data-action="calendarNext">الشهر التالي ›</button></div><div class="calendar-week">${['الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت','الأحد'].map(x=>`<span>${x}</span>`).join('')}</div><div class="calendar-grid">${cells.join('')}</div><div class="line"></div><h3>📌 ${fmt(calendarDate)}</h3>${dayM.length?`<div class="cards">${dayM.map(m=>`<div class="card calendar-result"><div>${miniThumbs(m,6)}</div><div class="memory-body"><h3>${esc(m.title||'ذكرى')}</h3><div class="meta">${memoryOnAnnualDay(m,calendarDate)?'ضمن ذكرى متكررة سنويًا':'ضمن فترة الذكرى'} • ${rangeLabel(m)}</div><button class="btn small primary" data-action="memory" data-id="${m.id}">فتح الذكرى والصور</button></div></div>`).join('')}</div>`:`<div class="empty">لا توجد ذكريات مسجلة تغطي هذا اليوم.</div>`}${dayE.length?`<div class="line"></div><h3>◴ محطات في هذا اليوم</h3><div class="cards">${dayE.map(e=>`<div class="card"><b>${esc(e.title)}</b><p>${esc(e.description||'')}</p></div>`).join('')}</div>`:''}${dayP.length?`<div class="line"></div><h3>📷 صور التُقطت في هذا اليوم</h3><div class="gallery mini-calendar-gallery">${dayP.map(p=>`<button class="thumb" data-action="photo" data-id="${p.id}"><img data-thumb="${p.id}" alt="${esc(p.name)}"></button>`).join('')}</div>`:`${!dayM.length&&!dayE.length?'':'<div class="note">لا توجد صور لها تاريخ التقاط EXIF في هذا اليوم.</div>'}`}</div>`
 }
 function pageHTML(s){return s==='home'?pageHome():s==='memories'?pageMemories():s==='calendar'?pageCalendar():s==='story'?pageStory():s==='dreams'?pageDreams():s==='spiritual'?pageSpiritual():s==='messages'?pageMessages():s==='about'?pageAbout():pageSettings()}
-function hideBootSplash(){const el=document.getElementById('bootSplash');if(!el||el.classList.contains('boot-done'))return;const elapsed=performance.now()-(window.__osraBootAt||performance.now());const wait=Math.max(0,3000-elapsed);setTimeout(()=>requestAnimationFrame(()=>el.classList.add('boot-done')),wait)}
+function hideBootSplash(){return new Promise(resolve=>{const el=document.getElementById('bootSplash');if(!el||el.classList.contains('boot-done')){resolve();return}const elapsed=performance.now()-(window.__osraBootAt||performance.now());const wait=Math.max(0,3000-elapsed);setTimeout(()=>requestAnimationFrame(()=>{el.classList.add('boot-done');setTimeout(resolve,460)}),wait)})}
 function renderNoAnim(preserveScroll=false){resetAlbumBookTurn();const oldInner=$('#currentPage .inner');const scrollTop=preserveScroll?(oldInner?.scrollTop||0):0;const scrollLeft=preserveScroll?(oldInner?.scrollLeft||0):0;$('#currentPage').innerHTML=pageHTML(section);hydrate();setNav();updateSelectionCount();requestAnimationFrame(()=>{fitAlbumBookStage();if(preserveScroll){const inner=$('#currentPage .inner');if(inner){inner.scrollTop=scrollTop;inner.scrollLeft=scrollLeft}}if(section==='home')maybeRunOccasionCelebrations()})}
 function navigate(to,dir=1){if(to===section||busy)return;resetAlbumBookTurn();busy=true;const book=$('#book'),current=$('#currentPage'),back=$('#backPage'),duration=760;back.innerHTML=pageHTML(to);hydrate();book.classList.remove('turn-next','turn-prev');requestAnimationFrame(()=>book.classList.add(dir>0?'turn-next':'turn-prev'));paperSound(duration);setTimeout(()=>{section=to;current.innerHTML=pageHTML(section);back.innerHTML='';book.classList.remove('turn-next','turn-prev');busy=false;hydrate();setNav();updateSelectionCount()},duration)}
 const thumbObserver=('IntersectionObserver' in window)?new IntersectionObserver(entries=>{for(const ent of entries){if(!ent.isIntersecting)continue;thumbObserver.unobserve(ent.target);queueThumbHydrate(ent.target)}},{rootMargin:'800px 0px'}):null;
@@ -1663,4 +1698,4 @@ async function ensureLatestOsRa(){
     if(reg.waiting) reg.waiting.postMessage({type:'SKIP_WAITING'});
   }catch(e){console.warn('OsRa service worker update skipped',e)}
 }
-(async()=>{try{initBootRibbon();initBootCelebration();ensureLatestOsRa().catch(()=>{});await dbOpen();await load();renderNoAnim();updateSoundButton();updateSurpriseButton();initBirthdayUi();hideBootSplash();startRomanticTicker();if(navigator.storage?.persist)navigator.storage.persist().catch(()=>{});setTimeout(async()=>{await runDeferredStartupMaintenance();await shareTarget();await maybeAutoFileBackup();},500);setInterval(()=>{maybeAutoFileBackup().catch(()=>{})},6*60*60*1000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&scanCheckpoint?.status==='running')persistScanProgress();if(document.visibilityState==='visible'){setTimeout(()=>{maybeAutoFileBackup().catch(()=>{})},120)}})}catch(e){console.error(e);hideBootSplash();toast('تعذر تشغيل OsRa.')}})();
+(async()=>{try{initBootRibbon();ensureLatestOsRa().catch(()=>{});await dbOpen();await load();renderNoAnim();updateSoundButton();updateSurpriseButton();initBirthdayUi();await hideBootSplash();runPostOpenCelebration();if(navigator.storage?.persist)navigator.storage.persist().catch(()=>{});setTimeout(async()=>{await runDeferredStartupMaintenance();await shareTarget();await maybeAutoFileBackup();},500);setInterval(()=>{maybeAutoFileBackup().catch(()=>{})},6*60*60*1000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&scanCheckpoint?.status==='running')persistScanProgress();if(document.visibilityState==='visible'){setTimeout(()=>{maybeAutoFileBackup().catch(()=>{})},120)}})}catch(e){console.error(e);hideBootSplash();toast('تعذر تشغيل OsRa.')}})();
