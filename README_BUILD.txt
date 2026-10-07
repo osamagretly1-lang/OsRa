@@ -37,3 +37,6 @@ Changes:
 
 
 R28 change: restored the original home-page three-card layout. The third card is now Rania birthday countdown; the generic "القادم" card was removed from the home page. New occasion countdowns remain available in "عداداتنا" and all R27 romantic/occasion/source-link features are preserved. IndexedDB schema remains VER=100.
+
+
+R29 update: full-screen romantic surprise engine with 28 presentation modes, larger readable messages, varied flowers/hearts/kisses/balloons, occasion-day integration, and anti-repeat style selection. Birthday/home layout/data behavior from R28 preserved.
