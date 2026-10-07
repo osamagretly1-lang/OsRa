@@ -1,10 +1,10 @@
-const BUILD='osra106-20261008-r30-polished-overlay-surprises';
+const BUILD='osra107-20261008-r31-surprise-timing-boot-ribbon';
 const CACHE=`OsRa-v106-${BUILD}`;
 const APP=[
   './',
   './index.html',
   './style.css',
-  './app.js?v=osra106-20261008-r30-polished-overlay-surprises',
+  './app.js?v=osra107-20261008-r31-surprise-timing-boot-ribbon',
   './manifest.json',
   './icon.svg',
   './icon-192.png',
