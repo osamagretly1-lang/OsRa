@@ -7,7 +7,7 @@
 .boot-sheet-back{background:linear-gradient(90deg,rgba(82,55,65,.18),rgba(255,255,255,.1) 20%,rgba(255,255,255,.03));box-shadow:inset 8px 0 16px rgba(52,33,41,.06),0 8px 18px rgba(52,33,41,.12);transform:translateZ(-4px) rotateY(-2deg)}
 .boot-sheet-front{display:grid;place-items:center;background:var(--paper);box-shadow:inset -8px 0 20px rgba(40,26,32,.05),0 10px 24px rgba(52,33,41,.16);animation:bootPageTurn 2.3s cubic-bezier(.2,.76,.24,1) infinite}
 .boot-logo{width:132px;height:132px;display:block}
-.boot-title{margin-top:3px;font:700 31px Georgia,serif;color:var(--rose);letter-spacing:.4px}
+.boot-title,.boot-subtitle,.boot-loading{display:none!important}
 .boot-subtitle{font-size:13px;color:var(--muted);font-weight:700}
 .boot-progress{width:92px;height:3px;border-radius:99px;background:rgba(108,70,100,.12);overflow:hidden;margin-top:13px}
 .boot-progress i{display:block;width:38%;height:100%;border-radius:99px;background:linear-gradient(90deg,transparent,var(--gold),transparent);animation:bootProgress 1.35s ease-in-out infinite}
@@ -369,13 +369,13 @@ body.birthday-day .topbar{padding-top:68px}
 /* R29 — full-screen romantic surprise deck: 28 presentation styles. */
 .romantic-scene-layer{position:fixed;inset:0;z-index:20050;pointer-events:none;overflow:hidden;isolation:isolate;opacity:0;transition:opacity .35s ease}
 .romantic-scene-layer.is-visible{opacity:1}.romantic-scene-layer.is-leaving{opacity:0;transition:opacity .75s ease}
-.romantic-scene-backdrop{position:absolute;inset:0;background:radial-gradient(circle at 50% 45%,rgba(255,255,255,.34),rgba(255,255,255,0) 42%),linear-gradient(135deg,rgba(255,192,220,.11),rgba(169,133,255,.10));backdrop-filter:blur(1.2px);-webkit-backdrop-filter:blur(1.2px)}
+.romantic-scene-backdrop{position:absolute;inset:0;background:transparent!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
 .romantic-scene-shower{position:absolute;inset:0;overflow:hidden}.rs-decor{position:absolute;z-index:2;font-size:clamp(28px,7vw,62px);line-height:1;filter:drop-shadow(0 9px 14px rgba(64,28,52,.18));opacity:0;animation:rsDecor var(--sd) ease-in-out var(--delay) both;will-change:transform,opacity}
 @keyframes rsDecor{0%{opacity:0;transform:translate3d(0,0,0) scale(.35) rotate(var(--r))}18%{opacity:1}58%{transform:translate3d(var(--drift),-16px,0) scale(var(--sc)) rotate(calc(var(--r) + 8deg))}100%{opacity:.24;transform:translate3d(calc(var(--drift) * -0.4),-48px,0) scale(calc(var(--sc) * .88)) rotate(calc(var(--r) - 10deg))}}
-.romantic-scene-core{position:absolute;inset:0;display:grid;place-items:center;padding:4vh 4vw}.rs-card{position:relative;z-index:8;width:min(88vw,780px);padding:clamp(22px,4vw,42px) clamp(22px,5vw,54px);text-align:center;border-radius:34px;border:2px solid rgba(255,255,255,.92);box-shadow:0 28px 90px rgba(67,27,58,.25),0 0 0 8px rgba(255,255,255,.12);overflow:visible;transform:translateY(14vh) scale(.68) rotate(-5deg);opacity:0;transition:transform 1.05s cubic-bezier(.12,.9,.18,1),opacity .55s ease}
-.romantic-scene-layer.is-visible .rs-card{transform:translateY(0) scale(1) rotate(0);opacity:1}.romantic-scene-layer.is-leaving .rs-card{transform:translateY(-5vh) scale(.92) rotate(3deg);opacity:0}
-.rs-badge{display:inline-block;padding:7px 16px;border-radius:999px;background:rgba(255,255,255,.76);color:#8d315d;font-weight:1000;font-size:clamp(14px,3.2vw,21px);margin-bottom:12px;box-shadow:0 8px 22px rgba(64,28,52,.12)}
-.rs-message{font-size:clamp(30px,7vw,66px);line-height:1.2;font-weight:1000;color:#5f304f;text-shadow:0 3px 0 #fff,0 6px 18px rgba(72,28,57,.16);text-wrap:balance}
+.romantic-scene-core{position:absolute;inset:0;display:block;padding:0}.rs-card{position:absolute;z-index:8;width:min(76vw,680px);max-height:min(62vh,520px);overflow:auto;padding:clamp(15px,3vw,30px) clamp(17px,4vw,38px);text-align:center;border-radius:30px;border:2px solid rgba(255,255,255,.75);background:rgba(255,250,248,.76);box-shadow:0 18px 44px rgba(67,27,58,.17),0 0 0 5px rgba(255,255,255,.10);overflow-wrap:anywhere;transform:translate(-50%,-50%) translateY(14vh) scale(calc(.68 * var(--msg-scale,1))) rotate(-5deg);opacity:0;transition:transform 1.05s cubic-bezier(.12,.9,.18,1),opacity .55s ease;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);scrollbar-width:none}.rs-card::-webkit-scrollbar{display:none}
+.romantic-scene-layer.is-visible .rs-card{transform:translate(-50%,-50%) translateY(0) scale(var(--msg-scale,1)) rotate(0);opacity:1}.romantic-scene-layer.is-leaving .rs-card{transform:translate(-50%,-50%) translateY(-4vh) scale(calc(.9 * var(--msg-scale,1))) rotate(3deg);opacity:0}
+.rs-badge{display:none!important;padding:7px 16px;border-radius:999px;background:rgba(255,255,255,.76);color:#8d315d;font-weight:1000;font-size:clamp(14px,3.2vw,21px);margin-bottom:12px;box-shadow:0 8px 22px rgba(64,28,52,.12)}
+.rs-message{font-size:clamp(26px,6vw,58px);line-height:1.22;font-weight:1000;color:#5f304f;text-shadow:0 3px 0 #fff,0 6px 18px rgba(72,28,57,.16);text-wrap:balance}
 .rs-mini-row{display:flex;justify-content:center;gap:14px;margin-top:14px;font-size:clamp(25px,5vw,42px)}.rs-mini-row span{display:inline-grid;place-items:center;animation:rsMini 1.8s ease-in-out infinite}.rs-mini-row span:nth-child(2){animation-delay:.18s}.rs-mini-row span:nth-child(3){animation-delay:.36s}
 @keyframes rsMini{0%,100%{transform:translateY(0) rotate(-4deg) scale(1)}50%{transform:translateY(-7px) rotate(5deg) scale(1.12)}}
 .rs-ring{position:absolute;z-index:4;border:3px solid rgba(255,255,255,.76);border-radius:50%;display:grid;place-items:center;color:#fff;font-size:24px;box-shadow:0 0 0 6px rgba(255,255,255,.12)}.rs-ring.r1{width:150px;height:150px;top:12%;left:9%;animation:rsOrbit 7s linear infinite}.rs-ring.r2{width:110px;height:110px;bottom:11%;right:10%;animation:rsOrbit 6s linear reverse infinite}@keyframes rsOrbit{to{transform:rotate(360deg)}}
@@ -417,3 +417,20 @@ body.birthday-day .topbar{padding-top:68px}
 @keyframes rsEffectBalloon{0%{opacity:0;transform:translateY(15vh) scale(.6) rotate(-8deg)}16%{opacity:1}100%{opacity:0;transform:translate(var(--drift),-105vh) scale(1.08) rotate(9deg)}}
 @media(max-width:600px){.rs-card{width:min(92vw,700px);padding:22px 17px 25px;border-radius:25px}.rs-message{font-size:clamp(27px,8vw,53px)}.rs-ring.r1{width:105px;height:105px;left:1%;top:8%}.rs-ring.r2{width:78px;height:78px;right:2%;bottom:9%}.scene-bootribbon .rs-card{width:94vw;padding:13px 10px;gap:8px}.scene-bootribbon .rs-badge{font-size:11px;padding:6px 8px}.scene-bootribbon .rs-message{font-size:clamp(22px,6.2vw,34px)}.scene-burst .rs-card{width:min(82vw,560px)}.scene-heartframe .rs-card{padding:19% 10% 22%}.scene-flowerframe .rs-card::before,.scene-flowerframe .rs-card::after{font-size:29px;letter-spacing:1px}.scene-balloons .rs-card::before,.scene-balloons .rs-card::after{font-size:72px}.scene-polaroid .rs-card{width:82vw}}
 @media(prefers-reduced-motion:reduce){.romantic-scene-layer,.romantic-effect-layer{display:none!important}}
+
+/* R30 — compact overlay control and non-dimming surprise presentation. */
+.surprise-toggle{min-width:118px;height:38px;padding:0 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.62);color:var(--ink);font:900 12px Tahoma,sans-serif;white-space:nowrap;margin-right:5px;box-shadow:0 2px 8px rgba(67,27,58,.07);transition:transform .18s ease,box-shadow .18s ease,background .18s ease}
+.surprise-toggle:active{transform:scale(.96)}.surprise-toggle.surprises-on{background:linear-gradient(135deg,rgba(255,241,196,.92),rgba(255,222,238,.92));color:#7b3859;box-shadow:0 4px 14px rgba(220,86,132,.15)}.surprise-toggle.surprises-off{background:rgba(236,228,232,.72);color:#796c73}
+.romantic-scene-layer,.romantic-effect-layer,.romantic-float-layer,.romantic-balloon-layer,.romantic-long-layer{background:transparent!important}
+.romantic-scene-layer{pointer-events:none!important}.romantic-scene-layer .rs-card{pointer-events:none}
+.romantic-scene-layer .romantic-scene-backdrop{pointer-events:none}
+@media(max-width:600px){.surprise-toggle{min-width:104px;font-size:10px;padding-inline:7px}.rs-card{width:min(84vw,650px);max-height:55vh;padding:14px 15px}.rs-message{font-size:clamp(23px,6vw,40px)}.rs-mini-row{margin-top:8px;font-size:clamp(21px,5vw,32px);gap:9px}}
+
+/* R30 final overlay corrections: keep every presentation floating without dimming or hijacking layout. */
+.romantic-scene-layer.is-visible .rs-card{transform:translate(-50%,-50%) translateY(0) scale(var(--msg-scale,1)) rotate(0)!important}
+.romantic-scene-layer.is-leaving .rs-card{transform:translate(-50%,-50%) translateY(-4vh) scale(calc(.9 * var(--msg-scale,1))) rotate(3deg)!important}
+.romantic-scene-layer .rs-card{margin:0!important;align-self:auto!important;justify-self:auto!important}
+.romantic-scene-layer .rs-badge{display:none!important}
+.romantic-scene-layer .rs-message{max-width:100%;overflow-wrap:anywhere}
+.romantic-scene-layer .rs-card{box-sizing:border-box}
+@media(max-width:600px){.romantic-scene-layer.is-visible .rs-card{transform:translate(-50%,-50%) translateY(0) scale(var(--msg-scale,1)) rotate(0)!important}.romantic-scene-layer.is-leaving .rs-card{transform:translate(-50%,-50%) translateY(-4vh) scale(calc(.9 * var(--msg-scale,1))) rotate(3deg)!important}}

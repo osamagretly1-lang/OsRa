@@ -1,10 +1,10 @@
-const BUILD='osra105-20261008-r29-28-surprise-styles';
-const CACHE=`OsRa-v105-${BUILD}`;
+const BUILD='osra106-20261008-r30-polished-overlay-surprises';
+const CACHE=`OsRa-v106-${BUILD}`;
 const APP=[
   './',
   './index.html',
   './style.css',
-  './app.js?v=osra105-20261008-r29-28-surprise-styles',
+  './app.js?v=osra106-20261008-r30-polished-overlay-surprises',
   './manifest.json',
   './icon.svg',
   './icon-192.png',
