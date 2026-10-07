@@ -278,3 +278,90 @@ button,input,textarea,select{font:inherit}button{cursor:pointer}.topbar{position
 .balloon-pop-spark.s0{--dx:-25vw;--dy:-19vh}.balloon-pop-spark.s1{--dx:24vw;--dy:-22vh}.balloon-pop-spark.s2{--dx:-29vw;--dy:-4vh}.balloon-pop-spark.s3{--dx:28vw;--dy:3vh}.balloon-pop-spark.s4{--dx:-17vw;--dy:22vh}.balloon-pop-spark.s5{--dx:19vw;--dy:23vh}.balloon-pop-spark.s6{--dx:-7vw;--dy:-28vh}.balloon-pop-spark.s7{--dx:7vw;--dy:27vh}
 @keyframes balloonSpark{0%{opacity:0;transform:translate(-50%,-50%) scale(.15) rotate(-30deg)}22%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--dx)) ,calc(-50% + var(--dy))) scale(1.05) rotate(28deg)}}
 @media(max-width:520px){.romantic-long-sign{left:50%;right:auto;transform:translate(-42%,0) rotate(14deg);width:92vw}}
+
+
+/* R27 — restored/enhanced Rania birthday UI. */
+/* R24 birthday day layer: active only on Rania's birthday, hidden in the full-screen photo viewer. */
+.birthday-banner{position:fixed;top:0;left:0;right:0;height:44px;z-index:200;background:linear-gradient(90deg,#b71c1c,#e53935 48%,#b71c1c);color:#fff;display:block;border-bottom:2px solid rgba(255,255,255,.22);box-shadow:0 3px 14px rgba(80,15,20,.28);overflow:hidden;direction:ltr;pointer-events:none}
+.birthday-banner[hidden],#birthday-effects[hidden]{display:none!important}
+.birthday-ticker-wrap{width:100%;height:44px;overflow:hidden;white-space:nowrap}
+.birthday-ticker-content{display:inline-block;min-width:max-content;padding-inline:8vw;font-size:15px;font-weight:800;line-height:44px;animation:birthdayTicker 20s linear infinite}
+@keyframes birthdayTicker{0%{transform:translate3d(100vw,0,0)}100%{transform:translate3d(-100%,0,0)}}
+#birthday-effects{position:fixed;top:44px;right:0;bottom:0;left:0;z-index:198;overflow:hidden;pointer-events:none}
+.birthday-fall-item{position:absolute;top:-42px;opacity:0;filter:drop-shadow(0 3px 5px rgba(95,25,45,.16));animation:birthdayFall 6s linear forwards;will-change:transform,opacity;user-select:none}
+@keyframes birthdayFall{0%{opacity:0;transform:translate3d(0,-30px,0) rotate(-8deg) scale(.8)}10%{opacity:.96}88%{opacity:.86}100%{opacity:0;transform:translate3d(var(--drift),calc(100vh + 80px),0) rotate(360deg) scale(1.08)}}
+body.birthday-day .topbar{padding-top:54px}
+body.birthday-lightbox-open .birthday-banner,body.birthday-lightbox-open #birthday-effects{display:none!important}
+.birthday-home-button{animation:birthdayHomePulse 2s ease-in-out infinite;box-shadow:0 6px 20px rgba(211,47,47,.22)}
+@keyframes birthdayHomePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.025)}}
+.birthday-dog-dialog{width:min(410px,calc(100% - 22px));max-width:410px;border:0;border-radius:26px;padding:0;background:transparent;overflow:visible}
+.birthday-dog-dialog::backdrop{background:rgba(25,10,18,.62);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.birthday-dog-card{position:relative;background:linear-gradient(180deg,#fffdf9,#fff4ea);border:1px solid rgba(108,70,100,.18);border-radius:26px;padding:22px 14px 8px;box-shadow:0 24px 60px rgba(42,20,34,.3);overflow:hidden}
+.birthday-dog-card::after{content:'♥  🌹  💕  💋  🌸  ❤️  💐';display:block;text-align:center;font-size:20px;letter-spacing:5px;padding:0 0 7px;animation:birthdaySparkle 1.8s ease-in-out infinite}
+@keyframes birthdaySparkle{0%,100%{opacity:.6;transform:translateY(0)}50%{opacity:1;transform:translateY(-2px)}}
+.birthday-dog-close{position:absolute;top:10px;left:10px;width:34px;height:34px;border:0;border-radius:50%;background:#f0e7e1;color:#5c4b55;font-size:24px;line-height:1;z-index:4}
+.birthday-dog-wrap{display:grid;place-items:center;height:385px}
+.birthday-dog-svg{width:min(100%,330px);height:100%;overflow:visible}
+.birthday-dog-raised-group{transform-origin:183px 198px;animation:birthdayDogWave 2.5s ease-in-out infinite}
+@keyframes birthdayDogWave{0%,100%{transform:rotate(0)}50%{transform:rotate(-5deg)}}
+@media(max-width:560px){body.birthday-day .topbar{padding-top:52px}.birthday-ticker-content{font-size:14px}.birthday-dog-wrap{height:350px}.birthday-dog-svg{width:310px}}
+@media(prefers-reduced-motion:reduce){.birthday-ticker-content,.birthday-fall-item,.birthday-home-button,.birthday-dog-raised-group,.birthday-dog-card::after{animation:none!important}.birthday-fall-item{display:none!important}}
+
+
+/* R27 — bigger, brighter daily romantic surprises. */
+.romantic-ticker{top:60px;height:62px;z-index:9994;padding:0 8px}
+.romantic-ticker.show span{animation-duration:4.4s}
+.romantic-ticker span{font-size:clamp(23px,6.2vw,42px);font-weight:1000;line-height:1.1;padding:11px 24px;border-radius:999px;color:#fff;background:linear-gradient(90deg,rgba(196,72,129,.96),rgba(242,117,165,.96),rgba(247,181,73,.95));border:2px solid rgba(255,255,255,.82);box-shadow:0 12px 34px rgba(91,32,76,.24),0 0 0 5px rgba(255,255,255,.16),inset 0 2px 0 rgba(255,255,255,.54);text-shadow:0 3px 10px rgba(75,28,57,.3);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px)}
+.romantic-ticker span[data-variant="1"]{background:linear-gradient(90deg,rgba(241,82,123,.97),rgba(255,144,92,.97))}
+.romantic-ticker span[data-variant="2"]{background:linear-gradient(90deg,rgba(133,78,195,.97),rgba(223,91,172,.97))}
+.romantic-ticker span[data-variant="3"]{background:linear-gradient(90deg,rgba(228,90,98,.97),rgba(245,181,76,.97))}
+.romantic-ticker span[data-variant="4"]{background:linear-gradient(90deg,rgba(48,151,154,.97),rgba(73,196,160,.97))}
+.romantic-float-item{font-size:clamp(24px,6.1vw,48px)!important;filter:drop-shadow(0 9px 14px rgba(55,32,46,.18));}
+.romantic-mini-balloon{width:40px;height:52px}
+.romantic-mini-balloon::after{top:48px;height:34px}
+.romantic-message-bubble{position:fixed;inset:0;z-index:9993;pointer-events:none;overflow:hidden}
+.romantic-bubble-card{position:absolute;top:15vh;max-width:min(82vw,660px);padding:17px 24px 20px;border-radius:28px;background:linear-gradient(145deg,#fffaf5 0%,#ffe4ef 48%,#f1dcff 100%);border:2px solid rgba(255,255,255,.9);box-shadow:0 20px 60px rgba(70,31,61,.23),0 0 0 7px rgba(255,185,210,.16);transform:translate3d(0,-26vh,0) scale(.72) rotate(-5deg);opacity:0;transition:transform .95s cubic-bezier(.16,.9,.18,1),opacity .55s ease}
+.romantic-message-bubble.from-left .romantic-bubble-card{left:5vw;transform-origin:12% 100%}
+.romantic-message-bubble.from-right .romantic-bubble-card{right:5vw;transform-origin:88% 100%}
+.romantic-message-bubble.settled .romantic-bubble-card{transform:translate3d(0,0,0) scale(1) rotate(0)}
+.romantic-message-bubble.settled .romantic-bubble-card{opacity:1}
+.romantic-message-bubble.leaving .romantic-bubble-card{transform:translate3d(0,14vh,0) scale(.9) rotate(4deg);opacity:0}
+.romantic-bubble-text{font-size:clamp(23px,5.8vw,39px);line-height:1.28;font-weight:1000;text-align:center;color:#5e3c54;text-wrap:balance;text-shadow:0 1px 0 #fff}
+.romantic-bubble-spark,.romantic-bubble-tail{position:absolute;display:grid;place-items:center}
+.romantic-bubble-spark{top:-16px;right:20px;width:36px;height:36px;border-radius:50%;background:#fff;color:#e64f86;font-size:23px;box-shadow:0 7px 18px rgba(70,31,61,.17)}
+.romantic-bubble-tail{bottom:-13px;left:16%;width:32px;height:32px;border-radius:50%;background:#fff;color:#d8568b;font-size:17px;box-shadow:0 6px 16px rgba(70,31,61,.14)}
+.birthday-banner{height:58px;background:linear-gradient(90deg,#9e1b35,#e52f63 28%,#f48a4c 50%,#e52f63 72%,#9e1b35);box-shadow:0 5px 25px rgba(128,26,48,.34);border-bottom:2px solid rgba(255,255,255,.45);z-index:10000}
+.birthday-ticker-wrap{height:58px}
+.birthday-ticker-content{font-size:clamp(18px,4.5vw,30px);line-height:58px;font-weight:1000;text-shadow:0 3px 12px rgba(60,13,26,.34);}
+body.birthday-day .topbar{padding-top:68px}
+.birthday-home-button{font-size:clamp(18px,4.7vw,27px)!important;padding:13px 22px!important;border-radius:999px!important}
+.birthday-countdown-card{position:relative;display:flex;align-items:center;gap:18px;margin:18px 0;padding:20px 18px;border-radius:28px;overflow:hidden;background:linear-gradient(135deg,#fff8ec 0%,#ffe4ef 48%,#efe3ff 100%);border:2px solid rgba(255,255,255,.95);box-shadow:0 18px 48px rgba(79,36,62,.14),0 0 0 6px rgba(243,141,179,.11)}
+.birthday-countdown-card::before{content:'✨ 💕 🎀 🌸 💖';position:absolute;inset:auto -4px 2px auto;font-size:32px;opacity:.16;letter-spacing:12px;transform:rotate(-5deg)}
+.birthday-countdown-glow{flex:0 0 74px;height:74px;display:grid;place-items:center;border-radius:24px;background:radial-gradient(circle at 35% 28%,#fff 0 10%,#ffd66d 11% 48%,#f68ab7 76%,#c65da8 100%);font-size:46px;box-shadow:0 12px 26px rgba(198,93,168,.25);animation:birthdayIconBounce 2.4s ease-in-out infinite}
+@keyframes birthdayIconBounce{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-5px) rotate(3deg)}}
+.birthday-countdown-copy{min-width:0;position:relative;z-index:1}
+.birthday-countdown-kicker{font-weight:900;color:#b44b73;font-size:14px}
+.birthday-countdown-copy h3{margin:2px 0 2px;font-size:clamp(22px,5.6vw,34px);color:#6a3555}
+.birthday-countdown-value{font-size:clamp(28px,7.2vw,48px);font-weight:1000;line-height:1.05;color:#c74475;text-shadow:0 4px 16px rgba(199,68,117,.14)}
+.birthday-countdown-date{margin-top:5px;font-size:15px;color:#6d5665;font-weight:700}
+.birthday-countdown-open{margin-inline-start:auto;flex:0 0 auto;border:0;border-radius:999px;padding:12px 17px;font:900 clamp(16px,3.8vw,20px) Tahoma,sans-serif;color:#fff;background:linear-gradient(135deg,#dd4b81,#ef6e8b,#efab63);box-shadow:0 10px 24px rgba(211,72,123,.22);cursor:pointer;animation:birthdayHomePulse 1.7s ease-in-out infinite}
+.birthday-countdown-heart{margin-inline-start:auto;font-size:42px;color:#db5a88;animation:birthdayHeartBeat 1.25s ease-in-out infinite}
+@keyframes birthdayHeartBeat{0%,100%{transform:scale(1)}35%{transform:scale(1.13)}60%{transform:scale(.98)}}
+.birthday-countdown-card.birthday-today{background:linear-gradient(135deg,#fff6d6,#ffe1ef 44%,#eadcff);box-shadow:0 22px 60px rgba(192,63,108,.22),0 0 0 8px rgba(255,213,94,.13)}
+.birthday-burst{position:absolute;transform:translate(-50%,-50%);width:4px;height:4px}
+.birthday-burst-spark{position:absolute;left:0;top:0;font-size:clamp(20px,5vw,35px);opacity:0;animation:birthdayBurstOut 1.45s cubic-bezier(.12,.78,.2,1) both;filter:drop-shadow(0 5px 9px rgba(90,30,60,.16))}
+.birthday-burst-spark.s0{--x:-76px;--y:-46px}.birthday-burst-spark.s1{--x:72px;--y:-52px}.birthday-burst-spark.s2{--x:-62px;--y:42px}.birthday-burst-spark.s3{--x:58px;--y:51px}.birthday-burst-spark.s4{--x:0px;--y:-78px}
+@keyframes birthdayBurstOut{0%{opacity:0;transform:translate(-50%,-50%) scale(.15)}24%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--x)),calc(-50% + var(--y))) scale(1.1) rotate(18deg)}}
+@media(max-width:600px){.romantic-ticker{top:56px;height:56px}.romantic-ticker span{font-size:clamp(19px,6.6vw,30px);padding:9px 16px}.romantic-bubble-card{top:12vh;max-width:90vw;padding:14px 16px 17px}.romantic-bubble-text{font-size:clamp(20px,6.2vw,29px)}.birthday-countdown-card{align-items:flex-start;gap:12px;padding:15px}.birthday-countdown-glow{flex-basis:60px;width:60px;height:60px;font-size:37px;border-radius:20px}.birthday-countdown-open{margin-top:9px}.birthday-countdown-heart{font-size:32px;margin-top:8px}}
+@media(prefers-reduced-motion:reduce){.birthday-countdown-glow,.birthday-countdown-heart,.birthday-countdown-open{animation:none!important}.birthday-burst{display:none!important}}
+
+
+/* R27 — richer occasion-day celebration. */
+.occasion-balloon{position:absolute;bottom:-16vh;font-size:clamp(30px,7vw,58px);filter:drop-shadow(0 10px 16px rgba(55,32,46,.16));animation:occasionBalloonRise 4.4s cubic-bezier(.14,.78,.2,1) both;will-change:transform,opacity}
+@keyframes occasionBalloonRise{0%{opacity:0;transform:translate3d(0,14vh,0) rotate(-9deg) scale(.55)}14%{opacity:1}50%{transform:translate3d(7vw,-42vh,0) rotate(8deg) scale(1.04)}78%{transform:translate3d(-5vw,-66vh,0) rotate(-6deg) scale(1.12)}100%{transform:translate3d(3vw,-86vh,0) rotate(4deg) scale(.92);opacity:0}}
+.occasion-spark{font-size:clamp(26px,6.2vw,52px)!important;text-shadow:0 4px 15px rgba(80,25,60,.16)}
+.occasion-confetti{font-size:clamp(24px,5.6vw,44px)!important}
+.romantic-long-sign{width:min(90vw,720px);padding:19px 22px 24px;border-radius:22px;background:linear-gradient(145deg,#fff9ef,#ffe2ef 54%,#f0e0ff);border:2px solid rgba(255,255,255,.94);box-shadow:0 24px 70px rgba(55,32,46,.25),0 0 0 7px rgba(241,142,179,.13)}
+.romantic-sign-face{font-size:clamp(20px,5vw,34px);line-height:1.55;color:#603b52;text-shadow:0 2px 0 #fff}
+.romantic-white-dog{width:78px}
+@media(max-width:520px){.romantic-sign-face{font-size:clamp(18px,5.5vw,27px)}.romantic-white-dog{width:62px}.occasion-balloon{font-size:34px!important}}

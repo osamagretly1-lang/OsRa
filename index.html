@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#6c4664">
-<meta name="osra-build" content="OsRa v101 — 2026-10-07 — R25 SAFE MULTI-SOURCE LINK + VISUAL FALLBACK + OCCASION SPARKS">
+<meta name="osra-build" content="OsRa v104 — 2026-10-08 — R28 OLD HOME LAYOUT + BIG ROMANTIC SURPRISES">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg">
 <link rel="stylesheet" href="style.css">
@@ -12,6 +12,10 @@
 <title>OsRa — Our Story</title>
 </head>
 <body>
+<div id="birthday-banner-container" class="birthday-banner" aria-live="polite" aria-label="تهنئة عيد ميلاد رانيا">
+  <div class="birthday-ticker-wrap"><div class="birthday-ticker-content">🎉✨ كل سنة وانتي طيبة ياروحي 🎂🎉♥️🥰🤩 &nbsp;&nbsp;•&nbsp;&nbsp; Happy birthday &nbsp;&nbsp;•&nbsp;&nbsp; 🎉✨ كل سنة وانتي طيبة ياروحي 🎂🎉♥️🥰🤩</div></div>
+</div>
+<div id="birthday-effects" aria-hidden="true"></div>
 <div id="bootSplash" class="boot-splash" role="status" aria-live="polite" aria-label="جارٍ فتح OsRa">
   <div class="boot-book" aria-hidden="true">
     <div class="boot-sheet boot-sheet-back"></div>
@@ -46,8 +50,44 @@
   <button data-section="settings">⚙<small>المزيد</small></button><button data-section="about">♥<small>عن OsRa</small></button>
 </nav>
 <div id="toast" class="toast"></div>
+<dialog id="birthday-dog-dialog" class="birthday-dog-dialog" aria-label="تهنئة عيد ميلاد رانيا">
+  <div class="birthday-dog-card">
+    <button id="birthdayDogClose" class="birthday-dog-close" type="button" aria-label="إغلاق">×</button>
+    <div class="birthday-dog-wrap">
+      <svg class="birthday-dog-svg" viewBox="0 0 260 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="كلب أبيض جيرمن مبتسم يحمل لافتة تهنئة">
+        <defs>
+          <filter id="dogShadow" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="8" stdDeviation="7" flood-color="#5a3949" flood-opacity=".18"/></filter>
+        </defs>
+        <g filter="url(#dogShadow)">
+          <path d="M68 104 37 20 92 61Z" fill="#fff" stroke="#dedede" stroke-width="3"/>
+          <path d="M192 104 223 20 168 61Z" fill="#fff" stroke="#dedede" stroke-width="3"/>
+          <path d="M65 86 48 38 80 68Z" fill="#ffe8ee"/>
+          <path d="M195 86 212 38 180 68Z" fill="#ffe8ee"/>
+          <ellipse cx="130" cy="118" rx="72" ry="60" fill="#fff" stroke="#dedede" stroke-width="3"/>
+          <circle cx="100" cy="111" r="8" fill="#26323a"/><circle cx="101.8" cy="108.5" r="2.8" fill="#fff"/>
+          <circle cx="160" cy="111" r="8" fill="#26323a"/><circle cx="161.8" cy="108.5" r="2.8" fill="#fff"/>
+          <ellipse cx="130" cy="137" rx="27" ry="19" fill="#fafafa"/>
+          <ellipse cx="130" cy="132" rx="14" ry="10" fill="#222"/>
+          <path d="M113 145 Q130 161 147 145" fill="none" stroke="#222" stroke-width="3" stroke-linecap="round"/>
+          <path d="M124 153 Q130 169 136 153 Z" fill="#ff718b"/>
+          <path d="M74 180 Q130 160 186 180 L194 285 Q130 305 66 285Z" fill="#fff" stroke="#dedede" stroke-width="3"/>
+          <path d="M130 179 112 191 130 198 148 191Z" fill="#e53935"/>
+          <ellipse cx="78" cy="220" rx="15" ry="32" fill="#fff" stroke="#dedede" stroke-width="3"/>
+          <g class="birthday-dog-raised-group">
+            <path d="M183 198 Q214 164 205 119" fill="none" stroke="#fff" stroke-width="26" stroke-linecap="round"/>
+            <path d="M183 198 Q214 164 205 119" fill="none" stroke="#dedede" stroke-width="29" stroke-linecap="round" opacity=".65"/>
+            <line x1="205" y1="119" x2="205" y2="76" stroke="#8d6e63" stroke-width="6" stroke-linecap="round"/>
+            <rect x="28" y="28" width="220" height="58" rx="13" fill="#fff7b8" stroke="#f2bf27" stroke-width="3"/>
+            <text x="138" y="52" font-family="Tahoma, Segoe UI, sans-serif" font-size="14" font-weight="800" fill="#c62828" text-anchor="middle" direction="rtl" unicode-bidi="plaintext">كل سنة وانتي طيبة ياحبيبتي</text>
+            <text x="138" y="75" font-size="17" text-anchor="middle">♥️😍🎂❤️🎉</text>
+          </g>
+        </g>
+      </svg>
+    </div>
+  </div>
+</dialog>
 <dialog id="modal" class="modal"><button id="modalClose" class="modal-close">×</button><div id="modalBody"></div></dialog>
 <dialog id="lightbox" class="lightbox"><div class="lbtop"><button id="lbClose" class="round dark" title="إغلاق">×</button><div class="lbtitle-wrap"><span id="lbTitle"></span><small id="lbMeta"></small></div><span id="lbCounter" class="lb-counter"></span><div class="lb-controls"><button id="lbZoomOut" class="round dark" title="تصغير">−</button><button id="lbZoomReset" class="round dark" title="الحجم الطبيعي">1:1</button><button id="lbZoomIn" class="round dark" title="تكبير">＋</button><button id="lbPlay" class="round dark" title="عرض تلقائي">▶</button><button id="lbPrev" class="round dark" title="السابق">‹</button><button id="lbNext" class="round dark" title="التالي">›</button></div></div><div class="lbbody"><div id="lbFrame" class="lb-frame"><img id="lbImage" alt=""></div><div id="lbStatus" class="lb-status">جارٍ فتح الصورة…</div></div><div id="lbStrip" class="lb-strip"></div></dialog>
-<script src="app.js?v=osra102-20261008-r26-romantic-daily-sparks-kiss" defer></script>
+<script src="app.js?v=osra104-20261008-r28-home-old-layout" defer></script>
 </body>
 </html>

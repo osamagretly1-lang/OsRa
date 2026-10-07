@@ -1,4 +1,4 @@
-OsRa v102 — R26 safe multi-source linking + visual fallback + occasion celebration + richer romantic daily effects
+OsRa v103 — R27 safe multi-source linking + visual fallback + occasion celebration + richer romantic daily effects
 
 Base preserved: OsRa v100 R24 family; IndexedDB version remains 100 to protect existing data.
 
@@ -14,7 +14,7 @@ R25 changes:
 - Added the missing Save Event handler required by the existing “محطات في قصتنا” UI.
 
 
-R26 additions:
+R27 additions:
 - Romantic messages now appear every day while OsRa is open, with a first message within seconds and ongoing randomized micro-effects roughly every 8–14 seconds in normal mode.
 - On an active occasion day (and while `🎉 احتفل 🥳` is enabled), the romantic micro-effects accelerate to roughly every 4–7 seconds. Muting the occasion for today also stops the occasion-day acceleration/celebration layer without changing the countdown.
 - Added the requested long surprise message: a slower top-bar appearance followed by a playful signboard that tilts, drops toward a small white puppy target, bounces, and fades.
@@ -34,3 +34,6 @@ Changes:
 - Original lookup and fast linking use all album source folders.
 - Birthday Rania greeting appears only on the configured annual birthday date; clicking “اليوم عيد ميلاد رانيا” opens the requested greeting.
 - No visual/pixel search was added to the normal linking flow.
+
+
+R28 change: restored the original home-page three-card layout. The third card is now Rania birthday countdown; the generic "القادم" card was removed from the home page. New occasion countdowns remain available in "عداداتنا" and all R27 romantic/occasion/source-link features are preserved. IndexedDB schema remains VER=100.

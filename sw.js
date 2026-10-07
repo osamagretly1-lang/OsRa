@@ -1,10 +1,10 @@
-const BUILD='osra102-20261008-r26-romantic-daily-sparks-kiss';
-const CACHE=`OsRa-v100-${BUILD}`;
+const BUILD='osra103-20261008-r27-birthday-big-surprises';
+const CACHE=`OsRa-v103-${BUILD}`;
 const APP=[
   './',
   './index.html',
   './style.css',
-  './app.js?v=osra102-20261008-r26-romantic-daily-sparks-kiss',
+  './app.js?v=osra103-20261008-r27-birthday-big-surprises',
   './manifest.json',
   './icon.svg',
   './icon-192.png',

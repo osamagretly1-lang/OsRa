@@ -24,3 +24,6 @@ OsRa HQ Source — final safe build
 الصور المخفية أو المستبعدة لا تُنسخ كملفات HQ.
 
 Stable R24 performance rebuild: preserved Add Album/Add Memory UI and existing data model; faster batch-first thumbnail hydration; no schema bump and no destructive migration.
+
+
+OsRa v103 / R27: restored Rania birthday UI + persistent home birthday countdown + larger/brighter romantic surprises. Database VER remains 100.
