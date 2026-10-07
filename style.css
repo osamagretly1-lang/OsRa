@@ -448,3 +448,50 @@ body.birthday-day .topbar{padding-top:68px}
 /* Keep surprise scenes integrated: no full-screen dimming around the message. */
 .scene-spotlight .rs-card{box-shadow:0 18px 55px rgba(67,27,58,.18),0 0 0 5px rgba(255,255,255,.10)!important}
 .romantic-scene-layer,.romantic-effect-layer{mix-blend-mode:normal!important}
+
+/* R32 — top-only boot ribbon + richer movement without dimming the app. */
+.boot-splash{background:transparent!important;place-items:start center!important;align-content:start!important;pointer-events:none!important;display:flex!important;flex-direction:column!important;align-items:center!important}
+.boot-book{margin-top:17vh}
+.boot-joy-ribbon{position:fixed!important;top:8px;left:50%;transform:translateX(-50%) scale(.98)!important;width:min(92vw,760px)!important;height:34px!important;z-index:100001!important}
+.boot-joy-ribbon span{font-size:17px!important;line-height:29px!important}
+.boot-splash.boot-done .boot-joy-ribbon{transform:translateX(-50%) translateY(-8px) scale(.97)!important}
+
+/* Never wash out the underlying book/menu: the surprise layer carries decoration and the message only. */
+.romantic-scene-backdrop{display:none!important;background:transparent!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+.romantic-scene-layer{background:transparent!important}
+
+/* Independent entrance/exit movements: the look can repeat only after the content changes. */
+.motion-drop .rs-card{transform:translate(-50%,-50%) translateY(-42vh) scale(calc(.72 * var(--msg-scale,1))) rotate(-6deg);}
+.motion-drop.is-visible .rs-card{transform:translate(-50%,-50%) translateY(0) scale(var(--msg-scale,1)) rotate(0)}
+.motion-rise .rs-card{transform:translate(-50%,-50%) translateY(42vh) scale(calc(.72 * var(--msg-scale,1))) rotate(5deg);}
+.motion-rise.is-visible .rs-card{transform:translate(-50%,-50%) translateY(0) scale(var(--msg-scale,1)) rotate(0)}
+.motion-slide-left .rs-card{transform:translate(-95vw,-50%) scale(calc(.82 * var(--msg-scale,1))) rotate(-7deg)}
+.motion-slide-left.is-visible .rs-card{transform:translate(-50%,-50%) scale(var(--msg-scale,1)) rotate(-1deg)}
+.motion-slide-right .rs-card{transform:translate(45vw,-50%) scale(calc(.82 * var(--msg-scale,1))) rotate(7deg)}
+.motion-slide-right.is-visible .rs-card{transform:translate(-50%,-50%) scale(var(--msg-scale,1)) rotate(1deg)}
+.motion-zoom .rs-card{transform:translate(-50%,-50%) scale(.06) rotate(-12deg);}
+.motion-zoom.is-visible .rs-card{transform:translate(-50%,-50%) scale(var(--msg-scale,1)) rotate(0)}
+.motion-spin .rs-card{transform:translate(-50%,-50%) scale(.12) rotate(-190deg);}
+.motion-spin.is-visible .rs-card{transform:translate(-50%,-50%) scale(var(--msg-scale,1)) rotate(0)}
+.motion-bounce .rs-card{transform:translate(-50%,-50%) translateY(28vh) scale(calc(.76 * var(--msg-scale,1))) rotate(8deg);}
+.motion-bounce.is-visible .rs-card{transform:translate(-50%,-50%) translateY(-5px) scale(var(--msg-scale,1)) rotate(-1deg)}
+.motion-float-left .rs-card{transform:translate(-50%,-50%) translateX(-34vw) translateY(10vh) scale(calc(.76 * var(--msg-scale,1))) rotate(-8deg)}
+.motion-float-left.is-visible .rs-card{transform:translate(-50%,-50%) translateX(0) translateY(0) scale(var(--msg-scale,1)) rotate(0)}
+.motion-float-right .rs-card{transform:translate(-50%,-50%) translateX(34vw) translateY(-9vh) scale(calc(.76 * var(--msg-scale,1))) rotate(8deg)}
+.motion-float-right.is-visible .rs-card{transform:translate(-50%,-50%) translateX(0) translateY(0) scale(var(--msg-scale,1)) rotate(0)}
+.motion-soft .rs-card{transform:translate(-50%,-50%) translateY(13vh) scale(calc(.88 * var(--msg-scale,1))) rotate(-2deg);}
+.motion-soft.is-visible .rs-card{transform:translate(-50%,-50%) translateY(0) scale(var(--msg-scale,1)) rotate(0)}
+.motion-zoom .rs-card,.motion-spin .rs-card{transition-duration:1.15s}
+
+.romantic-float-item{will-change:transform,opacity;}
+@keyframes romanticFloatGroup{0%{opacity:0;transform:translate3d(0,18vh,0) scale(.55) rotate(-10deg)}16%{opacity:1}55%{transform:translate3d(var(--driftX),var(--driftY),0) scale(1.08) rotate(8deg)}100%{opacity:0;transform:translate3d(calc(var(--driftX) * -1),calc(var(--driftY) * .25),0) scale(.86) rotate(-18deg)}}
+.romantic-float-layer .romantic-float-item{animation-name:romanticFloatGroup!important;animation-duration:5.8s!important;animation-timing-function:cubic-bezier(.18,.76,.2,1)!important;animation-fill-mode:both!important}
+
+@media(max-width:600px){
+ .boot-book{margin-top:14vh}
+ .boot-joy-ribbon{top:6px;width:94vw!important;height:29px!important}
+ .boot-joy-ribbon span{font-size:14px!important;line-height:24px!important}
+ .rs-card{max-height:58vh!important}
+ .rs-message{font-size:clamp(21px,6.2vw,46px)!important;line-height:1.24!important}
+ .scene-giantcenter .rs-message{font-size:clamp(30px,8.8vw,64px)!important}
+}

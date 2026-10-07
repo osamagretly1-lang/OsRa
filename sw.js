@@ -1,10 +1,10 @@
-const BUILD='osra107-20261008-r31-surprise-timing-boot-ribbon';
+const BUILD='osra108-20261008-r32-top-boot-multi-float';
 const CACHE=`OsRa-v106-${BUILD}`;
 const APP=[
   './',
   './index.html',
   './style.css',
-  './app.js?v=osra107-20261008-r31-surprise-timing-boot-ribbon',
+  './app.js?v=osra108-20261008-r32-top-boot-multi-float',
   './manifest.json',
   './icon.svg',
   './icon-192.png',

@@ -580,7 +580,29 @@ const ROMANTIC_LONG_MESSAGE='حلو انت وقاعد مستني الرساله 
 const ROMANTIC_FLOATS=['🎈','🌹','❤️','💛','💖','💕','🌷','🌸','💐','😘','🫂'];
 const ROMANTIC_KISS_MESSAGES=['هات بوسه🙈🙊',...ROMANTIC_TICKER_MESSAGES];
 function occasionJoyActive(){return surprisesAreEnabled()&&occasionCountdownsToday().some(x=>!countdownCelebrateOff(x.id))}
-function showRomanticFloat(kind='random'){if(!surprisesAreEnabled())return;let layer=document.getElementById('romanticFloatLayer');if(!layer){layer=document.createElement('div');layer.id='romanticFloatLayer';layer.className='romantic-float-layer';document.body.appendChild(layer)}const el=document.createElement('span');el.className='romantic-float-item';if(kind==='balloon'){el.classList.add('romantic-mini-balloon');el.innerHTML='<i></i>';el.style.setProperty('--balloon-hue',`${Math.floor(Math.random()*360)}deg`)}else{el.textContent=kind==='rose'?'🌹':kind==='heart'?'❤️':ROMANTIC_FLOATS[Math.floor(Math.random()*ROMANTIC_FLOATS.length)]}el.style.left=`${4+Math.random()*92}%`;el.style.fontSize=`${18+Math.random()*18}px`;el.style.animationDuration=`${4.2+Math.random()*2.8}s`;el.style.animationDelay=`${Math.random()*.45}s`;el.style.setProperty('--sway',`${-8+Math.random()*16}vw`);layer.appendChild(el);setTimeout(()=>el.remove(),8000)}
+function showRomanticFloat(kind='random'){
+ if(!surprisesAreEnabled())return;
+ let layer=document.getElementById('romanticFloatLayer');
+ if(!layer){layer=document.createElement('div');layer.id='romanticFloatLayer';layer.className='romantic-float-layer';document.body.appendChild(layer)}
+ const pool=kind==='balloon'?['balloon','balloon','balloon','balloon']:kind==='rose'?['rose','rose','heart','flower']:kind==='heart'?['heart','heart','kiss','flower']:['heart','rose','kiss','flower','heart','balloon'];
+ const count=3+Math.floor(Math.random()*3);
+ for(let i=0;i<count;i++){
+  const k=pool[Math.floor(Math.random()*pool.length)],el=document.createElement('span');
+  el.className='romantic-float-item';
+  if(k==='balloon'){el.classList.add('romantic-mini-balloon');el.innerHTML='<i></i>';el.style.setProperty('--balloon-hue',`${Math.floor(Math.random()*360)}deg`)}
+  else{el.textContent=k==='rose'?'🌹':k==='heart'?'❤️':k==='kiss'?'💋':k==='flower'?'🌸':ROMANTIC_FLOATS[Math.floor(Math.random()*ROMANTIC_FLOATS.length)]}
+  el.style.left=`${4+Math.random()*92}%`;
+  el.style.top=`${8+Math.random()*72}%`;
+  el.style.fontSize=`${24+Math.random()*24}px`;
+  el.style.animationDuration=`${4.1+Math.random()*2.8}s`;
+  el.style.animationDelay=`${(Math.random()*.7).toFixed(2)}s`;
+  el.style.setProperty('--sway',`${-12+Math.random()*24}vw`);
+  el.style.setProperty('--driftX',`${-8+Math.random()*16}vw`);
+  el.style.setProperty('--driftY',`${-35+Math.random()*70}vh`);
+  layer.appendChild(el);
+  setTimeout(()=>el.remove(),8500);
+ }
+}
 function romanticWhiteDogSvg(){return `<svg class="romantic-white-dog" viewBox="0 0 96 72" aria-hidden="true"><ellipse cx="48" cy="57" rx="34" ry="9" fill="rgba(30,18,25,.14)"/><path d="M29 25c-8-11-1-20 8-11l7 7c4-3 11-4 17-1l7-8c9-9 16 0 8 12 4 5 6 11 4 20-3 13-16 20-32 20S18 57 18 44c0-7 4-14 11-19Z" fill="#fff" stroke="#e5d9df" stroke-width="2"/><circle cx="38" cy="38" r="2.7" fill="#392b31"/><circle cx="58" cy="38" r="2.7" fill="#392b31"/><ellipse cx="48" cy="46" rx="7" ry="5" fill="#392b31"/><path d="M42 52c4 4 8 4 12 0" fill="none" stroke="#392b31" stroke-width="2" stroke-linecap="round"/><path d="M24 28 16 19c-4-5-7 1-5 9l9 9" fill="#fff" stroke="#e5d9df" stroke-width="2"/><path d="M72 28 80 19c4-5 7 1 5 9l-9 9" fill="#fff" stroke="#e5d9df" stroke-width="2"/></svg>`}
 function showRomanticLongMessage(){if(!surprisesAreEnabled()||romanticLongBusy)return;romanticLongBusy=true;renderRomanticTickerMessage(ROMANTIC_LONG_MESSAGE,Math.floor(Math.random()*5),10500);setTimeout(()=>{let layer=document.getElementById('romanticLongLayer');if(layer)layer.remove();layer=document.createElement('div');layer.id='romanticLongLayer';layer.className='romantic-long-layer';layer.innerHTML=`<div class="romantic-long-sign"><div class="romantic-sign-face">${esc(ROMANTIC_LONG_MESSAGE)}</div></div><div class="romantic-dog-target">${romanticWhiteDogSvg()}</div>`;document.body.appendChild(layer);setTimeout(()=>{layer.classList.add('landed')},4200);setTimeout(()=>{layer.classList.add('romantic-long-fade')},12800);setTimeout(()=>{layer.remove();romanticLongBusy=false},20000)},3900)}
 function showRomanticBubble(message){if(!surprisesAreEnabled())return;
@@ -605,6 +627,13 @@ function romanticScenePickStyle(){
  const v=choices[Math.floor(Math.random()*choices.length)]||ROMANTIC_SCENE_STYLES[0];
  lastRomanticSceneStyle=v;return v;
 }
+let lastRomanticMotion='';
+const ROMANTIC_MOTION_STYLES=['drop','rise','slide-left','slide-right','zoom','spin','bounce','float-left','float-right','soft'];
+function romanticMotionPick(){
+ const choices=ROMANTIC_MOTION_STYLES.filter(x=>x!==lastRomanticMotion);
+ const v=choices[Math.floor(Math.random()*choices.length)]||'soft';
+ lastRomanticMotion=v;return v;
+}
 function romanticSceneDecor(count=9){
  const out=[];
  for(let i=0;i<count;i++){
@@ -626,7 +655,8 @@ function showRomanticScene(message,opts={}){
  if(!surprisesAreEnabled())return;
  const old=document.getElementById('romanticSceneLayer');if(old)old.remove();
  const style=opts.style||romanticScenePickStyle();
- const layer=document.createElement('div');layer.id='romanticSceneLayer';layer.className=`romantic-scene-layer scene-${style}${opts.occasion?' scene-occasion':''}`;
+ const motion=opts.motion||romanticMotionPick();
+ const layer=document.createElement('div');layer.id='romanticSceneLayer';layer.className=`romantic-scene-layer scene-${style} motion-${motion}${opts.occasion?' scene-occasion':''}`;
  layer.setAttribute('aria-hidden','true');layer.innerHTML=romanticSceneHtml(message,style,!!opts.occasion);document.body.appendChild(layer);
  requestAnimationFrame(()=>layer.classList.add('is-visible'));
  const prof=surpriseTimingProfile();layer.classList.add(`surprise-speed-${prof.key}`);const baseLife=opts.occasion?9200:(style==='dogsign'?11800:7600);const life=Math.round(Math.max(4200,Math.min(12500,baseLife/prof.speed)));layer.style.setProperty('--surprise-speed',String(prof.speed));
