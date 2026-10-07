@@ -1,4 +1,4 @@
-OsRa v103 — R27 safe multi-source linking + visual fallback + occasion celebration + richer romantic daily effects
+OsRa v110 — 2026-10-08 — R34: boot hearts + custom surprise messages + 1m/3m timing
 
 Base preserved: OsRa v100 R24 family; IndexedDB version remains 100 to protect existing data.
 

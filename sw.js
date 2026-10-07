@@ -1,10 +1,10 @@
-const BUILD='osra109-20261008-r33-speed-timing';
+const BUILD='osra110-20261008-r34-boot-hearts-custom-messages';
 const CACHE=`OsRa-v109-${BUILD}`;
 const APP=[
   './',
   './index.html',
   './style.css',
-  './app.js?v=osra109-20261008-r33-speed-timing',
+  './app.js?v=osra110-r34-boot-hearts-custom-messages',
   './manifest.json',
   './icon.svg',
   './icon-192.png',

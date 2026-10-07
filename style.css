@@ -509,3 +509,21 @@ body.birthday-day .topbar{padding-top:68px}
  .romantic-scene-layer .rs-card{max-width:calc(100vw - 18px)!important;max-height:calc(100vh - 92px)!important;padding:13px 12px 17px!important}
  .romantic-scene-layer .rs-message{font-size:clamp(18px,7vw,34px);line-height:1.26}
 }
+
+
+/* R34 — playful boot loading: book + top ribbon + accumulating hearts/roses, no text. */
+.boot-heart-loader{width:min(310px,78vw);min-height:34px;margin-top:12px;display:flex;align-items:flex-end;justify-content:center;gap:6px;flex-wrap:wrap;direction:ltr;pointer-events:none;filter:drop-shadow(0 5px 10px rgba(72,37,67,.10))}
+.boot-heart-loader-item{display:inline-flex;align-items:center;justify-content:center;width:22px;height:24px;font-size:19px;opacity:0;transform:translateY(10px) scale(.45) rotate(-12deg);animation:bootHeartLoad 2.8s cubic-bezier(.16,.75,.2,1) forwards;animation-delay:calc(var(--i) * .105s);will-change:transform,opacity}
+@keyframes bootHeartLoad{0%{opacity:0;transform:translateY(12px) scale(.35) rotate(-14deg)}55%{opacity:1;transform:translateY(-3px) scale(1.13) rotate(7deg)}100%{opacity:1;transform:translateY(0) scale(1) rotate(0)}}
+.boot-splash .boot-joy-ribbon{pointer-events:none}
+.boot-splash .boot-loading,.boot-splash .boot-progress{display:none!important}
+@media(max-width:600px){.boot-heart-loader{width:82vw;gap:4px;margin-top:10px}.boot-heart-loader-item{width:18px;height:22px;font-size:16px}}
+@media(prefers-reduced-motion:reduce){.boot-heart-loader-item{animation:none!important;opacity:1;transform:none!important}}
+
+/* R34 — custom surprise messages in Settings. */
+.surprise-custom-message-item{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:10px 12px}
+.surprise-custom-message-item .actions{flex-shrink:0}
+
+.boot-splash{background:radial-gradient(circle at 50% 40%,rgba(255,250,243,.985),rgba(229,212,198,.975) 64%,rgba(219,195,180,.97))!important;}
+.boot-joy-ribbon{position:fixed!important;top:8px!important;left:50%!important;right:auto!important;transform:translateX(-50%)!important;width:min(94vw,760px)!important;z-index:100001!important}
+.boot-splash.boot-done .boot-joy-ribbon{transform:translateX(-50%) translateY(-8px)!important}
