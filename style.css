@@ -316,7 +316,7 @@ body.birthday-lightbox-open .birthday-banner,body.birthday-lightbox-open #birthd
 .romantic-ticker span[data-variant="2"]{background:linear-gradient(90deg,rgba(133,78,195,.97),rgba(223,91,172,.97))}
 .romantic-ticker span[data-variant="3"]{background:linear-gradient(90deg,rgba(228,90,98,.97),rgba(245,181,76,.97))}
 .romantic-ticker span[data-variant="4"]{background:linear-gradient(90deg,rgba(48,151,154,.97),rgba(73,196,160,.97))}
-.romantic-float-item{font-size:clamp(24px,6.1vw,48px)!important;filter:drop-shadow(0 9px 14px rgba(55,32,46,.18));}
+.romantic-float-item{filter:drop-shadow(0 9px 14px rgba(55,32,46,.18));}
 .romantic-mini-balloon{width:40px;height:52px}
 .romantic-mini-balloon::after{top:48px;height:34px}
 .romantic-message-bubble{position:fixed;inset:0;z-index:9993;pointer-events:none;overflow:hidden}
@@ -485,7 +485,21 @@ body.birthday-day .topbar{padding-top:68px}
 
 .romantic-float-item{will-change:transform,opacity;}
 @keyframes romanticFloatGroup{0%{opacity:0;transform:translate3d(0,18vh,0) scale(.55) rotate(-10deg)}16%{opacity:1}55%{transform:translate3d(var(--driftX),var(--driftY),0) scale(1.08) rotate(8deg)}100%{opacity:0;transform:translate3d(calc(var(--driftX) * -1),calc(var(--driftY) * .25),0) scale(.86) rotate(-18deg)}}
-.romantic-float-layer .romantic-float-item{animation-name:romanticFloatGroup!important;animation-duration:5.8s!important;animation-timing-function:cubic-bezier(.18,.76,.2,1)!important;animation-fill-mode:both!important}
+.romantic-float-layer{--float-speed:1}
+.romantic-float-layer .romantic-float-item{animation-name:romanticFloatGroup!important;animation-timing-function:cubic-bezier(.18,.76,.2,1)!important;animation-fill-mode:both!important}
+/* R42 — discrete utility classes keep randomized placement/timing in CSS; only one shared speed value is runtime-dynamic. */
+.romantic-float-item.rf-pos-0{left:5%;top:10%}.romantic-float-item.rf-pos-1{left:16%;top:24%}.romantic-float-item.rf-pos-2{left:29%;top:38%}.romantic-float-item.rf-pos-3{left:42%;top:14%}
+.romantic-float-item.rf-pos-4{left:54%;top:54%}.romantic-float-item.rf-pos-5{left:67%;top:27%}.romantic-float-item.rf-pos-6{left:79%;top:68%}.romantic-float-item.rf-pos-7{left:90%;top:44%}
+.romantic-float-item.rf-pos-8{left:11%;top:67%}.romantic-float-item.rf-pos-9{left:36%;top:72%}.romantic-float-item.rf-pos-10{left:61%;top:12%}.romantic-float-item.rf-pos-11{left:84%;top:21%}
+.romantic-float-item.rf-size-0{font-size:clamp(22px,5.2vw,34px)}.romantic-float-item.rf-size-1{font-size:clamp(24px,5.8vw,39px)}.romantic-float-item.rf-size-2{font-size:clamp(26px,6.4vw,44px)}
+.romantic-float-item.rf-size-3{font-size:clamp(29px,7vw,48px)}.romantic-float-item.rf-size-4{font-size:clamp(32px,7.6vw,53px)}
+.romantic-float-item.rf-delay-0{animation-delay:0s}.romantic-float-item.rf-delay-1{animation-delay:.12s}.romantic-float-item.rf-delay-2{animation-delay:.24s}.romantic-float-item.rf-delay-3{animation-delay:.36s}.romantic-float-item.rf-delay-4{animation-delay:.48s}.romantic-float-item.rf-delay-5{animation-delay:.60s}
+.romantic-float-item.rf-duration-0{--float-base-duration:4.1s}.romantic-float-item.rf-duration-1{--float-base-duration:4.8s}.romantic-float-item.rf-duration-2{--float-base-duration:5.5s}.romantic-float-item.rf-duration-3{--float-base-duration:6.2s}.romantic-float-item.rf-duration-4{--float-base-duration:6.9s}
+.romantic-float-layer .romantic-float-item[class*="rf-duration-"]{animation-duration:calc(var(--float-base-duration) / var(--float-speed))}
+.romantic-float-item.rf-drift-0{--driftX:-8vw;--driftY:-35vh}.romantic-float-item.rf-drift-1{--driftX:8vw;--driftY:-28vh}.romantic-float-item.rf-drift-2{--driftX:-4vw;--driftY:-20vh}.romantic-float-item.rf-drift-3{--driftX:12vw;--driftY:-42vh}.romantic-float-item.rf-drift-4{--driftX:-10vw;--driftY:10vh}
+.romantic-float-item.rf-drift-5{--driftX:5vw;--driftY:24vh}.romantic-float-item.rf-drift-6{--driftX:-6vw;--driftY:36vh}.romantic-float-item.rf-drift-7{--driftX:14vw;--driftY:-12vh}.romantic-float-item.rf-drift-8{--driftX:-11vw;--driftY:18vh}.romantic-float-item.rf-drift-9{--driftX:7vw;--driftY:42vh}
+.romantic-mini-balloon.rf-hue-0{filter:hue-rotate(-45deg) drop-shadow(0 7px 9px rgba(55,32,46,.12))}.romantic-mini-balloon.rf-hue-1{filter:hue-rotate(0deg) drop-shadow(0 7px 9px rgba(55,32,46,.12))}.romantic-mini-balloon.rf-hue-2{filter:hue-rotate(45deg) drop-shadow(0 7px 9px rgba(55,32,46,.12))}
+.romantic-mini-balloon.rf-hue-3{filter:hue-rotate(90deg) drop-shadow(0 7px 9px rgba(55,32,46,.12))}.romantic-mini-balloon.rf-hue-4{filter:hue-rotate(180deg) drop-shadow(0 7px 9px rgba(55,32,46,.12))}.romantic-mini-balloon.rf-hue-5{filter:hue-rotate(240deg) drop-shadow(0 7px 9px rgba(55,32,46,.12))}.romantic-mini-balloon.rf-hue-6{filter:hue-rotate(300deg) drop-shadow(0 7px 9px rgba(55,32,46,.12))}
 
 @media(max-width:600px){
  .boot-book{margin-top:14vh}
@@ -635,7 +649,7 @@ body.birthday-day .topbar{padding-top:68px}
 .boot-open-countdown-text.boot-open-countdown-pop{animation:bootOpenCountdownPop .82s cubic-bezier(.16,.8,.2,1) both}
 .boot-open-countdown-text.celebrate{font-size:clamp(54px,12vw,105px);letter-spacing:0;color:#b71c4a;text-shadow:0 8px 26px rgba(100,24,50,.17),0 0 18px rgba(255,255,255,.65)}
 .boot-open-countdown-hide{opacity:0}
-.boot-open-countdown-hide .boot-open-countdown-text{animation:bootOpenCountdownFade .48s ease forwards!important}
+.boot-open-countdown-hide .boot-open-countdown-text{animation:bootOpenCountdownFade .48s ease forwards}
 @keyframes bootOpenCountdownPop{0%{opacity:0;transform:scale(.55) translateY(10px)}58%{opacity:1;transform:scale(1.08) translateY(0)}100%{opacity:1;transform:scale(1)}}
 @keyframes bootOpenCountdownFade{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(1.12)}}
 @media(max-width:600px){
@@ -681,7 +695,7 @@ body.birthday-day .topbar{padding-top:68px}
   animation:bootR39CountdownIn .62s cubic-bezier(.12,.88,.18,1) both;
 }
 .boot-open-countdown-text.boot-open-countdown-exit{
-  animation:bootR39CountdownOut .28s cubic-bezier(.45,.02,.8,.2) both!important;
+  animation:bootR39CountdownOut .28s cubic-bezier(.45,.02,.8,.2) both;
 }
 .boot-open-countdown-text.celebrate{
   width:100vw;height:100vh;
@@ -735,12 +749,12 @@ body.birthday-day .topbar{padding-top:68px}
   0%{opacity:1;transform:scale(.4)}
   100%{opacity:0;transform:scale(5.5)}
 }
-/* Keep the countdown animated even when the device asks for reduced motion; this intro is user-requested UI. */
+/* R42 — respect prefers-reduced-motion; never force the giant countdown or its particles to animate. */
 @media(prefers-reduced-motion:reduce){
-  .boot-open-countdown-text.boot-open-countdown-pop{animation:bootR39CountdownIn .62s cubic-bezier(.12,.88,.18,1) both!important;opacity:1}
-  .boot-open-countdown-text.boot-open-countdown-exit{animation:bootR39CountdownOut .28s cubic-bezier(.45,.02,.8,.2) both!important}
-  .boot-countdown-shard{animation:bootR39Shard .72s cubic-bezier(.15,.7,.2,1) forwards!important}
-  .boot-countdown-flash{animation:bootR39Flash .34s ease-out forwards!important}
+  .boot-open-countdown-text.boot-open-countdown-pop{animation:none;opacity:1;transform:none;filter:none}
+  .boot-open-countdown-text.boot-open-countdown-exit{animation:none;opacity:0;transform:none;filter:none}
+  .boot-countdown-shard{animation:none;opacity:0;transform:translate(-50%,-50%)}
+  .boot-countdown-flash{animation:none;opacity:0;transform:none}
 }
 @media(max-width:600px){
   .boot-open-countdown-text{-webkit-text-stroke:6px rgba(255,255,255,.98);font-size:clamp(170px,61vw,430px)}
@@ -780,7 +794,3 @@ body.birthday-day .topbar{padding-top:68px}
 @keyframes osraClassicBirds{from{transform:translateX(-20px) rotate(-3deg)}to{transform:translateX(20px) rotate(3deg)}}
 @media(max-width:600px){.osra-cute-white-dog{font-size:42px}.osra-cinderella-char{font-size:66px}.osra-dog-head{font-size:54px}.osra-gift-box{font-size:60px}.osra-cartoon-fight-cloud{font-size:62px}.osra-magic-card,.osra-gift-message,.osra-birds-message,.osra-floating-target-balloon span{font-size:15px;padding:12px 15px}}
 
-
-/* R43 — thumbnail fallback: never expose broken-image alt text in the romantic thumbnail strips. */
-.strip-thumb img,.romantic-thumb img,.memory-hero img,.mini-thumb img,.romantic-cover-photo img,.lb-thumb img{color:transparent;font-size:0;}
-.strip-thumb{overflow:hidden;}
