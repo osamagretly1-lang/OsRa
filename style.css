@@ -746,3 +746,37 @@ body.birthday-day .topbar{padding-top:68px}
   .boot-open-countdown-text{-webkit-text-stroke:6px rgba(255,255,255,.98);font-size:clamp(170px,61vw,430px)}
   .boot-open-countdown-text.celebrate{font-size:clamp(60px,17vw,150px);-webkit-text-stroke:5px rgba(255,255,255,.96)}
 }
+
+
+/* ============================================================
+   R42 — Classic cartoon surprise scenes (merged from the original deck)
+   ============================================================ */
+.osra-classic-scene{position:fixed;inset:0;z-index:10060;pointer-events:none;display:grid;place-items:center;opacity:1;direction:rtl}
+.osra-classic-scene.osra-classic-leaving{opacity:0;transition:opacity .8s ease}
+.osra-classic-dog-sign .osra-walking-dog{position:absolute;bottom:20%;left:-170px;display:flex;flex-direction:column;align-items:center;gap:2px;animation:osraClassicDogWalk calc(10s/var(--classic-speed)) ease-in-out forwards}
+.osra-classic-dog-sign .osra-falling-board{background:#fff9c4;border:2px solid #fbc02d;padding:9px 16px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.16);font-weight:800;color:#d32f2f;max-width:min(82vw,620px);text-align:center;animation:osraClassicBoardDrop calc(.65s/var(--classic-speed)) cubic-bezier(.175,.885,.32,1.275) 1.2s both}
+.osra-classic-dog-sign .osra-falling-board span{display:block;overflow-wrap:anywhere}
+.osra-cute-white-dog{font-size:48px;text-align:center;filter:drop-shadow(0 5px 8px rgba(0,0,0,.12))}
+@keyframes osraClassicDogWalk{0%{left:-170px}40%{left:38%}80%{left:44%}100%{left:110%;opacity:0}}
+@keyframes osraClassicBoardDrop{from{opacity:0;transform:translateY(-90px) rotate(-4deg)}65%{opacity:1;transform:translateY(8px) rotate(2deg)}to{opacity:1;transform:translateY(0) rotate(0)}}
+.osra-classic-fish{overflow:hidden}
+.osra-floating-target-balloon{position:absolute;left:50%;top:39%;transform:translateX(-50%);font-size:54px;text-align:center;animation:osraClassicBalloonFloat calc(3s/var(--classic-speed)) ease-in-out infinite alternate}
+.osra-floating-target-balloon span{display:block;font-size:17px;background:rgba(255,255,255,.96);border:2px solid #ff4081;padding:7px 13px;border-radius:15px;color:#c2185b;font-weight:800;box-shadow:0 5px 16px rgba(0,0,0,.12);max-width:min(78vw,600px);overflow-wrap:anywhere}
+.osra-swimming-fish{position:absolute;right:-70px;top:43%;font-size:42px;animation:osraClassicFishSwim calc(6s/var(--classic-speed)) linear forwards}
+@keyframes osraClassicFishSwim{0%{right:-70px}50%{right:47%;transform:scaleX(1)}56%{transform:scaleX(-1)}100%{right:110%}}
+@keyframes osraClassicBalloonFloat{0%{transform:translate(-50%,0)}100%{transform:translate(-50%,-15px)}}
+.osra-classic-cinderella,.osra-classic-gift,.osra-classic-tomjerry{grid-template-rows:auto auto;align-content:center;text-align:center}
+.osra-cinderella-char{font-size:76px;animation:osraClassicFloat calc(3s/var(--classic-speed)) ease-in-out infinite}
+.osra-magic-card,.osra-gift-message,.osra-birds-message{margin-top:15px;background:rgba(255,255,255,.95);border:2px solid #ff4081;padding:15px 24px;border-radius:20px;box-shadow:0 12px 32px rgba(0,0,0,.22);font-weight:800;color:#c2185b;font-size:17px;max-width:min(86vw,680px);overflow-wrap:anywhere;animation:osraClassicFadePop calc(.5s/var(--classic-speed)) ease-out both}
+@keyframes osraClassicFadePop{from{transform:scale(.62);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes osraClassicFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.osra-gift-inner{display:grid;gap:5px;justify-items:center}
+.osra-dog-head{font-size:64px;animation:osraClassicFloat calc(2.7s/var(--classic-speed)) ease-in-out infinite}
+.osra-gift-box{font-size:70px;animation:osraClassicGiftBounce calc(1.7s/var(--classic-speed)) ease-in-out infinite alternate}
+@keyframes osraClassicGiftBounce{from{transform:scale(.96) rotate(-2deg)}to{transform:scale(1.06) rotate(2deg)}}
+.osra-cartoon-fight-cloud{font-size:72px;animation:osraClassicFight calc(1.05s/var(--classic-speed)) ease-in-out infinite}
+.osra-flying-birds{font-size:40px;letter-spacing:10px;animation:osraClassicBirds calc(2.3s/var(--classic-speed)) ease-in-out infinite alternate}
+@keyframes osraClassicFight{0%,100%{transform:translateX(-10px) rotate(-3deg)}50%{transform:translateX(10px) rotate(3deg)}}
+@keyframes osraClassicBirds{from{transform:translateX(-20px) rotate(-3deg)}to{transform:translateX(20px) rotate(3deg)}}
+@media(max-width:600px){.osra-cute-white-dog{font-size:42px}.osra-cinderella-char{font-size:66px}.osra-dog-head{font-size:54px}.osra-gift-box{font-size:60px}.osra-cartoon-fight-cloud{font-size:62px}.osra-magic-card,.osra-gift-message,.osra-birds-message,.osra-floating-target-balloon span{font-size:15px;padding:12px 15px}}
+

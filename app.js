@@ -1,5 +1,5 @@
 window.__osraBootAt=performance.now();
-const OSRA_BUILD='OsRa v115 — 2026-10-08 — R39 GIANT COUNTDOWN + POST-OPEN CELEBRATION + FAST SURPRISES';
+const OSRA_BUILD='OsRa v116 — 2026-10-08 — R41 RESTORED FULL SURPRISE DECK + GIANT COUNTDOWN';
 const DB='OsRaDB', VER=100, THUMB_VERSION=6, THUMB_MAX_BYTES=160*1024;
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 const DEFAULT={settings:{startDate:'',engagementDate:'',birthdayRania:'',osamaPhone:'',raniaPhone:'',whatsappUrl:'',libraryName:'',soundEnabled:false,surprisesEnabled:true,dailyAlbumIds:null,albumOrderMode:'manual',albumMiniView:false,messagesOrder:'desc',hideScanProgressCard:false,countdowns:[],surpriseTiming:'10',surpriseSpeed:'normal',customSurpriseMessages:[]},memories:[],events:[],dreams:[],verses:[],prayers:[],messages:[],excludedPhotos:[]};
@@ -375,7 +375,7 @@ function runPostOpenCelebration(){
    },7000);
  }
 }
-function clearSurpriseLayers(){['romanticSceneLayer','romanticMessageBubble','romanticLongLayer','romanticBalloonLayer','romanticEffectLayer','romanticFloatLayer','occasionCelebration'].forEach(id=>{const el=document.getElementById(id);if(el)el.remove()});document.querySelectorAll('[id^="romanticSceneLayer-"]').forEach(el=>el.remove());const ticker=document.getElementById('romanticTicker');if(ticker){ticker.classList.remove('show');const tx=document.getElementById('romanticTickerText');if(tx)tx.textContent=''}clearTimeout(romanticTickerCloseTimer);clearTimeout(romanticKissTimer);romanticKissTimer=null;clearTimeout(romanticDelightTimer);romanticDelightTimer=null;occasionCelebrationBusy=false;romanticLongBusy=false;romanticMessageCycle=0;romanticLongNextAt=4+Math.floor(Math.random()*3)}
+function clearSurpriseLayers(){clearClassicSurpriseScenes();['romanticSceneLayer','romanticMessageBubble','romanticLongLayer','romanticBalloonLayer','romanticEffectLayer','romanticFloatLayer','occasionCelebration'].forEach(id=>{const el=document.getElementById(id);if(el)el.remove()});document.querySelectorAll('[id^="romanticSceneLayer-"]').forEach(el=>el.remove());const ticker=document.getElementById('romanticTicker');if(ticker){ticker.classList.remove('show');const tx=document.getElementById('romanticTickerText');if(tx)tx.textContent=''}clearTimeout(romanticTickerCloseTimer);clearTimeout(romanticKissTimer);romanticKissTimer=null;clearTimeout(romanticDelightTimer);romanticDelightTimer=null;occasionCelebrationBusy=false;romanticLongBusy=false;romanticMessageCycle=0;romanticLongNextAt=4+Math.floor(Math.random()*3)}
 async function toggleSurprises(){state.settings.surprisesEnabled=!surprisesAreEnabled();await save();if(!surprisesAreEnabled()){clearSurpriseLayers();document.getElementById('bootAfterOpenCelebration')?.replaceChildren();}updateSurpriseButton();updateBirthdayUi();if(surprisesAreEnabled()){startRomanticTicker();maybeRunOccasionCelebrations();}renderNoAnim();}
 function dataRecoveryCard(){if(!recoveryCandidate)return '';const score=recoveryScore(recoveryCandidate);if(score<=recoveryScore(state))return '';return `<div class="card recovery-card"><h3>🛟 نسخة أمان أفضل متاحة</h3><p>OsRa وجد نسخة أمان تحتوي، بحسب المقارنة الداخلية، على بيانات أكثر من الحالة الحالية.</p><div class="meta">تاريخ النسخة: ${esc(recoveryLabel(recoveryCandidate))}</div><div class="actions"><button class="btn primary" data-action="restoreLocalRecovery">استعادة النسخة</button><button class="btn" data-action="hideRecoveryNotice">إخفاء هذا التنبيه</button></div><p class="meta">لن يتم الاستبدال تلقائيًا. الاستعادة لا تحذف الصور الأصلية من الهاتف، ولا تتم إلا بعد ضغطك على زر الاستعادة.</p></div>`}
 function scanProgressText(cp){if(!cp)return'';const n=cp.processed||cp.count||0,a=cp.added||0,u=cp.updated||0,m=cp.moved||0,e=cp.excluded||0;return `تم فحص ${n} صورة${a?` — ${a} جديدة`:''}${u?` — ${u} محدثة`:''}${m?` — ${m} منقولة`:''}${e?` — ${e} مستبعدة`:''}`}
@@ -766,7 +766,22 @@ function renderRomanticTickerMessage(message,variant,duration=7200){const el=doc
 const ROMANTIC_TICKER_MESSAGES=['بحبك','👇انت مش لوحدك انا معاك🫂','🙏ربنا يخليك ليا🙏🤲','كلمتني النهاردة 🤔؟','بصليلك دايما🙏','واااااحشني 🙈🙊🫂','خد ورده 🌹','انت حلو😍🤩😘','😍❤️انت حبيبي 🥰💛','❤️😍🥰💛🌹ياروحي❤️😍🥰🌹♥️'];
 const ROMANTIC_LONG_MESSAGE='حلو انت وقاعد مستني الرساله اللي جاية؟ طيب مفيش رسايل جاية وانا اصلا هاجي بطريقة محدش يتوقعني 😉😅 قوم ذاكر ولا شوف وراك إيه ولا كده هغير من التطبيق هياخدك مني🙊';
 const ROMANTIC_FLOATS=['🎈','🌹','❤️','💛','💖','💕','🌷','🌸','💐','😘','🫂'];
-const ROMANTIC_KISS_MESSAGES=['هات بوسه🙈🙊',...ROMANTIC_TICKER_MESSAGES];
+const ROMANTIC_EXTRA_MESSAGES=[
+ 'وجودك في حياتي بيخلي كل حاجة صعبة تهون.. ربنا يديمك ليا ❤️',
+ 'مش محتاج مناسَبة عشان أقولك إنك أحلى حاجة حصلتلي 🌹',
+ 'ضحكتك لوحدها قادرة تظبط يومي كله 🥰',
+ 'كل ثانية وأنتي في بالي وفي قلبي وفي كل دعوة بصليهالك 🙏❤️',
+ 'يا بخت قلبي بيكي ويا بختي بوجودك يا روحي 🙈',
+ 'سرحان فيكي ومش قادر أفكر في أي حاجة غيرك 😍❤️'
+];
+const APP_FLIRT_MESSAGES=[
+ 'حاسس إن الكود بتاعي هيقف من كثر جمالك.. ارحمي التطبيق شوية يا قمري! 🙈❤️',
+ 'أنا مجرد تطبيق على الموبايل وبجد مش عارف أركز في الشغل بسببك! 😍🙊',
+ 'أنا التطبيق وبقولك: أسامة سيبك من كل حاجة وسرحان فيكي، وأنا كمان شكله هيهنج مني الكود بسببك! 😜🥰',
+ 'هو ينفع تكوني قمر كده للتطبيق ولصاحب التطبيق في نفس الوقت؟ ده كتير علينا بصراحة! 🙈🌹'
+];
+// الرسالة السرية الليلية: هذه الرسالة وحدها تعمل في نافذة 11م–1ص وبحد أقصى مرة في اليوم.
+const ROMANTIC_KISS_MESSAGES=['هات بوسه🙈🙊'];
 function occasionJoyActive(){return surprisesAreEnabled()&&occasionCountdownsToday().some(x=>!countdownCelebrateOff(x.id))}
 function showRomanticFloat(kind='random',profile=surpriseTimingProfile()){
  if(!surprisesAreEnabled())return;
@@ -792,6 +807,21 @@ function showRomanticFloat(kind='random',profile=surpriseTimingProfile()){
  }
 }
 function romanticWhiteDogSvg(){return `<svg class="romantic-white-dog" viewBox="0 0 96 72" aria-hidden="true"><ellipse cx="48" cy="57" rx="34" ry="9" fill="rgba(30,18,25,.14)"/><path d="M29 25c-8-11-1-20 8-11l7 7c4-3 11-4 17-1l7-8c9-9 16 0 8 12 4 5 6 11 4 20-3 13-16 20-32 20S18 57 18 44c0-7 4-14 11-19Z" fill="#fff" stroke="#e5d9df" stroke-width="2"/><circle cx="38" cy="38" r="2.7" fill="#392b31"/><circle cx="58" cy="38" r="2.7" fill="#392b31"/><ellipse cx="48" cy="46" rx="7" ry="5" fill="#392b31"/><path d="M42 52c4 4 8 4 12 0" fill="none" stroke="#392b31" stroke-width="2" stroke-linecap="round"/><path d="M24 28 16 19c-4-5-7 1-5 9l9 9" fill="#fff" stroke="#e5d9df" stroke-width="2"/><path d="M72 28 80 19c4-5 7 1 5 9l-9 9" fill="#fff" stroke="#e5d9df" stroke-width="2"/></svg>`}
+const ROMANTIC_SCENE_STYLES=[
+ 'ribbon','spotlight','postcard','burst','neon','heartframe','flowerframe','balloons','orbit','stamp','sticker','cloud','shooting','curtain','split','bottomwave','topwave','giantcenter','sidecard','tiltcard','bubblefield','confetti','rain','ticket','polaroid','halo','bootribbon','dogsign'
+];
+const ROMANTIC_SCENE_EMOJIS=['❤️','💖','💕','💛','💗','🌹','🌷','🌸','💐','💋','😘','🥰','🫂','🎀','✨','⭐','🎈','💞','🌺','🩷'];
+const ROMANTIC_MOTION_STYLES=['drop','rise','slide-left','slide-right','zoom','spin','bounce','float-left','float-right','soft'];
+function romanticScenePickStyle(){
+ const choices=ROMANTIC_SCENE_STYLES.filter(x=>x!==lastRomanticSceneStyle);
+ const v=choices[Math.floor(Math.random()*choices.length)]||ROMANTIC_SCENE_STYLES[0];
+ lastRomanticSceneStyle=v;return v;
+}
+function romanticMotionPick(){
+ const choices=ROMANTIC_MOTION_STYLES.filter(x=>x!==lastRomanticMotion);
+ const v=choices[Math.floor(Math.random()*choices.length)]||'soft';
+ lastRomanticMotion=v;return v;
+}
 function romanticSceneHtml(message,style,occasion=false){
  const second=['💖','🌹','💋','🫂','🎈','✨','🌸','💐','💕'][Math.floor(Math.random()*9)];
  const third=['❤️','🌸','💕','🥰','⭐','💛','🌷','😘','🎀'][Math.floor(Math.random()*9)];
@@ -846,6 +876,59 @@ function showRomanticLongMessage(){
  return true;
 }
 
+
+// ------------------------------------------------------------
+// المشاهد الكرتونية الكلاسيكية المضافة من نظام المفاجآت الأصلي
+// ------------------------------------------------------------
+function clearClassicSurpriseScenes(){
+ document.querySelectorAll('.osra-classic-scene').forEach(el=>el.remove());
+}
+function classicSceneLife(profile){return Math.max(7600,Math.min(12000,Math.round(9000/Math.max(.72,profile?.speed||1))));}
+function classicSceneFinalize(el,life){
+ if(!el)return;
+ setTimeout(()=>{el.classList.add('osra-classic-leaving')},Math.max(5200,life-1100));
+ setTimeout(()=>{el.remove()},life);
+}
+function triggerDogFallingSign(messageText,profile=surpriseTimingProfile(),allowOverlap=false){
+ if(!surprisesAreEnabled())return null;if(!allowOverlap)clearClassicSurpriseScenes();
+ const el=document.createElement('div');el.className='osra-classic-scene osra-classic-dog-sign';
+ el.innerHTML=`<div class="osra-walking-dog"><div class="osra-falling-board"><span>${esc(messageText)}</span></div><div class="osra-cute-white-dog">🐶</div></div>`;
+ el.style.setProperty('--classic-speed',String(Math.max(.72,profile.speed||1)));document.body.appendChild(el);
+ classicSceneFinalize(el,Math.max(8500,classicSceneLife(profile)));return el;
+}
+function triggerFishPopBalloon(messageText,profile=surpriseTimingProfile(),allowOverlap=false){
+ if(!surprisesAreEnabled())return null;if(!allowOverlap)clearClassicSurpriseScenes();
+ const el=document.createElement('div');el.className='osra-classic-scene osra-classic-fish';
+ el.innerHTML=`<div class="osra-floating-target-balloon"><span>${esc(messageText)}</span>🎈</div><div class="osra-swimming-fish">🐟</div>`;
+ el.style.setProperty('--classic-speed',String(Math.max(.72,profile.speed||1)));document.body.appendChild(el);
+ classicSceneFinalize(el,Math.max(8200,classicSceneLife(profile)));return el;
+}
+function triggerCinderellaMagic(msgText,profile=surpriseTimingProfile(),allowOverlap=false){
+ if(!surprisesAreEnabled())return null;if(!allowOverlap)clearClassicSurpriseScenes();
+ const el=document.createElement('div');el.className='osra-classic-scene osra-classic-cinderella';
+ el.innerHTML=`<div class="osra-cinderella-char">👸🏼✨</div><div class="osra-magic-card">${esc(msgText)}</div>`;
+ el.style.setProperty('--classic-speed',String(Math.max(.72,profile.speed||1)));document.body.appendChild(el);
+ classicSceneFinalize(el,Math.max(8000,classicSceneLife(profile)));return el;
+}
+function triggerGermanShepherdGift(msgText,profile=surpriseTimingProfile(),allowOverlap=false){
+ if(!surprisesAreEnabled())return null;if(!allowOverlap)clearClassicSurpriseScenes();
+ const el=document.createElement('div');el.className='osra-classic-scene osra-classic-gift';
+ el.innerHTML=`<div class="osra-gift-inner"><div class="osra-dog-head">🐶</div><div class="osra-gift-box">🎁</div><div class="osra-gift-message">🌹🥰😍 بحبك وبموت فيكي 🌹♥️❤️<br><br>${esc(msgText)}</div></div>`;
+ el.style.setProperty('--classic-speed',String(Math.max(.72,profile.speed||1)));document.body.appendChild(el);
+ classicSceneFinalize(el,Math.max(8500,classicSceneLife(profile)+400));return el;
+}
+function triggerTomAndJerry(msgText,profile=surpriseTimingProfile(),allowOverlap=false){
+ if(!surprisesAreEnabled())return null;if(!allowOverlap)clearClassicSurpriseScenes();
+ const el=document.createElement('div');el.className='osra-classic-scene osra-classic-tomjerry';
+ el.innerHTML=`<div class="osra-cartoon-fight-cloud">💥💨</div><div class="osra-flying-birds">🐤🐤🐤</div><div class="osra-birds-message">${esc(msgText)}</div>`;
+ el.style.setProperty('--classic-speed',String(Math.max(.72,profile.speed||1)));document.body.appendChild(el);
+ classicSceneFinalize(el,Math.max(8000,classicSceneLife(profile)));return el;
+}
+function showClassicSurpriseScene(message,profile,allowOverlap=false){
+ const fns=[triggerDogFallingSign,triggerFishPopBalloon,triggerCinderellaMagic,triggerGermanShepherdGift,triggerTomAndJerry];
+ const fn=fns[Math.floor(Math.random()*fns.length)];fn(message,profile,allowOverlap);return 'classic';
+}
+
 function showRomanticMessage(profile=surpriseTimingProfile()){
  if(!surprisesAreEnabled())return 'off';
  if(!romanticLongBusy){
@@ -854,12 +937,17 @@ function showRomanticMessage(profile=surpriseTimingProfile()){
    if(showRomanticLongMessage())return 'long';
   }
  }
- const isFast=profile.speedKey==='random-fast';
- if(Math.random()<(isFast?.13:.09)){
+ const isFast=profile.speedKey==='random-fast' || (profile.randomAll&&profile.speedKey==='fast');
+ const allowOverlap=isFast&&Math.random()<.62;
+ // إضافة المشاهد الكرتونية القديمة إلى نفس مولّد المفاجآت، لكن بدون إغراق الوضع العادي.
+ if(Math.random()<.17){
+  const message=randomSurpriseMessage();lastRomanticSceneMessage=message;
+  showClassicSurpriseScene(message,profile,allowOverlap);
+ }else if(Math.random()<(isFast?.16:.10)){
   const m=randomSurpriseMessage();showMessageBalloon(m);
  }else{
   const message=randomSurpriseMessage();lastRomanticSceneMessage=message;
-  showRomanticScene(message,{style:romanticScenePickStyle(),motion:romanticMotionPick(),occasion:occasionJoyActive(),profile,allowOverlap:isFast&&Math.random()<.55});
+  showRomanticScene(message,{style:romanticScenePickStyle(),motion:romanticMotionPick(),occasion:occasionJoyActive(),profile,allowOverlap});
  }
  return 'message';
 }
@@ -1214,7 +1302,11 @@ async function saveMessage(i){
  if(i){const m=state.messages.find(x=>x.id===i);if(!m)return;m.date=date;m.sender=sender;m.text=text;m.starred=m.starred!==false}else state.messages.unshift({id:id('msg'),date,sender,text,starred:true});
  await save();closeModal();toast('تم حفظ الرسالة.');renderNoAnim();
 }
-function surpriseMessagePool(){const custom=Array.isArray(state.settings.customSurpriseMessages)?state.settings.customSurpriseMessages:[];return [...ROMANTIC_TICKER_MESSAGES,...custom].map(x=>String(x||'').trim()).filter(Boolean)}
+function surpriseMessagePool(){
+ const custom=Array.isArray(state.settings.customSurpriseMessages)?state.settings.customSurpriseMessages:[];
+ return [...ROMANTIC_TICKER_MESSAGES,...ROMANTIC_EXTRA_MESSAGES,...APP_FLIRT_MESSAGES,...custom]
+   .map(x=>String(x||'').trim()).filter(Boolean);
+}
 function surpriseMessageForm(existingIndex=-1){
  const value=existingIndex>=0?(state.settings.customSurpriseMessages?.[existingIndex]||''):'';
  modal(`<h2>${existingIndex>=0?'تعديل رسالة المفاجآت':'إضافة رسالة للمفاجآت'}</h2><div class=\"field\"><label>نص الرسالة</label><textarea id=\"surpriseMsgText\" maxlength=500 placeholder=\"اكتب الرسالة التي تريد ظهورها ضمن المفاجآت العشوائية…\">${esc(value)}</textarea></div><div class=\"actions\"><button class=\"btn primary\" data-action=\"saveSurpriseMessage\" data-id=\"${existingIndex}\">حفظ الرسالة</button><button class=\"btn\" data-action=\"closeModal\">إلغاء</button></div>`);

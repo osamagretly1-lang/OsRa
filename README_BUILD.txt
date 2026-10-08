@@ -45,4 +45,6 @@ R29 update: full-screen romantic surprise engine with 28 presentation modes, lar
 R35 patch: restored message-first surprise cadence; added random-fast movement mode; boot celebration now uses birthday-style moving large+mini ribbons plus bottom burst/top rain for ~3 seconds; cache build bumped.
 
 
-R40: classic startup preserved; added a large 3→2→1→احتفاااااال countdown after the loading screen, then a 7-second post-open celebration; random surprises resume only after the full 10-second sequence.
+R41: classic startup preserved; added a large 3→2→1→احتفاااااال countdown after the loading screen, then a 7-second post-open celebration; random surprises resume only after the full 10-second sequence.
+
+R42 Complete Surprise System: merged the original cartoon surprise deck, expanded romantic/app-flirt message pool, preserved 28 scene styles + 10 motion styles, retained exact timing/speed settings, and kept the post-open countdown/celebration flow.

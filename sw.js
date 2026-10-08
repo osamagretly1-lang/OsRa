@@ -1,10 +1,10 @@
-const BUILD='osra116-20261008-r40-restored-surprise-deck';
+const BUILD='osra118-20261008-r42-complete-surprise-system';
 const CACHE=`OsRa-v116-${BUILD}`;
 const APP=[
   './',
   './index.html',
   './style.css',
-  './app.js?v=osra116-r40-restored-surprise-deck',
+  './app.js?v=osra118-r42-complete-surprise-system',
   './manifest.json',
   './icon.svg',
   './icon-192.png',
