@@ -48,3 +48,5 @@ R35 patch: restored message-first surprise cadence; added random-fast movement m
 R41: classic startup preserved; added a large 3→2→1→احتفاااااال countdown after the loading screen, then a 7-second post-open celebration; random surprises resume only after the full 10-second sequence.
 
 R42 Complete Surprise System: merged the original cartoon surprise deck, expanded romantic/app-flirt message pool, preserved 28 scene styles + 10 motion styles, retained exact timing/speed settings, and kept the post-open countdown/celebration flow.
+
+The R42 build now includes the 3D-style couple layer using assets/osama-3d.png and assets/rania-3d.png; missing assets fall back to non-broken emoji placeholders. Celebration dance is randomized across five modes for 20–30 seconds, and page-turn figures appear only during the flip. No IndexedDB version change and no thumbnail regeneration.

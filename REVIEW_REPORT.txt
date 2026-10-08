@@ -1,0 +1,11 @@
+OsRa v118 / R42 final review report
+
+- IndexedDB VER=100 preserved; no DB version change.
+- Unified build: osra118-r42-complete-surprise-system in index.html, app.js SW registration, and sw.js cache.
+- showRomanticFloat uses computed animation duration + delay for cleanup.
+- Giant countdown reduced-motion rule no longer uses !important.
+- Five CSS-3D-style couple dance modes added; random selection per opening celebration; 20–30 second dance window.
+- Page-turn: Osama appears only on forward flips; Rania only on backward flips; auto cleanup after the flip.
+- Classic dog scenes are mutually exclusive; boot celebration now uses one dog only.
+- Missing thumbnail fallback is direct-from-linked-original for at most two visible failures per hydration batch; no thumbnail is saved by this fallback.
+- The R42 archive did not contain assets/osama-3d.png or assets/rania-3d.png. The code references those exact paths and uses a graceful fallback until the PNGs are supplied.
