@@ -1,5 +1,5 @@
 window.__osraBootAt=performance.now();
-const OSRA_BUILD='OsRa v120 — 2026-10-08 — R44 3D COUPLE + CLASSIC MINIATURES';
+const OSRA_BUILD='OsRa v121 — 2026-10-08 — R45 3D COUPLE MOTION REFINED';
 const DB='OsRaDB', VER=100, THUMB_VERSION=6, THUMB_MAX_BYTES=160*1024;
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 const DEFAULT={settings:{startDate:'',engagementDate:'',birthdayRania:'',osamaPhone:'',raniaPhone:'',whatsappUrl:'',libraryName:'',soundEnabled:false,surprisesEnabled:true,dailyAlbumIds:null,albumOrderMode:'manual',albumMiniView:false,messagesOrder:'desc',hideScanProgressCard:false,countdowns:[],surpriseTiming:'10',surpriseSpeed:'normal',customSurpriseMessages:[]},memories:[],events:[],dreams:[],verses:[],prayers:[],messages:[],excludedPhotos:[]};

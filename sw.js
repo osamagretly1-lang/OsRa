@@ -1,11 +1,11 @@
-const BUILD='osra120-20261008-r44-3d-couple-classics';
-const CACHE=`OsRa-v120-${BUILD}`;
+const BUILD='osra121-20261008-r45-3d-couple-motion-refined';
+const CACHE=`OsRa-v121-${BUILD}`;
 const APP=[
   './',
   './index.html',
   './style.css',
   './assets/osra3d.js',
-  './app.js?v=osra120-r44-3d-couple-classics',
+  './app.js?v=osra121-r45-3d-couple-motion-refined',
   './manifest.json',
   './icon.svg',
   './icon-192.png',
