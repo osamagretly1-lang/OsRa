@@ -1,20 +1,29 @@
-OsRa v121 — R45 3D Couple Motion + Classic Miniatures
+OsRa v101 — R25 safe multi-source linking + visual fallback + occasion celebration + romantic ticker
 
-Base: R43 stable core. IndexedDB VER remains 100.
+Base preserved: OsRa v100 R24 family; IndexedDB version remains 100 to protect existing data.
 
-This package is the complete upload root. Keep every file and the assets/ folder together when uploading to GitHub Pages / hosting.
+R25 changes:
+- Safe album/source linking validates a manually selected folder before saving it; zero matches are rejected.
+- One OsRa album can link to multiple real source folders; each new source searches only the photos still missing originals.
+- Manual linking continues until the user explicitly says there are no more sources. Visual matching appears only as the final optional fallback.
+- Visual matching supports one folder, multiple folders, or a parent folder searched recursively; results are suggestions only and require user approval.
+- Link reports include aggregate results plus per-source scan/match/verification counts where available.
+- HQ build warns explicitly about missing originals and never silently hides skipped photos; existing multi-source HQ collection logic is preserved.
+- Custom occasion countdowns can celebrate automatically on their date with lightweight fireworks/hearts/flowers/kisses. The small button is `🎉 احتفل 🥳` and becomes `🎉 احتفل nicht 😔` only for the current day when muted. Birthday greeting/content remains separate and unchanged.
+- Romantic ticker messages appear infrequently in the top bar, each shown twice with randomized playful right-to-left animation.
+- Added the missing Save Event handler required by the existing “محطات في قصتنا” UI.
 
-R45 fixes / refinements:
-- Osama + Rania now use genuine local WebGL low-poly 3D geometry for the couple sequence; no PNG character overlays and no CDN dependency.
-- Faces, hair, suit/tie, mauve off-shoulder dress and pearl trim were refined for a brighter, more cheerful miniature-cartoon look.
-- Fixed the previous extra/phantom-hand problem: high-five and hand-holding poses use only the intended two arms per character; no floating third hand and no stray hand on Rania's waist.
-- Reworked the acrobatic slot into the requested lift-and-spin dance: Osama remains grounded, lifts Rania, and rotates with a small controlled orbit so both figures remain readable.
-- The five celebration dance slots remain: romantic turn, lift-and-spin, joyful hand-holding bounce, warm hug spin, high-five shuffle.
-- Page-turn couple motion is corrected so Osama pushes from the lower-right on forward turns and Rania pushes from the lower-left on backward turns, appearing only during the turn.
-- Added a lightweight 2D couple fallback for browsers/WebViews without WebGL, using the same corrected limb logic.
-- Existing random classic message scenes remain: one long-haired white German Shepherd, fish/balloon, Cinderella/wand, gift dog, Tom/Jerry-style chase, Robinson + horse, Masha/Bear-style scene, SpongeBob-style scene, and Shaun-the-Sheep-style scene.
+OsRa v100 — r24 FINAL + SIMPLE DUPLICATE CANCEL + SOURCE UI
 
-Safety/performance:
-- No IndexedDB schema bump; VER=100 is untouched.
-- No photo copying, global thumbnail regeneration, cloud upload, or automatic visual reindex was introduced.
-- All 3D code is local under assets/osra3d.js.
+OsRa HQ Source — final safe build
+
+مصدر مستقل عالي الجودة لـ OsRa، منفصل عن Backup البيانات.
+الحد الأقصى: 2048px للضلع الأطول، JPEG quality 88 تقريبًا.
+الربط في الهاتف الآخر يعتمد على photoId + هوية مجموعة الصور، وليس اسم الملف أو حجمه.
+نسخة البيانات هي مصدر الحقيقة للألبومات والترتيب؛ HQ يوفّر ملف الصورة فقط.
+الصور المخفية أو المستبعدة لا تُنسخ كملفات HQ.
+
+Stable R24 performance rebuild: preserved Add Album/Add Memory UI and existing data model; faster batch-first thumbnail hydration; no schema bump and no destructive migration.
+
+
+OsRa v103 / R27: restored Rania birthday UI + persistent home birthday countdown + larger/brighter romantic surprises. Database VER remains 100.

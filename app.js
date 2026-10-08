@@ -1,5 +1,5 @@
 window.__osraBootAt=performance.now();
-const OSRA_BUILD='OsRa v121 — 2026-10-08 — R45 3D COUPLE MOTION REFINED';
+const OSRA_BUILD='OsRa v122 — 2026-10-08 — R46 STABLE CORE + RELIABLE POST-CELEBRATION RANDOM MESSAGES';
 const DB='OsRaDB', VER=100, THUMB_VERSION=6, THUMB_MAX_BYTES=160*1024;
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 const DEFAULT={settings:{startDate:'',engagementDate:'',birthdayRania:'',osamaPhone:'',raniaPhone:'',whatsappUrl:'',libraryName:'',soundEnabled:false,surprisesEnabled:true,dailyAlbumIds:null,albumOrderMode:'manual',albumMiniView:false,messagesOrder:'desc',hideScanProgressCard:false,countdowns:[],surpriseTiming:'10',surpriseSpeed:'normal',customSurpriseMessages:[]},memories:[],events:[],dreams:[],verses:[],prayers:[],messages:[],excludedPhotos:[]};
@@ -250,28 +250,132 @@ function runPostOpenCelebration(){
  if(!layer)return;
  layer.innerHTML='';
  if(!surprisesAreEnabled()){setTimeout(()=>startRomanticTicker(),220);return}
- const glyphs=['❤️','💖','💕','💗','💛','🌹','🌷','🌸','💐','💋','😘','✨','🎀','🎉','🎈'];
- const countdown=document.createElement('div');countdown.className='boot-open-countdown';countdown.style.opacity='0';
- const countText=document.createElement('div');countText.className='boot-open-countdown-text';countdown.appendChild(countText);layer.appendChild(countdown);
- const timers=[];const intervals=[];
- const clearTimers=()=>{timers.splice(0).forEach(clearTimeout);intervals.splice(0).forEach(clearInterval)};
- const addRain=(count,cls,durBase)=>{for(let i=0;i<count;i++){const el=document.createElement('span');el.className=`boot-open-item boot-open-rain ${cls}`;el.textContent=glyphs[Math.floor(Math.random()*glyphs.length)];el.style.left=`${Math.random()*100}%`;el.style.setProperty('--dx',`${-18+Math.random()*36}vw`);el.style.setProperty('--delay',`${(Math.random()*.65).toFixed(2)}s`);el.style.setProperty('--dur',`${(durBase+Math.random()*1.15).toFixed(2)}s`);el.style.fontSize=`${18+Math.random()*28}px`;layer.appendChild(el)}};
- const addBurst=(count,durBase)=>{for(let i=0;i<count;i++){const el=document.createElement('span');el.className='boot-open-item boot-open-burst';el.textContent=glyphs[Math.floor(Math.random()*glyphs.length)];el.style.setProperty('--left',`${4+Math.random()*92}%`);el.style.setProperty('--dx',`${-18+Math.random()*36}vw`);el.style.setProperty('--delay',`${(Math.random()*.6).toFixed(2)}s`);el.style.setProperty('--dur',`${(durBase+Math.random()*1.1).toFixed(2)}s`);el.style.fontSize=`${20+Math.random()*32}px`;layer.appendChild(el)}};
- const addMix=(count)=>{for(let i=0;i<count;i++){const el=document.createElement('span');el.className='boot-open-item boot-open-mix';el.textContent=glyphs[Math.floor(Math.random()*glyphs.length)];el.style.left=`${Math.random()*100}%`;el.style.bottom=`${8+Math.random()*42}%`;el.style.setProperty('--dx',`${-22+Math.random()*44}vw`);el.style.setProperty('--delay',`${(Math.random()*1.1).toFixed(2)}s`);el.style.setProperty('--dur',`${(2.3+Math.random()*2.5).toFixed(2)}s`);el.style.fontSize=`${18+Math.random()*34}px`;layer.appendChild(el)}};
- const explodeCount=()=>{const rect=countText.getBoundingClientRect();if(!rect.width)return;const cx=rect.left+rect.width/2,cy=rect.top+rect.height/2,shell=document.createElement('div');shell.className='boot-countdown-explosion';shell.style.left=`${cx}px`;shell.style.top=`${cy}px`;const pieces=['✦','✧','♥','•','✿','❀','⋆','·'];for(let i=0;i<34;i++){const shard=document.createElement('span');shard.className='boot-countdown-shard';shard.textContent=pieces[i%pieces.length];const a=Math.random()*Math.PI*2,d=90+Math.random()*280;shard.style.setProperty('--x',`${Math.cos(a)*d}px`);shard.style.setProperty('--y',`${Math.sin(a)*d}px`);shard.style.setProperty('--r',`${-180+Math.random()*360}deg`);shard.style.fontSize=`${10+Math.random()*34}px`;shard.style.animationDelay=`${(Math.random()*.06).toFixed(2)}s`;shell.appendChild(shard)}const flash=document.createElement('span');flash.className='boot-countdown-flash';shell.appendChild(flash);layer.appendChild(shell);countText.classList.remove('boot-open-countdown-pop');countText.classList.add('boot-open-countdown-exit');timers.push(setTimeout(()=>shell.remove(),760))};
- const showCount=(value)=>{countdown.style.opacity='1';countText.className='boot-open-countdown-text';countText.textContent=value;countText.setAttribute('data-text',value);void countText.offsetWidth;countText.classList.add('boot-open-countdown-pop')};
- const introPromise=window.OsRa3D?.bootSequence?.()||Promise.resolve();
- timers.push(setTimeout(()=>showCount('3'),2000));
- timers.push(setTimeout(()=>{explodeCount();showCount('2')},2890));
- timers.push(setTimeout(()=>{explodeCount();showCount('1')},3780));
- timers.push(setTimeout(()=>{explodeCount();countdown.classList.add('boot-open-countdown-celebrate');showCount('احتفااااااال 🎉');addRain(38,'rain-heavy',1.8);addBurst(26,3.0)},4690));
- timers.push(setTimeout(()=>{if(document.body.contains(layer)){addRain(18,'rain-soft',2.8);addMix(24)}},6500));
- timers.push(setTimeout(()=>{if(document.body.contains(layer)){addRain(16,'rain-soft',3.4);addBurst(18,4.0);addMix(26)}},9800));
- intervals.push(setInterval(()=>{if(document.body.contains(layer)&&surprisesAreEnabled())addRain(8,'rain-soft',2.6)},5200));
- introPromise.then(()=>{clearTimers();if(!layer)return;layer.classList.add('boot-open-fade');timers.push(setTimeout(()=>{layer.innerHTML='';layer.classList.remove('boot-open-fade');if(surprisesAreEnabled())startRomanticTicker()},650))}).catch(()=>{clearTimers();if(layer)layer.innerHTML='';if(surprisesAreEnabled())startRomanticTicker()});
-}
+ const glyphs=['❤️','💖','💕','💗','💛','🌹','🌷','🌸','💐','💋','😘','✨','🎀','🎉','🎈','🐶'];
+ const countdown=document.createElement('div');
+ countdown.className='boot-open-countdown';
+ const countText=document.createElement('div');
+ countText.className='boot-open-countdown-text';
+ countdown.appendChild(countText);
+ layer.appendChild(countdown);
 
-function clearSurpriseLayers(){clearClassicSurpriseScenes();window.OsRa3D?.stop?.();['romanticSceneLayer','romanticMessageBubble','romanticLongLayer','romanticBalloonLayer','romanticEffectLayer','romanticFloatLayer','occasionCelebration'].forEach(id=>{const el=document.getElementById(id);if(el)el.remove()});document.querySelectorAll('[id^="romanticSceneLayer-"]').forEach(el=>el.remove());const ticker=document.getElementById('romanticTicker');if(ticker){ticker.classList.remove('show');const tx=document.getElementById('romanticTickerText');if(tx)tx.textContent=''}clearTimeout(romanticTickerCloseTimer);clearTimeout(romanticKissTimer);romanticKissTimer=null;clearTimeout(romanticDelightTimer);romanticDelightTimer=null;occasionCelebrationBusy=false;romanticLongBusy=false;romanticMessageCycle=0;romanticLongNextAt=4+Math.floor(Math.random()*3)}
+ const showCount=(value,extra='')=>{
+   countText.className=`boot-open-countdown-text ${extra}`.trim();
+   countText.textContent=value;
+   countText.setAttribute('data-text',value);
+   void countText.offsetWidth;
+   countText.classList.add('boot-open-countdown-pop');
+ };
+ const explodeCount=()=>{
+   if(!document.body.contains(layer))return;
+   const rect=countText.getBoundingClientRect();
+   const cx=rect.left+rect.width/2, cy=rect.top+rect.height/2;
+   const shell=document.createElement('div');
+   shell.className='boot-countdown-explosion';
+   shell.style.left=`${cx}px`;shell.style.top=`${cy}px`;
+   const pieces=['✦','✧','♥','•','✿','❀','⋆','·'];
+   for(let i=0;i<34;i++){
+     const shard=document.createElement('span');
+     shard.className='boot-countdown-shard';
+     shard.textContent=pieces[i%pieces.length];
+     const a=Math.random()*Math.PI*2;
+     const d=90+Math.random()*280;
+     shard.style.setProperty('--x',`${Math.cos(a)*d}px`);
+     shard.style.setProperty('--y',`${Math.sin(a)*d}px`);
+     shard.style.setProperty('--r',`${-180+Math.random()*360}deg`);
+     shard.style.fontSize=`${10+Math.random()*34}px`;
+     shard.style.animationDelay=`${(Math.random()*.06).toFixed(2)}s`;
+     shell.appendChild(shard);
+   }
+   const flash=document.createElement('span');flash.className='boot-countdown-flash';shell.appendChild(flash);
+   layer.appendChild(shell);
+   countText.classList.remove('boot-open-countdown-pop');
+   countText.classList.add('boot-open-countdown-exit');
+   setTimeout(()=>shell.remove(),760);
+ };
+ showCount('3');
+ // The first 3 seconds are always the countdown, directly over the home page.
+ setTimeout(()=>{explodeCount();},720);
+ setTimeout(()=>{showCount('2');},1000);
+ setTimeout(()=>{explodeCount();},1720);
+ setTimeout(()=>{showCount('1');},2000);
+ setTimeout(()=>{explodeCount();},2720);
+ setTimeout(()=>{beginCelebration();},3000);
+
+ const addRain=(count,cls,durBase,spread=100)=>{
+  for(let i=0;i<count;i++){
+   const s=document.createElement('span');s.className=`boot-open-item boot-open-rain ${cls}`;
+   s.textContent=glyphs[Math.floor(Math.random()*glyphs.length)];
+   s.style.left=`${Math.random()*spread}%`;
+   s.style.setProperty('--dx',`${-18+Math.random()*36}vw`);
+   s.style.setProperty('--delay',`${(Math.random()*.65).toFixed(2)}s`);
+   s.style.setProperty('--dur',`${(durBase+Math.random()*1.15).toFixed(2)}s`);
+   s.style.fontSize=`${18+Math.random()*28}px`;
+   layer.appendChild(s);
+  }
+ };
+ const addBurst=(count,durBase)=>{
+  for(let i=0;i<count;i++){
+   const s=document.createElement('span');s.className='boot-open-item boot-open-burst';
+   s.textContent=glyphs[Math.floor(Math.random()*glyphs.length)];
+   s.style.setProperty('--left',`${4+Math.random()*92}%`);
+   s.style.setProperty('--dx',`${-18+Math.random()*36}vw`);
+   s.style.setProperty('--delay',`${(Math.random()*.6).toFixed(2)}s`);
+   s.style.setProperty('--dur',`${(durBase+Math.random()*1.1).toFixed(2)}s`);
+   s.style.fontSize=`${20+Math.random()*32}px`;
+   layer.appendChild(s);
+  }
+ };
+ const addMix=(count)=>{
+  for(let i=0;i<count;i++){
+   const s=document.createElement('span');s.className='boot-open-item boot-open-mix';
+   s.textContent=glyphs[Math.floor(Math.random()*glyphs.length)];
+   s.style.left=`${Math.random()*100}%`;
+   s.style.bottom=`${8+Math.random()*42}%`;
+   s.style.setProperty('--dx',`${-22+Math.random()*44}vw`);
+   s.style.setProperty('--delay',`${(Math.random()*1.1).toFixed(2)}s`);
+   s.style.setProperty('--dur',`${(2.3+Math.random()*2.5).toFixed(2)}s`);
+   s.style.fontSize=`${18+Math.random()*34}px`;
+   layer.appendChild(s);
+  }
+ };
+ const addDogs=()=>{
+  for(let i=0;i<3;i++){
+   const s=document.createElement('span');s.className='boot-open-item boot-open-dog';s.innerHTML=romanticWhiteDogSvg();
+   s.style.left=`${12+i*38}%`;
+   s.style.setProperty('--dx',`${-10+Math.random()*20}vw`);
+   s.style.setProperty('--delay',`${(.15+i*.35).toFixed(2)}s`);
+   s.style.setProperty('--dur',`${(3.0+Math.random()*.8).toFixed(2)}s`);
+   layer.appendChild(s);
+  }
+ };
+ function beginCelebration(){
+   if(!document.body.contains(layer)||!surprisesAreEnabled())return;
+   countdown.classList.add('boot-open-countdown-celebrate');
+   showCount('احتفااااااال 🎉','celebrate');
+   // 0–2s: dense rain + strong upward burst.
+   addRain(58,'rain-heavy',1.7);
+   addBurst(38,3.0);
+   addDogs();
+   setTimeout(()=>{
+     if(!document.body.contains(layer)||!surprisesAreEnabled())return;
+     addRain(24,'rain-soft',2.6);
+   },2000);
+   // 4–7s: rich mixed flow.
+   setTimeout(()=>{
+     if(!document.body.contains(layer)||!surprisesAreEnabled())return;
+     addRain(32,'rain-soft',3.5);addBurst(26,4.0);addMix(40);
+   },4000);
+   setTimeout(()=>{countdown.classList.add('boot-open-countdown-hide');},800);
+   // 3s countdown + 7s celebration = 10s total post-open intro.
+   setTimeout(()=>{
+     if(!layer)return;
+     layer.classList.add('boot-open-fade');
+     setTimeout(()=>{layer.innerHTML='';layer.classList.remove('boot-open-fade');},600);
+     if(surprisesAreEnabled())startRomanticTicker();
+   },7000);
+ }
+}
+function clearSurpriseLayers(){clearClassicSurpriseScenes();['romanticSceneLayer','romanticMessageBubble','romanticLongLayer','romanticBalloonLayer','romanticEffectLayer','romanticFloatLayer','occasionCelebration'].forEach(id=>{const el=document.getElementById(id);if(el)el.remove()});document.querySelectorAll('[id^="romanticSceneLayer-"]').forEach(el=>el.remove());const ticker=document.getElementById('romanticTicker');if(ticker){ticker.classList.remove('show');const tx=document.getElementById('romanticTickerText');if(tx)tx.textContent=''}clearTimeout(romanticTickerCloseTimer);clearTimeout(romanticKissTimer);romanticKissTimer=null;clearTimeout(romanticDelightTimer);romanticDelightTimer=null;occasionCelebrationBusy=false;romanticLongBusy=false;romanticMessageCycle=0;romanticLongNextAt=4+Math.floor(Math.random()*3)}
 async function toggleSurprises(){state.settings.surprisesEnabled=!surprisesAreEnabled();await save();if(!surprisesAreEnabled()){clearSurpriseLayers();document.getElementById('bootAfterOpenCelebration')?.replaceChildren();}updateSurpriseButton();updateBirthdayUi();if(surprisesAreEnabled()){startRomanticTicker();maybeRunOccasionCelebrations();}renderNoAnim();}
 function dataRecoveryCard(){if(!recoveryCandidate)return '';const score=recoveryScore(recoveryCandidate);if(score<=recoveryScore(state))return '';return `<div class="card recovery-card"><h3>🛟 نسخة أمان أفضل متاحة</h3><p>OsRa وجد نسخة أمان تحتوي، بحسب المقارنة الداخلية، على بيانات أكثر من الحالة الحالية.</p><div class="meta">تاريخ النسخة: ${esc(recoveryLabel(recoveryCandidate))}</div><div class="actions"><button class="btn primary" data-action="restoreLocalRecovery">استعادة النسخة</button><button class="btn" data-action="hideRecoveryNotice">إخفاء هذا التنبيه</button></div><p class="meta">لن يتم الاستبدال تلقائيًا. الاستعادة لا تحذف الصور الأصلية من الهاتف، ولا تتم إلا بعد ضغطك على زر الاستعادة.</p></div>`}
 function scanProgressText(cp){if(!cp)return'';const n=cp.processed||cp.count||0,a=cp.added||0,u=cp.updated||0,m=cp.moved||0,e=cp.excluded||0;return `تم فحص ${n} صورة${a?` — ${a} جديدة`:''}${u?` — ${u} محدثة`:''}${m?` — ${m} منقولة`:''}${e?` — ${e} مستبعدة`:''}`}
@@ -638,7 +742,7 @@ function pageMemoriesAt(idx){const old=albumBookIndex;albumBookIndex=idx;const h
 function pageMemories(){const ms=memoryListForBook();if(albumBookIndex>=ms.length)albumBookIndex=Math.max(0,ms.length-1);const selectedVisible=ms.filter(m=>selectedMemories.has(m.id)).length;const m=ms[albumBookIndex];const prev=albumBookIndex>0?ms[albumBookIndex-1]:null,next=albumBookIndex<ms.length-1?ms[albumBookIndex+1]:null;return `<div class="inner memories-book-page"><div class="kicker">📸 ذكرياتنا</div><h1 class="title">ألبوماتنا</h1><p class="note">كل ألبوم له صفحة خاصة به داخل الكتاب. استخدم الأسهم أو اسحب الصفحة للتنقل بين الألبومات، بينما تبقى أدوات التحديد والترتيب كما هي.</p><div class="actions" style="margin:12px 0"><button class="btn primary" data-action="folder">📁 إضافة مجلد / ألبوم</button><button class="btn" data-action="scan">↻ فحص المجلد المحدد</button><button class="btn" data-action="addMemory">＋ ذكرى</button><button class="btn" data-action="newAlbum">＋ ألبوم</button><button class="btn" data-action="hiddenMemories">👁️ المخفي</button><button class="btn" data-action="dailyAlbums">✨ ألبومات صورة اليوم</button><button class="btn" data-action="go" data-section="calendar">📅 التقويم</button></div><div class="card bulk-tools"><div class="actions"><button class="btn small" data-action="selectAllMemories">☑ تحديد الكل</button><button class="btn small" data-action="clearMemorySelection">مسح التحديد</button><button class="btn small" data-action="commitMemoryOrder">✅ تثبيت ترتيب التحديد</button><button class="btn small" data-action="mergeSelectedMemories">📁 جمع المحدد في ألبوم واحد</button><button class="btn small" data-action="hideSelectedMemories">👁️ إخفاء المحدد</button></div><div class="meta">${selectedVisible} محددة من ${ms.length}. كل تحديد يأخذ رقمًا حسب ترتيب ضغطاتك.</div></div><div class="card album-order-bar" style="margin:10px 0"><div class="order-row"><b>ترتيب الألبومات</b><span class="album-book-count">${ms.length?`${albumBookIndex+1} / ${ms.length}`:'0 / 0'}</span></div><div class="actions" style="margin-top:8px"><button class="btn small" data-action="orderManual">↕ ترتيب يدوي</button><button class="btn small" data-action="orderDetails">✨ الأكثر تفاصيلًا أولًا</button><button class="btn small" data-action="orderLinked">💛 الأصول المكتشفة أولًا</button><button class="btn small ${state.settings.albumMiniView?'primary':''}" data-action="toggleAlbumMiniView">🗂️ ${state.settings.albumMiniView?'العودة إلى الكتاب':'عرض الألبومات مصغرة'}</button></div></div><div style="display:flex;gap:8px;margin-bottom:12px"><input id="searchMem" style="flex:1;padding:10px;border:1px solid var(--line);border-radius:12px;background:#fff8" placeholder="ابحث بالاسم أو المكان أو السنة" value="${esc(pageMemories.q||'')}"><button class="btn" data-action="search">بحث</button></div>${state.settings.albumMiniView?`<div class="album-mini-grid">${ms.length?ms.map(albumMiniCard).join(''):`<div class="empty">لا توجد ألبومات ظاهرة.</div>`}</div>`:`<><div class="memories-book-controls"><button class="round" data-action="albumPrev" ${prev?'':'disabled'} title="الألبوم السابق">‹</button><div class="book-control-center"><span>صفحة الألبوم</span><strong>${ms.length?`${albumBookIndex+1} من ${ms.length}`:'لا توجد ألبومات'}</strong></div><button class="round" data-action="albumNext" ${next?'':'disabled'} title="الألبوم التالي">›</button></div><div class="album-book-stage">${ms.length?`<div class="album-underlay">${next?memoryCard(next,albumBookIndex+1):memoryCard(m,albumBookIndex)}</div><div class="album-leaf">${memoryCard(m,albumBookIndex)}</div>`:`<div class="empty">لا توجد ألبومات ظاهرة.</div>`}</div></>`}</div>`}
 function restoreAlbumScroll(top,left){const apply=()=>{const inner=$('#currentPage .inner');if(!inner)return;inner.scrollTop=top;inner.scrollLeft=left};requestAnimationFrame(()=>{apply();requestAnimationFrame(apply)});setTimeout(apply,60);setTimeout(apply,220);setTimeout(apply,500)}
 function resetAlbumBookTurn(){albumBookToken++;if(albumBookTimer){clearTimeout(albumBookTimer);albumBookTimer=null}albumBookBusy=false;const stage=document.querySelector('.album-book-stage');if(stage)stage.classList.remove('turn-next','turn-prev')}
-function turnAlbumPage(dir){const duration=760;window.OsRa3D?.pageTurn?.(dir);if(albumBookBusy)return;const ms=memoryListForBook();const target=albumBookIndex+dir;if(target<0||target>=ms.length)return;const stage=document.querySelector('.album-book-stage');if(!stage)return;const leaf=stage.querySelector('.album-leaf'),under=stage.querySelector('.album-underlay');if(!leaf||!under)return;const targetMemory=ms[target],token=++albumBookToken;albumBookBusy=true;stage.classList.remove('turn-next','turn-prev');void leaf.offsetWidth;under.innerHTML=memoryCard(targetMemory,target);fitAlbumBookStage();hydrate(under);requestAnimationFrame(()=>{if(token!==albumBookToken||!document.contains(stage)){albumBookBusy=false;return}stage.classList.add(dir>0?'turn-next':'turn-prev');paperSound(duration);albumBookTimer=setTimeout(()=>{if(token!==albumBookToken||!document.contains(stage)){albumBookBusy=false;albumBookTimer=null;return}albumBookTimer=null;stage.classList.remove('turn-next','turn-prev');void leaf.offsetWidth;const fresh=memoryListForBook(),targetIndex=Math.max(0,fresh.findIndex(m=>m.id===targetMemory.id));const resolvedTarget=fresh[targetIndex]||targetMemory,nextMemory=fresh[targetIndex+dir]||null;leaf.innerHTML=memoryCard(resolvedTarget,targetIndex);under.innerHTML=nextMemory?memoryCard(nextMemory,targetIndex+dir):memoryCard(resolvedTarget,targetIndex);albumBookIndex=targetIndex;fitAlbumBookStage();albumBookBusy=false;const countEl=document.querySelector('.album-book-count'),pageEl=document.querySelector('.book-control-center strong'),prevBtn=document.querySelector('[data-action="albumPrev"]'),nextBtn=document.querySelector('[data-action="albumNext"]');if(countEl)countEl.textContent=fresh.length?`${targetIndex+1} / ${fresh.length}`:'0 / 0';if(pageEl)pageEl.textContent=fresh.length?`${targetIndex+1} من ${fresh.length}`:'لا توجد ألبومات';if(prevBtn)prevBtn.disabled=targetIndex<=0;if(nextBtn)nextBtn.disabled=targetIndex>=fresh.length-1;hydrate(stage)},duration+8)})}
+function turnAlbumPage(dir){const duration=760;if(albumBookBusy)return;const ms=memoryListForBook();const target=albumBookIndex+dir;if(target<0||target>=ms.length)return;const stage=document.querySelector('.album-book-stage');if(!stage)return;const leaf=stage.querySelector('.album-leaf'),under=stage.querySelector('.album-underlay');if(!leaf||!under)return;const targetMemory=ms[target],token=++albumBookToken;albumBookBusy=true;stage.classList.remove('turn-next','turn-prev');void leaf.offsetWidth;under.innerHTML=memoryCard(targetMemory,target);fitAlbumBookStage();hydrate(under);requestAnimationFrame(()=>{if(token!==albumBookToken||!document.contains(stage)){albumBookBusy=false;return}stage.classList.add(dir>0?'turn-next':'turn-prev');paperSound(duration);albumBookTimer=setTimeout(()=>{if(token!==albumBookToken||!document.contains(stage)){albumBookBusy=false;albumBookTimer=null;return}albumBookTimer=null;stage.classList.remove('turn-next','turn-prev');void leaf.offsetWidth;const fresh=memoryListForBook(),targetIndex=Math.max(0,fresh.findIndex(m=>m.id===targetMemory.id));const resolvedTarget=fresh[targetIndex]||targetMemory,nextMemory=fresh[targetIndex+dir]||null;leaf.innerHTML=memoryCard(resolvedTarget,targetIndex);under.innerHTML=nextMemory?memoryCard(nextMemory,targetIndex+dir):memoryCard(resolvedTarget,targetIndex);albumBookIndex=targetIndex;fitAlbumBookStage();albumBookBusy=false;const countEl=document.querySelector('.album-book-count'),pageEl=document.querySelector('.book-control-center strong'),prevBtn=document.querySelector('[data-action="albumPrev"]'),nextBtn=document.querySelector('[data-action="albumNext"]');if(countEl)countEl.textContent=fresh.length?`${targetIndex+1} / ${fresh.length}`:'0 / 0';if(pageEl)pageEl.textContent=fresh.length?`${targetIndex+1} من ${fresh.length}`:'لا توجد ألبومات';if(prevBtn)prevBtn.disabled=targetIndex<=0;if(nextBtn)nextBtn.disabled=targetIndex>=fresh.length-1;hydrate(stage)},duration+8)})}
 
 function selectedIndex(set,id){const a=[...set],i=a.indexOf(id);return i<0?0:i+1}
 function memoryCard(m,idx=0){const ps=photoFor(m),sn=selectedIndex(selectedMemories,m.id);return `<article class="card memory-card romantic-card album-tone-${idx%6}"><div class="romantic-card-cover">${romanticMiniGallery(m,4)}${sn?`<span class="album-selection-number">#${sn}</span>`:''}</div><div class="memory-body"><label class="photo-check"><input class="memory-select" type="checkbox" data-memory="${m.id}" ${selectedMemories.has(m.id)?'checked':''}> تحديد الألبوم ${sn?`<span class="selection-badge">#${sn}</span>`:''}</label><h3>${esc(m.title||'ذكرى')}${albumOriginalBadge(m)}</h3><div class="meta">${rangeLabel(m)}${m.place?' • '+esc(m.place):''} • ${ps.length} صورة${normalizeAlbumLinkFolders(m).length?` • 📁 ${normalizeAlbumLinkFolders(m).length} أصل`:(m.linkSourceId?` • 📁 مصدر الربط: ${esc(sourceLabel(sources.find(x=>x.id===m.linkSourceId)))}`:'')}</div><div class="actions album-card-actions"><button class="btn small primary" data-action="memory" data-id="${m.id}">فتح الألبوم</button><button class="btn small" data-action="editMemory" data-id="${m.id}">تعديل الألبوم</button><button class="btn small" data-action="hideMemory" data-id="${m.id}">إخفاء</button></div>${m.description?`<div class="album-notes"><b>ملاحظات الألبوم</b><p>${esc(m.description)}</p></div>`:''}</div></article>`}
@@ -821,31 +925,17 @@ function triggerTomAndJerry(msgText,profile=surpriseTimingProfile(),allowOverlap
  classicSceneFinalize(el,Math.max(8000,classicSceneLife(profile)));return el;
 }
 function showClassicSurpriseScene(message,profile,allowOverlap=false){
- if(window.OsRa3D?.classicRandom){window.OsRa3D.classicRandom(message);return 'classic3d'}
  const fns=[triggerDogFallingSign,triggerFishPopBalloon,triggerCinderellaMagic,triggerGermanShepherdGift,triggerTomAndJerry];
  const fn=fns[Math.floor(Math.random()*fns.length)];fn(message,profile,allowOverlap);return 'classic';
 }
 
 function showRomanticMessage(profile=surpriseTimingProfile()){
  if(!surprisesAreEnabled())return 'off';
- if(!romanticLongBusy){
-  romanticMessageCycle++;
-  if(romanticMessageCycle>=romanticLongNextAt){
-   if(showRomanticLongMessage())return 'long';
-  }
- }
- const isFast=profile.speedKey==='random-fast' || (profile.randomAll&&profile.speedKey==='fast');
- const allowOverlap=isFast&&Math.random()<.62;
- // إضافة المشاهد الكرتونية القديمة إلى نفس مولّد المفاجآت، لكن بدون إغراق الوضع العادي.
- if(Math.random()<.17){
-  const message=randomSurpriseMessage();lastRomanticSceneMessage=message;
-  showClassicSurpriseScene(message,profile,allowOverlap);
- }else if(Math.random()<(isFast?.16:.10)){
-  const m=randomSurpriseMessage();showMessageBalloon(m);
- }else{
-  const message=randomSurpriseMessage();lastRomanticSceneMessage=message;
-  showRomanticScene(message,{style:romanticScenePickStyle(),motion:romanticMotionPick(),occasion:occasionJoyActive(),profile,allowOverlap});
- }
+ // وضع الرسائل المضمون: بعد الاحتفال نعرض النص العشوائي نفسه مباشرة.
+ // لا نعتمد على مشهد/بالونة/رسمة حتى لا يختفي النص إذا تعطل أحد المؤثرات.
+ const message=randomSurpriseMessage();
+ lastRomanticSceneMessage=message;
+ renderRomanticTickerMessage(message,Math.floor(Math.random()*5),6200);
  return 'message';
 }
 
@@ -854,7 +944,7 @@ function showMessageBalloon(message){
  let layer=document.getElementById('romanticBalloonLayer');if(layer)layer.remove();layer=document.createElement('div');layer.id='romanticBalloonLayer';layer.className='romantic-balloon-layer';const sparks=['✨','💖','🌹','💕','🥰','🎀','💛','😘'];layer.innerHTML=`<div class="romantic-balloon-wrap"><div class="romantic-balloon"><span class="romantic-balloon-knot"></span><span class="romantic-balloon-text">${esc(message)}</span></div></div>${sparks.map((x,i)=>`<span class="balloon-pop-spark s${i}">${x}</span>`).join('')}`;document.body.appendChild(layer);setTimeout(()=>layer.classList.add('pop'),4200);setTimeout(()=>layer.classList.add('fade'),6500);setTimeout(()=>layer.remove(),9800)
 }
 function inKissWindow(){const d=new Date();const mins=d.getHours()*60+d.getMinutes();return mins>=23*60||mins<60}
-function tryScheduleKissBalloon(){if(!surprisesAreEnabled())return;clearTimeout(romanticKissTimer);const key=`${today()}-kiss-balloon`;if(localStorage.getItem('osra-kiss-balloon-shown')===key)return;const d=new Date(),mins=d.getHours()*60+d.getMinutes();if(mins>=23*60||mins<60){const delay=5200+Math.random()*4200;romanticKissTimer=setTimeout(()=>{if(!inKissWindow()||localStorage.getItem('osra-kiss-balloon-shown')===key)return;localStorage.setItem('osra-kiss-balloon-shown',key);const msg=ROMANTIC_KISS_MESSAGES[Math.random()<0.55?0:1+Math.floor(Math.random()*(ROMANTIC_KISS_MESSAGES.length-1))];showRomanticScene(msg,{style:Math.random()<.55?'balloons':'giantcenter'});},delay);return}if(mins<23*60){const until23=(23*60-mins)*60000-d.getSeconds()*1000;romanticKissTimer=setTimeout(()=>tryScheduleKissBalloon(),Math.max(30000,until23));return}const tomorrow=new Date(d);tomorrow.setDate(tomorrow.getDate()+1);tomorrow.setHours(23,0,5,0);romanticKissTimer=setTimeout(()=>tryScheduleKissBalloon(),Math.max(60000,tomorrow-d))}
+function tryScheduleKissBalloon(){if(!surprisesAreEnabled())return;clearTimeout(romanticKissTimer);const key=`${today()}-kiss-balloon`;if(localStorage.getItem('osra-kiss-balloon-shown')===key)return;const d=new Date(),mins=d.getHours()*60+d.getMinutes();if(mins>=23*60||mins<60){const delay=5200+Math.random()*4200;romanticKissTimer=setTimeout(()=>{if(!inKissWindow()||localStorage.getItem('osra-kiss-balloon-shown')===key)return;localStorage.setItem('osra-kiss-balloon-shown',key);const msg=ROMANTIC_KISS_MESSAGES[0]||ROMANTIC_TICKER_MESSAGES[0];renderRomanticTickerMessage(msg,4,6200);},delay);return}if(mins<23*60){const until23=(23*60-mins)*60000-d.getSeconds()*1000;romanticKissTimer=setTimeout(()=>tryScheduleKissBalloon(),Math.max(30000,until23));return}const tomorrow=new Date(d);tomorrow.setDate(tomorrow.getDate()+1);tomorrow.setHours(23,0,5,0);romanticKissTimer=setTimeout(()=>tryScheduleKissBalloon(),Math.max(60000,tomorrow-d))}
 function showRomanticEffect(profile=surpriseTimingProfile()){
  if(!surprisesAreEnabled())return;
  const layer=document.getElementById('romanticEffectLayer')||(()=>{const x=document.createElement('div');x.id='romanticEffectLayer';x.className='romantic-effect-layer';document.body.appendChild(x);return x})();
@@ -871,26 +961,19 @@ function startRomanticTicker(){
  clearTimeout(romanticTickerTimer);clearTimeout(romanticDelightTimer);
  const schedule=(delay)=>{
   romanticDelightTimer=setTimeout(()=>{
+   romanticDelightTimer=null;
    if(!surprisesAreEnabled())return;
    const prof=surpriseTimingProfile();
    const result=showRomanticMessage(prof);
    if(result==='off')return;
    localStorage.setItem('osra-romantic-day-message',today());
-   if(prof.speedKey==='random-fast'&&Math.random()<.48){
-    const extra={...prof,speed:Math.max(1.5,prof.speed*(.96+Math.random()*.34)),key:'fast'};
-    setTimeout(()=>{if(surprisesAreEnabled()&&!romanticLongBusy)showRomanticMessage(extra)},430+Math.random()*900);
-   }
-   const effectChance=prof.speedKey==='random-fast'?.86:.48;
-   const floatChance=prof.speedKey==='random-fast'?.72:.42;
-   if(Math.random()<effectChance)setTimeout(()=>showRomanticEffect(prof),100+Math.random()*260);
-   if(Math.random()<floatChance){const k=Math.random();setTimeout(()=>showRomanticFloat(k<.25?'balloon':k<.55?'rose':k<.78?'heart':'random',prof),120+Math.random()*300)}
-   const next=result==='long'?Math.max(10500,Math.min(13000,prof.interval||10000)):Math.max(3000,Math.round(prof.interval));
+   const next=Math.max(3000,Math.round(prof.interval||10000));
    schedule(next);
   },Math.max(0,delay));
   romanticTickerTimer=romanticDelightTimer;
  };
- // The first surprise is deliberately separated from the 10-second opening celebration; this is only a start offset.
- schedule(1200);
+ // ضمان الرسالة الأولى مباشرة بعد نهاية احتفال فتح البرنامج.
+ schedule(220);
  tryScheduleKissBalloon();
 }
 
@@ -921,7 +1004,7 @@ function pageCalendar(){
 function pageHTML(s){return s==='home'?pageHome():s==='memories'?pageMemories():s==='calendar'?pageCalendar():s==='story'?pageStory():s==='dreams'?pageDreams():s==='spiritual'?pageSpiritual():s==='messages'?pageMessages():s==='about'?pageAbout():pageSettings()}
 function hideBootSplash(){return new Promise(resolve=>{const el=document.getElementById('bootSplash');if(!el||el.classList.contains('boot-done')){resolve();return}const elapsed=performance.now()-(window.__osraBootAt||performance.now());const wait=Math.max(0,3000-elapsed);setTimeout(()=>requestAnimationFrame(()=>{el.classList.add('boot-done');setTimeout(resolve,460)}),wait)})}
 function renderNoAnim(preserveScroll=false){resetAlbumBookTurn();const oldInner=$('#currentPage .inner');const scrollTop=preserveScroll?(oldInner?.scrollTop||0):0;const scrollLeft=preserveScroll?(oldInner?.scrollLeft||0):0;$('#currentPage').innerHTML=pageHTML(section);hydrate();setNav();updateSelectionCount();requestAnimationFrame(()=>{fitAlbumBookStage();if(preserveScroll){const inner=$('#currentPage .inner');if(inner){inner.scrollTop=scrollTop;inner.scrollLeft=scrollLeft}}if(section==='home')maybeRunOccasionCelebrations()})}
-function navigate(to,dir=1){if(to===section||busy)return;resetAlbumBookTurn();window.OsRa3D?.pageTurn?.(dir);busy=true;const book=$('#book'),current=$('#currentPage'),back=$('#backPage'),duration=760;back.innerHTML=pageHTML(to);hydrate();book.classList.remove('turn-next','turn-prev');requestAnimationFrame(()=>book.classList.add(dir>0?'turn-next':'turn-prev'));paperSound(duration);setTimeout(()=>{section=to;current.innerHTML=pageHTML(section);back.innerHTML='';book.classList.remove('turn-next','turn-prev');busy=false;hydrate();setNav();updateSelectionCount()},duration)}
+function navigate(to,dir=1){if(to===section||busy)return;resetAlbumBookTurn();busy=true;const book=$('#book'),current=$('#currentPage'),back=$('#backPage'),duration=760;back.innerHTML=pageHTML(to);hydrate();book.classList.remove('turn-next','turn-prev');requestAnimationFrame(()=>book.classList.add(dir>0?'turn-next':'turn-prev'));paperSound(duration);setTimeout(()=>{section=to;current.innerHTML=pageHTML(section);back.innerHTML='';book.classList.remove('turn-next','turn-prev');busy=false;hydrate();setNav();updateSelectionCount()},duration)}
 const thumbObserver=('IntersectionObserver' in window)?new IntersectionObserver(entries=>{for(const ent of entries){if(!ent.isIntersecting)continue;thumbObserver.unobserve(ent.target);queueThumbHydrate(ent.target)}},{rootMargin:'800px 0px'}):null;
 async function getThumbBlob(id){if(thumbCache.has(id))return thumbCache.get(id);let b=null;try{const rec=await get('thumbs',id);b=rec?.blob||null}catch{}if(!b){const legacy=await get('photos',id).catch(()=>null);b=legacy?.thumbBlob||null}if(b){thumbCache.set(id,b);while(thumbCache.size>THUMB_CACHE_MAX){const first=thumbCache.keys().next().value;thumbCache.delete(first)}}return b}
 function setThumbElement(el,b){if(!el||!b)return false;const u=URL.createObjectURL(b);el.dataset.thumbBound='1';el.dataset.thumbQueued='';el.loading='eager';el.decoding='async';el.addEventListener('load',()=>URL.revokeObjectURL(u),{once:true});el.addEventListener('error',()=>URL.revokeObjectURL(u),{once:true});el.src=u;return true}
@@ -1712,7 +1795,7 @@ async function ensureLatestOsRa(){
     location.reload();
   },{once:true});
   try{
-    const reg=await navigator.serviceWorker.register('./sw.js?build=osra120-20261008-r44-3d-couple-classics',{updateViaCache:'none'});
+    const reg=await navigator.serviceWorker.register('./sw.js?build=osra122-20261008-r46-stable-core',{updateViaCache:'none'});
     await reg.update().catch(()=>{});
     if(reg.waiting) reg.waiting.postMessage({type:'SKIP_WAITING'});
   }catch(e){console.warn('OsRa service worker update skipped',e)}

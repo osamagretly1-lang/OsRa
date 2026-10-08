@@ -1,11 +1,10 @@
-const BUILD='osra121-20261008-r45-3d-couple-motion-refined';
-const CACHE=`OsRa-v121-${BUILD}`;
+const BUILD='osra122-20261008-r46-stable-core-linking-repair';
+const CACHE=`OsRa-v122-${BUILD}`;
 const APP=[
   './',
   './index.html',
   './style.css',
-  './assets/osra3d.js',
-  './app.js?v=osra121-r45-3d-couple-motion-refined',
+  './app.js?v=osra122-r46-stable-core',
   './manifest.json',
   './icon.svg',
   './icon-192.png',
