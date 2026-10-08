@@ -1,11 +1,11 @@
-const BUILD='osra118-20261008-r42-complete-surprise-system';
-const CACHE=`OsRa-v118-${BUILD}`;
-const OPTIONAL_3D=['./assets/osama-3d.png','./assets/rania-3d.png'];
+const BUILD='osra120-20261008-r44-3d-couple-classics';
+const CACHE=`OsRa-v120-${BUILD}`;
 const APP=[
   './',
   './index.html',
   './style.css',
-  './app.js?v=osra118-r42-complete-surprise-system',
+  './assets/osra3d.js',
+  './app.js?v=osra120-r44-3d-couple-classics',
   './manifest.json',
   './icon.svg',
   './icon-192.png',
@@ -58,15 +58,6 @@ self.addEventListener('fetch',event=>{
                (isNav ? await caches.match('./index.html') : null) ||
                new Response('',{status:504});
       }
-    })());
-    return;
-  }
-  const isOptional3D=OPTIONAL_3D.some(a=>new URL(a,self.location.href).href===u.href);
-  if(isOptional3D){
-    event.respondWith((async()=>{
-      const cached=await caches.match(event.request,{ignoreSearch:false});
-      if(cached)return cached;
-      try{return await freshNetwork(event.request)}catch{return new Response('',{status:404})}
     })());
     return;
   }
