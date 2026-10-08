@@ -781,6 +781,16 @@ body.birthday-day .topbar{padding-top:68px}
 @media(max-width:600px){.osra-cute-white-dog{font-size:42px}.osra-cinderella-char{font-size:66px}.osra-dog-head{font-size:54px}.osra-gift-box{font-size:60px}.osra-cartoon-fight-cloud{font-size:62px}.osra-magic-card,.osra-gift-message,.osra-birds-message,.osra-floating-target-balloon span{font-size:15px;padding:12px 15px}}
 
 
+
+/* R47 — restrained Tom & Jerry cue; keeps the classic scene lightweight. */
+.osra-tomjerry-chase{position:absolute;top:30%;left:50%;transform:translateX(-50%);width:min(76vw,520px);display:flex;justify-content:space-between;align-items:center;font-size:clamp(42px,11vw,86px);filter:drop-shadow(0 6px 10px rgba(0,0,0,.12));animation:osraTomJerryChase calc(2.4s/var(--classic-speed)) ease-in-out infinite alternate}
+.osra-tomjerry-chase .osra-tom{display:inline-block;animation:osraTomWiggle calc(.85s/var(--classic-speed)) ease-in-out infinite alternate}
+.osra-tomjerry-chase .osra-jerry{display:inline-block;animation:osraJerryWiggle calc(.72s/var(--classic-speed)) ease-in-out infinite alternate-reverse}
+@keyframes osraTomJerryChase{from{transform:translateX(-50%) translateX(-16px)}to{transform:translateX(-50%) translateX(16px)}}
+@keyframes osraTomWiggle{from{transform:translateY(3px) rotate(-4deg)}to{transform:translateY(-7px) rotate(4deg)}}
+@keyframes osraJerryWiggle{from{transform:translateY(-4px) rotate(4deg)}to{transform:translateY(5px) rotate(-4deg)}}
+@media(max-width:600px){.osra-tomjerry-chase{top:27%;font-size:clamp(36px,12vw,66px);width:72vw}}
+
 /* R43 — thumbnail fallback: never expose broken-image alt text in the romantic thumbnail strips. */
 .strip-thumb img,.romantic-thumb img,.memory-hero img,.mini-thumb img,.romantic-cover-photo img,.lb-thumb img{color:transparent;font-size:0;}
 .strip-thumb{overflow:hidden;}

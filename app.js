@@ -1,5 +1,5 @@
 window.__osraBootAt=performance.now();
-const OSRA_BUILD='OsRa v122 — 2026-10-08 — R46 STABLE CORE + RELIABLE POST-CELEBRATION RANDOM MESSAGES';
+const OSRA_BUILD='OsRa v123 — 2026-10-08 — R47 STABLE CORE + RESTORED PRESENTATION VARIETY';
 const DB='OsRaDB', VER=100, THUMB_VERSION=6, THUMB_MAX_BYTES=160*1024;
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 const DEFAULT={settings:{startDate:'',engagementDate:'',birthdayRania:'',osamaPhone:'',raniaPhone:'',whatsappUrl:'',libraryName:'',soundEnabled:false,surprisesEnabled:true,dailyAlbumIds:null,albumOrderMode:'manual',albumMiniView:false,messagesOrder:'desc',hideScanProgressCard:false,countdowns:[],surpriseTiming:'10',surpriseSpeed:'normal',customSurpriseMessages:[]},memories:[],events:[],dreams:[],verses:[],prayers:[],messages:[],excludedPhotos:[]};
@@ -920,7 +920,7 @@ function triggerGermanShepherdGift(msgText,profile=surpriseTimingProfile(),allow
 function triggerTomAndJerry(msgText,profile=surpriseTimingProfile(),allowOverlap=false){
  if(!surprisesAreEnabled())return null;if(!allowOverlap)clearClassicSurpriseScenes();
  const el=document.createElement('div');el.className='osra-classic-scene osra-classic-tomjerry';
- el.innerHTML=`<div class="osra-cartoon-fight-cloud">💥💨</div><div class="osra-flying-birds">🐤🐤🐤</div><div class="osra-birds-message">${esc(msgText)}</div>`;
+ el.innerHTML=`<div class="osra-tomjerry-chase"><span class="osra-tom">🐱</span><span class="osra-jerry">🐭</span></div><div class="osra-cartoon-fight-cloud">💥💨</div><div class="osra-flying-birds">🐤🐤🐤</div><div class="osra-birds-message">${esc(msgText)}</div>`;
  el.style.setProperty('--classic-speed',String(Math.max(.72,profile.speed||1)));document.body.appendChild(el);
  classicSceneFinalize(el,Math.max(8000,classicSceneLife(profile)));return el;
 }
@@ -931,10 +931,33 @@ function showClassicSurpriseScene(message,profile,allowOverlap=false){
 
 function showRomanticMessage(profile=surpriseTimingProfile()){
  if(!surprisesAreEnabled())return 'off';
- // وضع الرسائل المضمون: بعد الاحتفال نعرض النص العشوائي نفسه مباشرة.
- // لا نعتمد على مشهد/بالونة/رسمة حتى لا يختفي النص إذا تعطل أحد المؤثرات.
  const message=randomSurpriseMessage();
  lastRomanticSceneMessage=message;
+ romanticMessageCycle=(romanticMessageCycle||0)+1;
+
+ // نفس مخزن الرسائل، لكن طريقة التقديم تتغير فقط. لا نغيّر البيانات ولا الربط.
+ // الرسالة الطويلة تظهر نادرًا حتى تبقى مفاجأة، ثم نعود للدورة العادية.
+ if(romanticMessageCycle>=7 || Math.random()<0.08){
+   romanticMessageCycle=0;
+   if(showRomanticLongMessage())return 'long';
+ }
+
+ const roll=Math.random();
+ // 35%: بطاقة رومانسية حرة فوق محتوى التطبيق، بمكان/حركة/ستايل مختلف كل مرة.
+ if(roll<0.35){
+   showRomanticScene(message,{style:romanticScenePickStyle(),motion:romanticMotionPick(),profile});
+   return 'scene';
+ }
+ // 25%: مشهد كرتوني خفيف من الديك الأصلي: كلب، سمكة، سندريلا، هدية، توم وجيري.
+ if(roll<0.60){
+   return showClassicSurpriseScene(message,profile,false);
+ }
+ // 20%: فقاعة تطلع من أحد الجانبين بدل تثبيت الرسالة أعلى الشاشة.
+ if(roll<0.80){
+   showRomanticBubble(message);
+   return 'bubble';
+ }
+ // 20%: العرض البسيط المضمون كنقطة أمان؛ نفس الرسالة، بدون أي اعتماد على الرسم.
  renderRomanticTickerMessage(message,Math.floor(Math.random()*5),6200);
  return 'message';
 }
