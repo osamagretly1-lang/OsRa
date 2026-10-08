@@ -1,10 +1,10 @@
-const BUILD='osra118-20261008-r42-complete-surprise-system';
-const CACHE=`OsRa-v116-${BUILD}`;
+const BUILD='osra119-20261008-r43-stable-core-linking-repair';
+const CACHE=`OsRa-v119-${BUILD}`;
 const APP=[
   './',
   './index.html',
   './style.css',
-  './app.js?v=osra118-r42-complete-surprise-system',
+  './app.js?v=osra119-r43-stable-core',
   './manifest.json',
   './icon.svg',
   './icon-192.png',

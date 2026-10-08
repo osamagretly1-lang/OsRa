@@ -780,3 +780,7 @@ body.birthday-day .topbar{padding-top:68px}
 @keyframes osraClassicBirds{from{transform:translateX(-20px) rotate(-3deg)}to{transform:translateX(20px) rotate(3deg)}}
 @media(max-width:600px){.osra-cute-white-dog{font-size:42px}.osra-cinderella-char{font-size:66px}.osra-dog-head{font-size:54px}.osra-gift-box{font-size:60px}.osra-cartoon-fight-cloud{font-size:62px}.osra-magic-card,.osra-gift-message,.osra-birds-message,.osra-floating-target-balloon span{font-size:15px;padding:12px 15px}}
 
+
+/* R43 — thumbnail fallback: never expose broken-image alt text in the romantic thumbnail strips. */
+.strip-thumb img,.romantic-thumb img,.memory-hero img,.mini-thumb img,.romantic-cover-photo img,.lb-thumb img{color:transparent;font-size:0;}
+.strip-thumb{overflow:hidden;}
