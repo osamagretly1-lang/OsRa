@@ -1,10 +1,10 @@
-const BUILD='osra124-20261008-r48-stable-presentation-variety';
-const CACHE=`OsRa-v124-${BUILD}`;
+const BUILD='osra122-20261008-r47-stable-full-surprises-linking-repair';
+const CACHE=`OsRa-v122-${BUILD}`;
 const APP=[
   './',
   './index.html',
   './style.css',
-  './app.js?v=osra124-r48-presentation-variety',
+  './app.js?v=osra122-r47-stable-full-surprises',
   './manifest.json',
   './icon.svg',
   './icon-192.png',

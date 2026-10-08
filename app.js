@@ -1,12 +1,12 @@
 window.__osraBootAt=performance.now();
-const OSRA_BUILD='OsRa v124 — 2026-10-08 — R48 STABLE CORE + RESTORED PRESENTATION VARIETY';
+const OSRA_BUILD='OsRa v122 — 2026-10-08 — R47 STABLE FULL SURPRISES + RELIABLE MESSAGE LOOP';
 const DB='OsRaDB', VER=100, THUMB_VERSION=6, THUMB_MAX_BYTES=160*1024;
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 const DEFAULT={settings:{startDate:'',engagementDate:'',birthdayRania:'',osamaPhone:'',raniaPhone:'',whatsappUrl:'',libraryName:'',soundEnabled:false,surprisesEnabled:true,dailyAlbumIds:null,albumOrderMode:'manual',albumMiniView:false,messagesOrder:'desc',hideScanProgressCard:false,countdowns:[],surpriseTiming:'10',surpriseSpeed:'normal',customSurpriseMessages:[]},memories:[],events:[],dreams:[],verses:[],prayers:[],messages:[],excludedPhotos:[]};
 const thumbCache=new Map();const THUMB_CACHE_MAX=96;let thumbHydrateQueue=new Set(),thumbHydrateTimer=0;
 let excludedCacheSource=null,excludedCacheSet=new Set();
 let db,state=structuredClone(DEFAULT),libraryHandle=null,backupFileHandle=null,backupMeta={lastSavedAt:0,lastAutoFileAt:0},hqSourceHandle=null,hqSourceMeta={name:'',manifestVersion:1},hqIndex=new Map(),hqBuildCheckpoint=null,hqBuildSelection=null,hqBuildStopRequested=false,photos=new Map(),sources=[],activeSourceId=null,scanProgresses={},permissionCache=new Set(),permissionDeniedCache=new Set(),searchState={query:'',messageId:'',fromSection:'home'},section='home',busy=false,scanLock=false,scanStopRequested=false,scanCheckpoint=null,scanProgressWrite=Promise.resolve(),dragSelectMode=false,dragSelecting=false,dragSelectValue=true,dragVisited=new Set(),dragPointerId=null,dragScrollTimer=null,dragLastX=0,dragLastY=0,dragLongPressTimer=null,dragPending=false,dragPendingPhoto='',dragPendingItem=null,dragPendingX=0,dragPendingY=0,quickTapHandledUntil=0,reindexRestorePool=[],duplicateModalGroups=[],installEvent=null,soundOn=false,audioCtx=null,lb={ids:[],i:0,url:null,thumbUrl:null,loadToken:0,timer:null,touchX:null,touchY:null,zoom:1,panX:0,panY:0,dragX:null,dragY:null,dragPanX:0,dragPanY:0,pinchStart:0,pinchBase:1,lastTap:0,lastTapX:0,lastTapY:0,flipBusy:false,flipTimer:null,flipUrls:[]},currentMemoryId=null,selectedPhotos=new Set(),selectedMemories=new Set(),calendarDate=today(),calendarCursor=null,safetyTimer=null,recoveryCandidate=null,recoveryNoticeHidden=false,pendingFolderRoot=null,pendingFolderName='',albumBookIndex=0,albumBookBusy=false,albumBookTimer=null,albumBookToken=0;
-let lastLinkReport=null,linkProgresses={},linkProgressTimer=null,linkRunStartedAt=0,albumReviewState=null,manualLinkSession=null,visualLinkSession=null,visualLinkStopRequested=false,romanticTickerTimer=null,romanticTickerCloseTimer=null,romanticDelightTimer=null,romanticKissTimer=null,romanticKissShownKey='',romanticLongBusy=false,romanticMessageCycle=0,romanticLongNextAt=4+Math.floor(Math.random()*3),occasionCelebrationBusy=false,lastRomanticSceneMessage='',lastRomanticSceneStyle='',lastRomanticMotion='',surpriseStyleDeck=[],surpriseMotionDeck=[],surpriseClassicDeck=[],surpriseLastPresentation='';
+let lastLinkReport=null,linkProgresses={},linkProgressTimer=null,linkRunStartedAt=0,albumReviewState=null,manualLinkSession=null,visualLinkSession=null,visualLinkStopRequested=false,romanticTickerTimer=null,romanticTickerCloseTimer=null,romanticDelightTimer=null,romanticKissTimer=null,romanticKissShownKey='',romanticLongBusy=false,romanticMessageCycle=0,romanticLongNextAt=4+Math.floor(Math.random()*3),occasionCelebrationBusy=false,lastRomanticSceneMessage='',lastRomanticSceneStyle='',lastRomanticMotion='',romanticMessageDeck=[],romanticMessageDeckSignature='',romanticTickerGeneration=0,romanticTickerWatchdog=null;
 const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const id=p=>p+'-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);
 function isImage(n){return /\.(jpe?g|png|webp|gif|avif|heic|heif|tif?f|bmp)$/i.test(String(n||''))}
@@ -375,7 +375,7 @@ function runPostOpenCelebration(){
    },7000);
  }
 }
-function clearSurpriseLayers(){clearClassicSurpriseScenes();['romanticSceneLayer','romanticMessageBubble','romanticLongLayer','romanticBalloonLayer','romanticEffectLayer','romanticFloatLayer','occasionCelebration'].forEach(id=>{const el=document.getElementById(id);if(el)el.remove()});document.querySelectorAll('[id^="romanticSceneLayer-"]').forEach(el=>el.remove());const ticker=document.getElementById('romanticTicker');if(ticker){ticker.classList.remove('show');const tx=document.getElementById('romanticTickerText');if(tx)tx.textContent=''}clearTimeout(romanticTickerCloseTimer);clearTimeout(romanticKissTimer);romanticKissTimer=null;clearTimeout(romanticDelightTimer);romanticDelightTimer=null;occasionCelebrationBusy=false;romanticLongBusy=false;romanticMessageCycle=0;romanticLongNextAt=4+Math.floor(Math.random()*3);surpriseStyleDeck=[];surpriseMotionDeck=[];surpriseClassicDeck=[];surpriseLastPresentation='';lastRomanticSceneStyle='';lastRomanticMotion=''}
+function clearSurpriseLayers(){romanticTickerGeneration++;clearInterval(romanticTickerWatchdog);romanticTickerWatchdog=null;clearClassicSurpriseScenes();['romanticSceneLayer','romanticMessageBubble','romanticLongLayer','romanticBalloonLayer','romanticEffectLayer','romanticFloatLayer','occasionCelebration'].forEach(id=>{const el=document.getElementById(id);if(el)el.remove()});document.querySelectorAll('[id^="romanticSceneLayer-"]').forEach(el=>el.remove());const ticker=document.getElementById('romanticTicker');if(ticker){ticker.classList.remove('show');const tx=document.getElementById('romanticTickerText');if(tx)tx.textContent=''}clearTimeout(romanticTickerCloseTimer);clearTimeout(romanticKissTimer);romanticKissTimer=null;clearTimeout(romanticDelightTimer);romanticDelightTimer=null;occasionCelebrationBusy=false;romanticLongBusy=false;romanticMessageCycle=0;romanticLongNextAt=4+Math.floor(Math.random()*3)}
 async function toggleSurprises(){state.settings.surprisesEnabled=!surprisesAreEnabled();await save();if(!surprisesAreEnabled()){clearSurpriseLayers();document.getElementById('bootAfterOpenCelebration')?.replaceChildren();}updateSurpriseButton();updateBirthdayUi();if(surprisesAreEnabled()){startRomanticTicker();maybeRunOccasionCelebrations();}renderNoAnim();}
 function dataRecoveryCard(){if(!recoveryCandidate)return '';const score=recoveryScore(recoveryCandidate);if(score<=recoveryScore(state))return '';return `<div class="card recovery-card"><h3>🛟 نسخة أمان أفضل متاحة</h3><p>OsRa وجد نسخة أمان تحتوي، بحسب المقارنة الداخلية، على بيانات أكثر من الحالة الحالية.</p><div class="meta">تاريخ النسخة: ${esc(recoveryLabel(recoveryCandidate))}</div><div class="actions"><button class="btn primary" data-action="restoreLocalRecovery">استعادة النسخة</button><button class="btn" data-action="hideRecoveryNotice">إخفاء هذا التنبيه</button></div><p class="meta">لن يتم الاستبدال تلقائيًا. الاستعادة لا تحذف الصور الأصلية من الهاتف، ولا تتم إلا بعد ضغطك على زر الاستعادة.</p></div>`}
 function scanProgressText(cp){if(!cp)return'';const n=cp.processed||cp.count||0,a=cp.added||0,u=cp.updated||0,m=cp.moved||0,e=cp.excluded||0;return `تم فحص ${n} صورة${a?` — ${a} جديدة`:''}${u?` — ${u} محدثة`:''}${m?` — ${m} منقولة`:''}${e?` — ${e} مستبعدة`:''}`}
@@ -762,7 +762,8 @@ function countdownsPanel(){const xs=state.settings.countdowns||[];return `<div c
 function removeOccasionCelebration(){document.getElementById('occasionCelebration')?.remove();occasionCelebrationBusy=false}
 function runOccasionCelebrationForId(idv){if(!surprisesAreEnabled())return;const list=occasionCountdownsToday().filter(x=>String(x.id)===String(idv));if(!list.length||countdownCelebrateOff(idv)||occasionCelebrationBusy)return;removeOccasionCelebration();occasionCelebrationBusy=true;const layer=document.createElement('div');layer.id='occasionCelebration';layer.className='occasion-celebration';layer.setAttribute('aria-hidden','true');const fireworks=['🎆','✨','💥','🎇','⭐'];const fall=['❤️','🫂','🌹','🌷','🌸','💋','💛','🥰','💖','🎀'];for(let i=0;i<26;i++){const s=document.createElement('span');s.className='occasion-spark';s.textContent=fireworks[i%fireworks.length];s.style.left=`${4+Math.random()*92}%`;s.style.animationDelay=`${(Math.random()*.85).toFixed(2)}s`;s.style.animationDuration=`${(2.0+Math.random()*1.35).toFixed(2)}s`;layer.appendChild(s)}for(let i=0;i<44;i++){const s=document.createElement('span');s.className='occasion-confetti';s.textContent=fall[i%fall.length];s.style.left=`${Math.random()*100}%`;s.style.animationDelay=`${(Math.random()*1.5).toFixed(2)}s`;s.style.animationDuration=`${(3.0+Math.random()*2.0).toFixed(2)}s`;layer.appendChild(s)}for(let i=0;i<7;i++){const s=document.createElement('span');s.className='occasion-balloon';s.textContent=['🎈','🎈','🎈','💖'][i%4];s.style.left=`${8+Math.random()*84}%`;s.style.animationDelay=`${(Math.random()*.8).toFixed(2)}s`;s.style.animationDuration=`${(3.2+Math.random()*1.7).toFixed(2)}s`;layer.appendChild(s)}document.body.appendChild(layer);setTimeout(()=>{const label=list[0]?.title||'';showRomanticScene(label,{occasion:true,style:romanticScenePickStyle()});layer.classList.add('occasion-celebration-out');setTimeout(()=>{layer.remove();occasionCelebrationBusy=false},800)},2200)}
 function maybeRunOccasionCelebrations(){if(!surprisesAreEnabled()||section!=='home')return;const key=today();for(const x of occasionCountdownsToday()){if(countdownCelebrateOff(x.id))continue;const shownKey=`osra-occasion-shown-${String(x.id)}-${key}`;if(localStorage.getItem(shownKey))continue;localStorage.setItem(shownKey,'1');setTimeout(()=>runOccasionCelebrationForId(x.id),350);break}}
-function renderRomanticTickerMessage(message,variant,duration=7200){const el=document.getElementById('romanticTicker');const tx=document.getElementById('romanticTickerText');if(!el||!tx)return;tx.textContent=message;tx.dataset.variant=String(variant||0);el.classList.remove('show');void el.offsetWidth;el.classList.add('show');clearTimeout(romanticTickerCloseTimer);romanticTickerCloseTimer=setTimeout(()=>el.classList.remove('show'),Math.max(2800,duration))}
+function ensureRomanticTicker(){let el=document.getElementById('romanticTicker'),tx=document.getElementById('romanticTickerText');if(el&&tx)return {el,tx};if(!el){el=document.createElement('div');el.id='romanticTicker';el.className='romantic-ticker';el.setAttribute('aria-live','polite');el.setAttribute('aria-hidden','true');document.body.appendChild(el)}if(!tx){tx=document.createElement('span');tx.id='romanticTickerText';el.appendChild(tx)}return {el,tx}}
+function renderRomanticTickerMessage(message,variant,duration=7200){if(!surprisesAreEnabled())return false;const {el,tx}=ensureRomanticTicker();tx.textContent=String(message||'');tx.dataset.variant=String(variant||0);el.classList.remove('show');void el.offsetWidth;el.classList.add('show');clearTimeout(romanticTickerCloseTimer);romanticTickerCloseTimer=setTimeout(()=>{el.classList.remove('show')},Math.max(2800,duration));return true}
 const ROMANTIC_TICKER_MESSAGES=['بحبك','👇انت مش لوحدك انا معاك🫂','🙏ربنا يخليك ليا🙏🤲','كلمتني النهاردة 🤔؟','بصليلك دايما🙏','واااااحشني 🙈🙊🫂','خد ورده 🌹','انت حلو😍🤩😘','😍❤️انت حبيبي 🥰💛','❤️😍🥰💛🌹ياروحي❤️😍🥰🌹♥️'];
 const ROMANTIC_LONG_MESSAGE='حلو انت وقاعد مستني الرساله اللي جاية؟ طيب مفيش رسايل جاية وانا اصلا هاجي بطريقة محدش يتوقعني 😉😅 قوم ذاكر ولا شوف وراك إيه ولا كده هغير من التطبيق هياخدك مني🙊';
 const ROMANTIC_FLOATS=['🎈','🌹','❤️','💛','💖','💕','🌷','🌸','💐','😘','🫂'];
@@ -781,7 +782,7 @@ const APP_FLIRT_MESSAGES=[
  'هو ينفع تكوني قمر كده للتطبيق ولصاحب التطبيق في نفس الوقت؟ ده كتير علينا بصراحة! 🙈🌹'
 ];
 // الرسالة السرية الليلية: هذه الرسالة وحدها تعمل في نافذة 11م–1ص وبحد أقصى مرة في اليوم.
-const ROMANTIC_KISS_MESSAGES=['هات بوسه🙈🙊',...ROMANTIC_TICKER_MESSAGES];
+const ROMANTIC_KISS_MESSAGES=['هات بوسه🙈🙊'];
 function occasionJoyActive(){return surprisesAreEnabled()&&occasionCountdownsToday().some(x=>!countdownCelebrateOff(x.id))}
 function showRomanticFloat(kind='random',profile=surpriseTimingProfile()){
  if(!surprisesAreEnabled())return;
@@ -812,34 +813,15 @@ const ROMANTIC_SCENE_STYLES=[
 ];
 const ROMANTIC_SCENE_EMOJIS=['❤️','💖','💕','💛','💗','🌹','🌷','🌸','💐','💋','😘','🥰','🫂','🎀','✨','⭐','🎈','💞','🌺','🩷'];
 const ROMANTIC_MOTION_STYLES=['drop','rise','slide-left','slide-right','zoom','spin','bounce','float-left','float-right','soft'];
-function shuffledDeck(items){const a=[...items];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a;}
 function romanticScenePickStyle(){
- if(!surpriseStyleDeck.length)surpriseStyleDeck=shuffledDeck(ROMANTIC_SCENE_STYLES);
- let v=surpriseStyleDeck.shift()||ROMANTIC_SCENE_STYLES[0];
- if(v===lastRomanticSceneStyle&&ROMANTIC_SCENE_STYLES.length>1){
-   surpriseStyleDeck=shuffledDeck(ROMANTIC_SCENE_STYLES.filter(x=>x!==v).concat(surpriseStyleDeck));
-   v=surpriseStyleDeck.shift()||v;
- }
+ const choices=ROMANTIC_SCENE_STYLES.filter(x=>x!==lastRomanticSceneStyle);
+ const v=choices[Math.floor(Math.random()*choices.length)]||ROMANTIC_SCENE_STYLES[0];
  lastRomanticSceneStyle=v;return v;
 }
 function romanticMotionPick(){
- if(!surpriseMotionDeck.length)surpriseMotionDeck=shuffledDeck(ROMANTIC_MOTION_STYLES);
- let v=surpriseMotionDeck.shift()||'soft';
- if(v===lastRomanticMotion&&ROMANTIC_MOTION_STYLES.length>1){
-   surpriseMotionDeck=shuffledDeck(ROMANTIC_MOTION_STYLES.filter(x=>x!==v).concat(surpriseMotionDeck));
-   v=surpriseMotionDeck.shift()||v;
- }
+ const choices=ROMANTIC_MOTION_STYLES.filter(x=>x!==lastRomanticMotion);
+ const v=choices[Math.floor(Math.random()*choices.length)]||'soft';
  lastRomanticMotion=v;return v;
-}
-function classicPresentationPick(){
- const names=['dog','fish','cinderella','gift','tomjerry'];
- if(!surpriseClassicDeck.length)surpriseClassicDeck=shuffledDeck(names);
- let v=surpriseClassicDeck.shift()||'dog';
- if(v===surpriseLastPresentation&&names.length>1){
-   surpriseClassicDeck=shuffledDeck(names.filter(x=>x!==v).concat(surpriseClassicDeck));
-   v=surpriseClassicDeck.shift()||v;
- }
- surpriseLastPresentation=v;return v;
 }
 function romanticSceneHtml(message,style,occasion=false){
  const second=['💖','🌹','💋','🫂','🎈','✨','🌸','💐','💕'][Math.floor(Math.random()*9)];
@@ -939,33 +921,42 @@ function triggerGermanShepherdGift(msgText,profile=surpriseTimingProfile(),allow
 function triggerTomAndJerry(msgText,profile=surpriseTimingProfile(),allowOverlap=false){
  if(!surprisesAreEnabled())return null;if(!allowOverlap)clearClassicSurpriseScenes();
  const el=document.createElement('div');el.className='osra-classic-scene osra-classic-tomjerry';
- el.innerHTML=`<div class="osra-tomjerry-chase"><span class="osra-tom">🐱</span><span class="osra-jerry">🐭</span></div><div class="osra-cartoon-fight-cloud">💥💨</div><div class="osra-flying-birds">🐤🐤🐤</div><div class="osra-birds-message">${esc(msgText)}</div>`;
+ el.innerHTML=`<div class="osra-cartoon-fight-cloud">💥💨</div><div class="osra-flying-birds">🐤🐤🐤</div><div class="osra-birds-message">${esc(msgText)}</div>`;
  el.style.setProperty('--classic-speed',String(Math.max(.72,profile.speed||1)));document.body.appendChild(el);
  classicSceneFinalize(el,Math.max(8000,classicSceneLife(profile)));return el;
 }
 function showClassicSurpriseScene(message,profile,allowOverlap=false){
- const key=classicPresentationPick();
- const map={dog:triggerDogFallingSign,fish:triggerFishPopBalloon,cinderella:triggerCinderellaMagic,gift:triggerGermanShepherdGift,tomjerry:triggerTomAndJerry};
- (map[key]||triggerDogFallingSign)(message,profile,allowOverlap);
- return `classic:${key}`;
+ const fns=[triggerDogFallingSign,triggerFishPopBalloon,triggerCinderellaMagic,triggerGermanShepherdGift,triggerTomAndJerry];
+ const fn=fns[Math.floor(Math.random()*fns.length)];fn(message,profile,allowOverlap);return 'classic';
 }
 
 function showRomanticMessage(profile=surpriseTimingProfile()){
  if(!surprisesAreEnabled())return 'off';
- const message=randomSurpriseMessage();
- lastRomanticSceneMessage=message;
- romanticMessageCycle=(romanticMessageCycle||0)+1;
- if(romanticMessageCycle>=10||Math.random()<0.07){
-   romanticMessageCycle=0;
-   if(showRomanticLongMessage())return 'long';
-   romanticMessageCycle=1;
+ try{
+  if(!romanticLongBusy){
+   romanticMessageCycle++;
+   if(romanticMessageCycle>=romanticLongNextAt){
+    if(showRomanticLongMessage())return 'long';
+   }
+  }
+  const message=randomSurpriseMessage();
+  // Guaranteed text channel: even if a decorative scene/effect fails, the message is still visible.
+  renderRomanticTickerMessage(message,Math.floor(Math.random()*5),Math.max(4300,Math.min(7600,(profile.interval||7200)*.72)));
+  const isFast=profile.speedKey==='random-fast' || (profile.randomAll&&profile.speedKey==='fast');
+  const allowOverlap=isFast&&Math.random()<.62;
+  if(Math.random()<.17){showClassicSurpriseScene(message,profile,allowOverlap)}
+  else if(Math.random()<(isFast?.16:.10)){showMessageBalloon(message)}
+  else{showRomanticScene(message,{style:romanticScenePickStyle(),motion:romanticMotionPick(),occasion:occasionJoyActive(),profile,allowOverlap})}
+  // Decorative effects are deliberately non-critical. They can never stop the message cycle.
+  if(Math.random()<(isFast?.86:.48))setTimeout(()=>{try{if(surprisesAreEnabled())showRomanticEffect(profile)}catch{}},90+Math.random()*240);
+  if(Math.random()<(isFast?.72:.42)){const k=Math.random();setTimeout(()=>{try{if(surprisesAreEnabled())showRomanticFloat(k<.25?'balloon':k<.55?'rose':k<.78?'heart':'random',profile)}catch{}},120+Math.random()*280)}
+  return 'message';
+ }catch(error){
+  console.warn('OsRa surprise renderer recovered:',error);
+  const fallback=randomSurpriseMessage();
+  renderRomanticTickerMessage(fallback,0,6200);
+  return 'message';
  }
- const roll=Math.random();
- if(roll<0.60){showRomanticScene(message,{style:romanticScenePickStyle(),motion:romanticMotionPick(),profile});return 'scene';}
- if(roll<0.82){return showClassicSurpriseScene(message,profile,false);}
- if(roll<0.94){showRomanticBubble(message);return 'bubble';}
- renderRomanticTickerMessage(message,Math.floor(Math.random()*5),Math.min(7200,Math.max(4200,(profile.interval||10000)-1200)));
- return 'message';
 }
 
 function showMessageBalloon(message){
@@ -973,7 +964,7 @@ function showMessageBalloon(message){
  let layer=document.getElementById('romanticBalloonLayer');if(layer)layer.remove();layer=document.createElement('div');layer.id='romanticBalloonLayer';layer.className='romantic-balloon-layer';const sparks=['✨','💖','🌹','💕','🥰','🎀','💛','😘'];layer.innerHTML=`<div class="romantic-balloon-wrap"><div class="romantic-balloon"><span class="romantic-balloon-knot"></span><span class="romantic-balloon-text">${esc(message)}</span></div></div>${sparks.map((x,i)=>`<span class="balloon-pop-spark s${i}">${x}</span>`).join('')}`;document.body.appendChild(layer);setTimeout(()=>layer.classList.add('pop'),4200);setTimeout(()=>layer.classList.add('fade'),6500);setTimeout(()=>layer.remove(),9800)
 }
 function inKissWindow(){const d=new Date();const mins=d.getHours()*60+d.getMinutes();return mins>=23*60||mins<60}
-function tryScheduleKissBalloon(){if(!surprisesAreEnabled())return;clearTimeout(romanticKissTimer);const key=`${today()}-kiss-balloon`;if(localStorage.getItem('osra-kiss-balloon-shown')===key)return;const d=new Date(),mins=d.getHours()*60+d.getMinutes();if(mins>=23*60||mins<60){const delay=5200+Math.random()*4200;romanticKissTimer=setTimeout(()=>{if(!inKissWindow()||localStorage.getItem('osra-kiss-balloon-shown')===key)return;localStorage.setItem('osra-kiss-balloon-shown',key);const msg=ROMANTIC_KISS_MESSAGES[Math.random()<0.55?0:1+Math.floor(Math.random()*(ROMANTIC_KISS_MESSAGES.length-1))]||ROMANTIC_TICKER_MESSAGES[0];showRomanticScene(msg,{style:Math.random()<.55?'balloons':'giantcenter',motion:romanticMotionPick(),profile:surpriseTimingProfile()});},delay);return}if(mins<23*60){const until23=(23*60-mins)*60000-d.getSeconds()*1000;romanticKissTimer=setTimeout(()=>tryScheduleKissBalloon(),Math.max(30000,until23));return}const tomorrow=new Date(d);tomorrow.setDate(tomorrow.getDate()+1);tomorrow.setHours(23,0,5,0);romanticKissTimer=setTimeout(()=>tryScheduleKissBalloon(),Math.max(60000,tomorrow-d))}
+function tryScheduleKissBalloon(){if(!surprisesAreEnabled())return;clearTimeout(romanticKissTimer);const key=`${today()}-kiss-balloon`;if(localStorage.getItem('osra-kiss-balloon-shown')===key)return;const d=new Date(),mins=d.getHours()*60+d.getMinutes();if(mins>=23*60||mins<60){const delay=5200+Math.random()*4200;romanticKissTimer=setTimeout(()=>{if(!inKissWindow()||localStorage.getItem('osra-kiss-balloon-shown')===key)return;localStorage.setItem('osra-kiss-balloon-shown',key);const msg=ROMANTIC_KISS_MESSAGES[0]||'هات بوسه🙈🙊';renderRomanticTickerMessage(msg,4,6200);},delay);return}if(mins<23*60){const until23=(23*60-mins)*60000-d.getSeconds()*1000;romanticKissTimer=setTimeout(()=>tryScheduleKissBalloon(),Math.max(30000,until23));return}const tomorrow=new Date(d);tomorrow.setDate(tomorrow.getDate()+1);tomorrow.setHours(23,0,5,0);romanticKissTimer=setTimeout(()=>tryScheduleKissBalloon(),Math.max(60000,tomorrow-d))}
 function showRomanticEffect(profile=surpriseTimingProfile()){
  if(!surprisesAreEnabled())return;
  const layer=document.getElementById('romanticEffectLayer')||(()=>{const x=document.createElement('div');x.id='romanticEffectLayer';x.className='romantic-effect-layer';document.body.appendChild(x);return x})();
@@ -987,32 +978,43 @@ function showRomanticEffect(profile=surpriseTimingProfile()){
 }
 function startRomanticTicker(){
  if(!surprisesAreEnabled())return;
- clearTimeout(romanticTickerTimer);clearTimeout(romanticDelightTimer);
+ clearTimeout(romanticTickerTimer);clearTimeout(romanticDelightTimer);clearInterval(romanticTickerWatchdog);
+ const generation=++romanticTickerGeneration;
  const schedule=(delay)=>{
-  romanticDelightTimer=setTimeout(()=>{
-   romanticDelightTimer=null;
-   if(!surprisesAreEnabled())return;
-   let prof=null;
+  if(generation!==romanticTickerGeneration||!surprisesAreEnabled())return;
+  clearTimeout(romanticTickerTimer);
+  const safeDelay=Math.max(220,Number(delay)||10000);
+  romanticTickerTimer=setTimeout(()=>{
+   romanticTickerTimer=null;romanticDelightTimer=null;
+   if(generation!==romanticTickerGeneration||!surprisesAreEnabled())return;
+   const prof=surpriseTimingProfile();
+   // Compute the next wake-up first. A rendering exception therefore cannot kill the loop.
+   const preliminaryNext=Math.max(3000,Math.round(prof.interval||10000));
+   schedule(preliminaryNext);
    try{
-     prof=surpriseTimingProfile();
-     showRomanticMessage(prof);
-     if(Math.random()<0.28)showRomanticEffect(prof);
-     if(Math.random()<0.16)showRomanticFloat(['balloon','rose','heart'][Math.floor(Math.random()*3)],prof);
-   }catch(err){console.warn('romantic surprise cycle recovered',err)}
-   finally{
-     if(surprisesAreEnabled()){
-       let next=prof?.interval;
-       if(!next)next=surpriseTimingProfile().interval||10000;
-       schedule(Math.max(3000,Math.round(next)));
-     }
+    const result=showRomanticMessage(prof);
+    localStorage.setItem('osra-romantic-day-message',today());
+    // Long message and other special scenes can take longer; push only the next wake-up without ever stopping the cycle.
+    if(result==='long'){
+      const longNext=Math.max(10500,Math.min(13000,prof.interval||10000));
+      schedule(longNext);
+    }
+   }catch(error){
+    console.warn('OsRa surprise scheduler recovered:',error);
+    schedule(preliminaryNext);
    }
-  },Math.max(0,delay));
-  romanticTickerTimer=romanticDelightTimer;
+  },safeDelay);
+  romanticDelightTimer=romanticTickerTimer;
  };
+ // First message: immediately after the post-open celebration has been cleared.
  schedule(220);
  tryScheduleKissBalloon();
+ // Lightweight watchdog: if a browser/WebView throttles or loses the timeout, revive the loop while enabled.
+ romanticTickerWatchdog=setInterval(()=>{
+  if(!surprisesAreEnabled()){clearInterval(romanticTickerWatchdog);romanticTickerWatchdog=null;return}
+  if(!romanticTickerTimer&&!romanticDelightTimer)startRomanticTicker();
+ },20000);
 }
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&surprisesAreEnabled()&&!romanticDelightTimer&&!romanticTickerTimer)startRomanticTicker()});
 
 function countdownForm(existing=null){const x=existing||{title:'',date:'',emoji:'⏳',showHome:true,annual:false};modal(`<h2>${existing?'تعديل':'إضافة'} عداد / موعد</h2>${field('cTitle','اسم الموعد',x.title,'text')}${field('cDate','التاريخ',x.date,'date')}${field('cEmoji','الرمز (اختياري)',x.emoji,'text')}<label class="field" style="display:flex;align-items:center;gap:8px"><span><input id="cAnnual" type="checkbox" ${x.annual?'checked':''}> يتكرر سنويًا</span></label><label class="field" style="display:flex;align-items:center;gap:8px"><span><input id="cHome" type="checkbox" ${x.showHome?'checked':''}> إظهار العداد في الرئيسية</span></label><div class="actions"><button class="btn primary" data-action="saveCountdown" data-id="${existing?.id||''}">حفظ</button><button class="btn" data-action="closeModal">إلغاء</button></div>`)}
 async function saveCountdown(i){const title=$('#cTitle').value.trim();const date=$('#cDate').value;const emoji=$('#cEmoji').value.trim()||'⏳';if(!title||!date){toast('اكتب اسم الموعد والتاريخ.');return}let x=i?state.settings.countdowns.find(v=>v.id===i):null;if(!x){x={id:id('cnt'),title:'',date:'',emoji:'⏳',showHome:true,annual:false};state.settings.countdowns.unshift(x)}x.title=title;x.date=date;x.emoji=emoji;x.annual=!!$('#cAnnual')?.checked;x.showHome=!!$('#cHome')?.checked;await save();closeModal();toast('تم حفظ العداد.');renderNoAnim()}
@@ -1358,7 +1360,10 @@ async function deleteSurpriseMessage(i){
  const n=Number(i);if(!Number.isInteger(n)||n<0||n>=state.settings.customSurpriseMessages.length)return;
  state.settings.customSurpriseMessages.splice(n,1);await save();toast('تم حذف الرسالة من المفاجآت العشوائية.');renderNoAnim();
 }
-function randomSurpriseMessage(){const pool=surpriseMessagePool();let message=pool[Math.floor(Math.random()*pool.length)]||ROMANTIC_TICKER_MESSAGES[0];let guard=0;while(pool.length>1&&message===lastRomanticSceneMessage&&guard++<12)message=pool[Math.floor(Math.random()*pool.length)];return message}
+function shuffleArray(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function nextSurpriseMessage(){const pool=surpriseMessagePool();const sig=pool.join('\u001f');if(!pool.length)return ROMANTIC_TICKER_MESSAGES[0];if(sig!==romanticMessageDeckSignature||!romanticMessageDeck.length){romanticMessageDeck=shuffleArray([...pool]);romanticMessageDeckSignature=sig;if(romanticMessageDeck.length>1&&romanticMessageDeck[romanticMessageDeck.length-1]===lastRomanticSceneMessage)[romanticMessageDeck.unshift(romanticMessageDeck.pop())]}
+ const message=romanticMessageDeck.pop()||pool[Math.floor(Math.random()*pool.length)];lastRomanticSceneMessage=message;return message}
+function randomSurpriseMessage(){return nextSurpriseMessage()}
 function eventForm(){modal(`<h2>محطة في قصتنا</h2>${field('eTitle','العنوان','','text')}${field('eDate','التاريخ',today(),'date')}<div class="field"><label>ماذا حدث؟</label><textarea id="eDesc"></textarea></div><button class="btn primary" data-action="saveEvent">حفظ</button>`)}
 async function saveEvent(){const title=$('#eTitle')?.value.trim(),date=$('#eDate')?.value,description=$('#eDesc')?.value.trim()||'';if(!title||!date){toast('اكتب عنوان المحطة والتاريخ.');return}state.events.unshift({id:id('evt'),title,date,description});await save();closeModal();toast('تم حفظ المحطة.');renderNoAnim()}
 async function saveMemory(i){const m=state.memories.find(x=>x.id===i);if(!m)return;const start=$('#mDate').value,end=$('#mEndDate').value||start;if(start&&end&&end<start){toast('تاريخ النهاية لا يمكن أن يكون قبل البداية.');return}m.title=$('#mTitle').value.trim()||'ذكرى بدون اسم';m.date=start;m.endDate=start?end:'';m.place=$('#mPlace').value.trim();m.description=$('#mDesc').value.trim();const nextSource=$('#mLinkSource')?.value||'',oldSource=m.linkSourceId||'';if(nextSource){const links=normalizeAlbumLinkFolders(m),same=links.find(x=>String(x.sourceId)===String(nextSource));if(same){m.linkSourceId=same.sourceId;m.linkFolderPath=same.folderPath}else{m.linkSourceId=String(nextSource);m.linkFolderPath='';m.linkFolders=links}}else if(oldSource&&normalizeAlbumLinkFolders(m).length===0){m.linkSourceId='';m.linkFolderPath=''}m.userEdited=true;normalizeState();await save();closeModal();toast('تم حفظ الذكرى.');if(section==='memories'||section==='home'||section==='calendar')renderNoAnim()}
@@ -1832,7 +1837,7 @@ async function ensureLatestOsRa(){
     location.reload();
   },{once:true});
   try{
-    const reg=await navigator.serviceWorker.register('./sw.js?build=osra122-20261008-r46-stable-core',{updateViaCache:'none'});
+    const reg=await navigator.serviceWorker.register('./sw.js?build=osra122-20261008-r47-stable-full-surprises',{updateViaCache:'none'});
     await reg.update().catch(()=>{});
     if(reg.waiting) reg.waiting.postMessage({type:'SKIP_WAITING'});
   }catch(e){console.warn('OsRa service worker update skipped',e)}

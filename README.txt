@@ -26,4 +26,4 @@ OsRa HQ Source — final safe build
 Stable R24 performance rebuild: preserved Add Album/Add Memory UI and existing data model; faster batch-first thumbnail hydration; no schema bump and no destructive migration.
 
 
-OsRa v124 / R48: restored Rania birthday UI + persistent home birthday countdown + larger/brighter romantic surprises. Database VER remains 100.
+OsRa v103 / R27: restored Rania birthday UI + persistent home birthday countdown + larger/brighter romantic surprises. Database VER remains 100.

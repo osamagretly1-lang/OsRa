@@ -1,0 +1,18 @@
+OsRa v122 / R47 — Reliable Surprise Message Loop
+
+Base: R43 STABLE CORE + FULL SURPRISE DECK + LINKING REPAIR.
+
+What changed:
+- IndexedDB remains VER=100. No schema migration.
+- All existing R43 features remain; this fix targets only the reliability of the surprise-message scheduler.
+- Surprise messages now use a shuffled deck. Every message in the pool (including custom messages) is shown once before the deck is reshuffled, so the cycle does not repeat one message over and over.
+- The long message remains a special surprise and appears after 4–6 regular message cycles, as previously requested.
+- The first surprise is scheduled 220 ms after the opening celebration is cleared.
+- The next timer is armed BEFORE rendering the current surprise. A rendering exception therefore cannot permanently stop the message loop.
+- A lightweight 20-second watchdog revives the loop if a browser/WebView loses a timer while surprises are enabled.
+- The ticker is a guaranteed text channel. Decorative scenes/effects are secondary and cannot prevent the message text from appearing.
+- All existing 28 visual scene styles and 10 motion styles are preserved.
+- The five original classic scene functions are preserved.
+- The night-only “هات بوسه🙈🙊” message remains limited to 11 PM–1 AM and is rendered through the reliable text ticker path.
+- The surprise toggle still controls the entire system. Turning it off clears timers/effects; turning it on starts the loop immediately.
+- Build/cache identifiers were changed only to R47/v122 so old Service Worker caches cannot mask the fix.
