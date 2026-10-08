@@ -50,4 +50,8 @@ R41: classic startup preserved; added a large 3→2→1→احتفاااااال
 R47 Complete Surprise System: merged the original cartoon surprise deck, expanded romantic/app-flirt message pool, preserved 28 scene styles + 10 motion styles, retained exact timing/speed settings, and kept the post-open countdown/celebration flow.
 
 
-R47 note: stable core preserved; surprise messages keep the same stored pool and countdown settings, while presentation now rotates conservatively among free-position romantic scenes, the existing classic cartoon deck, side bubbles, and the plain ticker. Long message is rare. No scan/link/HQ engine changes.
+R48 note: stable core preserved; surprise messages keep the same stored pool and countdown settings, while presentation now rotates conservatively among free-position romantic scenes, the existing classic cartoon deck, side bubbles, and the plain ticker. Long message is rare. No scan/link/HQ engine changes.
+
+R48 stability correction: every surprise cycle now guarantees a visible message, presentation/motion use shuffled decks so all configured styles are actually reached before repeating, classic scenes rotate through the full five-scene deck, and scheduler errors are caught so one failed animation cannot permanently stop future messages.
+
+R48 correction: message delivery is now guaranteed every cycle; styles and motions use non-repeating shuffled decks; classic presentations cycle across dog, fish, Cinderella, gift, and Tom & Jerry; a failed visual effect cannot terminate the message scheduler; the nightly kiss message uses the same romantic presentation deck.
