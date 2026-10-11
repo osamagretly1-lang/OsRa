@@ -1,0 +1,14 @@
+OsRa v122 — R50 LINK / SCAN / PHOTO / FESTIVE
+Build date: 2026-10-11
+Base: OsRa_v122_R49_FULL_TEST.zip
+
+1) Quick linking: the target OsRa album is fixed first. The user selects a suspected source; OsRa verifies candidate files before linking. A zero-match source is not added as a successful album link, and a source already rejected for this album in the current manual-link session is omitted from the retry choices. A new source can be selected instead.
+2) Link report repair: missing-photo rows now offer Quick Link and Visual Match. Photos can also be repaired directly from their album using the per-photo "ربط الأصل" action. If a photo belongs to multiple albums, the report flow lets the user choose the target album.
+3) Visual matching: real previews are read from the actual candidate files. Candidate cards show a clear number, filename/path and similarity score. Several target photos can be selected and applied in one batch, with at most one candidate per target photo. Before committing, the candidate is re-read and rechecked against its preview signature.
+4) Thumbnails: all visible copies of the same photo ID are hydrated, not only the first matching image element. If a thumbnail is missing, OsRa attempts to recreate a compact thumbnail from a real original and save it. Visual matching also attempts this fallback before skipping a target photo.
+5) Scan reliability: file reads and per-image processing operations have timeouts; an individual unreadable/slow image is recorded as skipped and scanning continues. Skipped-file details are kept in the checkpoint (up to 100 recent entries). Pause, actual Cancel, and Hide Progress are separate actions. Cancel retains already-saved scan results and clears the stale resume checkpoint.
+6) Source list: compact by default; additional source entries can be expanded using "عرض المزيد".
+7) Celebration: the original effects remain. Additional waves add more top-down falling hearts, flowers, kisses, balloons and celebration symbols, with several movement paths and varied timing. Lightweight radial fireworks are added during enabled celebrations and birthday effects.
+8) Cache/build version is bumped to R50 in HTML, app.js and service worker. IndexedDB remains at version 100 to avoid forcing a database schema upgrade on existing user data.
+
+Privacy/data note: this is an offline-first browser application. No server upload behavior was added. Source files and their local photo folders remain separate.

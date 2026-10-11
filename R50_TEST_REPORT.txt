@@ -1,0 +1,29 @@
+OsRa R50 — QA / TEST REPORT
+Date: 2026-10-11
+Base archive: OsRa_v122_R49_FULL_TEST.zip
+Backup created before edits: OsRa_v122_R49_FULL_TEST_BACKUP_BEFORE_CHANGES.zip
+
+CHECKS PASSED
+- Node.js syntax check: app.js.
+- Node.js syntax check: sw.js.
+- HTML parsed successfully; no duplicate IDs were found.
+- Local script/style/manifest/icon references in index.html were checked and resolved in this package.
+- CSS parsed with tinycss2: 1,165 top-level rules, zero top-level syntax errors and zero declaration parse errors.
+- Automated helper tests passed: scan operation resolution; pause interruption; cancel interruption; timeout of a stalled operation; interruption-waiter cleanup; reindex snapshot only when a matching record will be removed.
+- Static contract checks passed for the compact source list, image thumbnail fallback, pause/cancel controls, skipped-file reporting, report and album quick-link entry points, multi-select visual results, candidate previews, celebration additions, fireworks hooks, and R50 cache/version references.
+- Source diff review shows changes limited to app.js, index.html, style.css, and sw.js, plus the two R50 documentation files. The baseline archive remains unchanged.
+- Archive integrity is checked separately after packaging.
+
+NOT VERIFIED IN A REAL BROWSER / DEVICE
+- Browser integration/visual testing could not be completed in this execution environment: Chromium navigation to both the local test server and the local file was blocked with ERR_BLOCKED_BY_ADMINISTRATOR. Therefore this report does not claim that the UI was visually exercised end-to-end.
+- The actual camira folder is not available in this workspace. Its exact failure cannot be reproduced here. The generic fix adds bounded waits and per-image skip-and-log behavior, but the real folder should be tested on the user's Android device to confirm which file or directory operation caused the original stall.
+- File System Access permissions, directory handles, IndexedDB recovery, and on-device celebration smoothness cannot be fully validated by static/runtime helper tests alone.
+
+SAFETY / COMPATIBILITY
+- The R49 archive was preserved separately before modification.
+- IndexedDB version remains 100; this release does not force a database schema upgrade.
+- Zero-match sources are not accepted as a successful album-source association.
+- Scanning cancellation is distinct from hiding the progress card; already completed/saved scan results are retained on cancellation.
+- The existing celebration code was not removed; new falling effects are additive.
+
+Release status: JavaScript/CSS/HTML static validation and targeted helper tests passed. Because full browser/device integration testing was blocked, this should be treated as a carefully checked candidate release, not as proof that every visual/device-specific behavior is fully verified.

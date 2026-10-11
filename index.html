@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#6c4664">
-<meta name="osra-build" content="OsRa v122 — 2026-10-08 — R47 STABLE FULL SURPRISES + RELIABLE MESSAGE LOOP">
+<meta name="osra-build" content="OsRa v122 — 2026-10-11 — R50 LINK SCAN PHOTO FESTIVE">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg">
-<link rel="stylesheet" href="style.css">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; connect-src 'self'; worker-src 'self'; font-src 'self'">
+<link rel="stylesheet" href="style.css?v=osra122-r50-link-scan-photo-festive">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self'; style-src 'self'; style-src-elem 'self'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data:; connect-src 'self'; worker-src 'self'; font-src 'self'">
 <title>OsRa — Our Story</title>
 </head>
 <body>
@@ -22,6 +22,11 @@
     <div class="boot-sheet boot-sheet-front">
       <img src="icon.svg" alt="" class="boot-logo">
     </div>
+  </div>
+  <div id="bootCoupleScene" class="osra-couple-scene osra-couple-loading" aria-hidden="true">
+    <div class="osra-couple-person osra-couple-osama"><img src="assets/osama-3d.png" alt="أسامة"><span class="osra-couple-fallback" aria-hidden="true">🤵🏻‍♂️</span></div>
+    <div class="osra-couple-person osra-couple-rania"><img src="assets/rania-3d.png" alt="رانيا"><span class="osra-couple-fallback" aria-hidden="true">👗</span></div>
+    <span class="osra-couple-heart" aria-hidden="true">♥</span>
   </div>
   <div class="boot-title">OsRa</div>
   <div class="boot-subtitle">رانيا ♥ أسامة</div>
@@ -39,6 +44,7 @@
     <article id="currentPage" class="page current"></article>
     <div id="flipPage" class="page flip"></div>
   </section>
+  <div id="pageTurnCouple" class="osra-page-turn-couple" aria-hidden="true"></div>
   <div class="hint">اسحب الورقة ← أو → أو اضغط على الأقسام • كل ألبوم له صفحة خاصة</div>
 </main>
 <nav id="nav" class="nav">
@@ -90,6 +96,6 @@
 </dialog>
 <dialog id="modal" class="modal"><button id="modalClose" class="modal-close">×</button><div id="modalBody"></div></dialog>
 <dialog id="lightbox" class="lightbox"><div class="lbtop"><button id="lbClose" class="round dark" title="إغلاق">×</button><div class="lbtitle-wrap"><span id="lbTitle"></span><small id="lbMeta"></small></div><span id="lbCounter" class="lb-counter"></span><div class="lb-controls"><button id="lbZoomOut" class="round dark" title="تصغير">−</button><button id="lbZoomReset" class="round dark" title="الحجم الطبيعي">1:1</button><button id="lbZoomIn" class="round dark" title="تكبير">＋</button><button id="lbPlay" class="round dark" title="عرض تلقائي">▶</button><button id="lbPrev" class="round dark" title="السابق">‹</button><button id="lbNext" class="round dark" title="التالي">›</button></div></div><div class="lbbody"><div id="lbFrame" class="lb-frame"><img id="lbImage" alt=""></div><div id="lbStatus" class="lb-status">جارٍ فتح الصورة…</div></div><div id="lbStrip" class="lb-strip"></div></dialog>
-<script src="app.js?v=osra122-r47-stable-full-surprises" defer></script>
+<script src="app.js?v=osra122-r50-link-scan-photo-festive" defer></script>
 </body>
 </html>

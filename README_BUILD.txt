@@ -48,3 +48,6 @@ R35 patch: restored message-first surprise cadence; added random-fast movement m
 R41: classic startup preserved; added a large 3→2→1→احتفاااااال countdown after the loading screen, then a 7-second post-open celebration; random surprises resume only after the full 10-second sequence.
 
 R43 Complete Surprise System: merged the original cartoon surprise deck, expanded romantic/app-flirt message pool, preserved 28 scene styles + 10 motion styles, retained exact timing/speed settings, and kept the post-open countdown/celebration flow.
+
+R50 RELEASE NOTE (2026-10-11)
+See R50_CHANGELOG.txt for all additions and R50_TEST_REPORT.txt for test results and the explicit limits of browser/device validation. Build/cache version is R50; IndexedDB stays at version 100 for compatibility with existing data. The original R49 FULL_TEST archive is preserved as a pre-change rollback backup outside this release ZIP.

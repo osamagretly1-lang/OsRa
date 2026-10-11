@@ -1,12 +1,15 @@
 window.__osraBootAt=performance.now();
-const OSRA_BUILD='OsRa v122 — 2026-10-08 — R47 STABLE FULL SURPRISES + RELIABLE MESSAGE LOOP';
+const OSRA_BUILD='OsRa v122 — 2026-10-11 — R50 LINK SCAN PHOTO FESTIVE';
+const OSRA_3D_ASSETS={osama:'assets/osama-3d.png',rania:'assets/rania-3d.png'};
+let osraPageTurnCoupleTimer=null;
 const DB='OsRaDB', VER=100, THUMB_VERSION=6, THUMB_MAX_BYTES=160*1024;
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 const DEFAULT={settings:{startDate:'',engagementDate:'',birthdayRania:'',osamaPhone:'',raniaPhone:'',whatsappUrl:'',libraryName:'',soundEnabled:false,surprisesEnabled:true,dailyAlbumIds:null,albumOrderMode:'manual',albumMiniView:false,messagesOrder:'desc',hideScanProgressCard:false,countdowns:[],surpriseTiming:'10',surpriseSpeed:'normal',customSurpriseMessages:[]},memories:[],events:[],dreams:[],verses:[],prayers:[],messages:[],excludedPhotos:[]};
-const thumbCache=new Map();const THUMB_CACHE_MAX=96;let thumbHydrateQueue=new Set(),thumbHydrateTimer=0;
+const thumbCache=new Map(),thumbFallbackPromises=new Map();const THUMB_CACHE_MAX=96;let thumbHydrateQueue=new Set(),thumbHydrateTimer=0;
 let excludedCacheSource=null,excludedCacheSet=new Set();
-let db,state=structuredClone(DEFAULT),libraryHandle=null,backupFileHandle=null,backupMeta={lastSavedAt:0,lastAutoFileAt:0},hqSourceHandle=null,hqSourceMeta={name:'',manifestVersion:1},hqIndex=new Map(),hqBuildCheckpoint=null,hqBuildSelection=null,hqBuildStopRequested=false,photos=new Map(),sources=[],activeSourceId=null,scanProgresses={},permissionCache=new Set(),permissionDeniedCache=new Set(),searchState={query:'',messageId:'',fromSection:'home'},section='home',busy=false,scanLock=false,scanStopRequested=false,scanCheckpoint=null,scanProgressWrite=Promise.resolve(),dragSelectMode=false,dragSelecting=false,dragSelectValue=true,dragVisited=new Set(),dragPointerId=null,dragScrollTimer=null,dragLastX=0,dragLastY=0,dragLongPressTimer=null,dragPending=false,dragPendingPhoto='',dragPendingItem=null,dragPendingX=0,dragPendingY=0,quickTapHandledUntil=0,reindexRestorePool=[],duplicateModalGroups=[],installEvent=null,soundOn=false,audioCtx=null,lb={ids:[],i:0,url:null,thumbUrl:null,loadToken:0,timer:null,touchX:null,touchY:null,zoom:1,panX:0,panY:0,dragX:null,dragY:null,dragPanX:0,dragPanY:0,pinchStart:0,pinchBase:1,lastTap:0,lastTapX:0,lastTapY:0,flipBusy:false,flipTimer:null,flipUrls:[]},currentMemoryId=null,selectedPhotos=new Set(),selectedMemories=new Set(),calendarDate=today(),calendarCursor=null,safetyTimer=null,recoveryCandidate=null,recoveryNoticeHidden=false,pendingFolderRoot=null,pendingFolderName='',albumBookIndex=0,albumBookBusy=false,albumBookTimer=null,albumBookToken=0;
-let lastLinkReport=null,linkProgresses={},linkProgressTimer=null,linkRunStartedAt=0,albumReviewState=null,manualLinkSession=null,visualLinkSession=null,visualLinkStopRequested=false,romanticTickerTimer=null,romanticTickerCloseTimer=null,romanticDelightTimer=null,romanticKissTimer=null,romanticKissShownKey='',romanticLongBusy=false,romanticMessageCycle=0,romanticLongNextAt=4+Math.floor(Math.random()*3),occasionCelebrationBusy=false,lastRomanticSceneMessage='',lastRomanticSceneStyle='',lastRomanticMotion='',romanticMessageDeck=[],romanticMessageDeckSignature='',romanticTickerGeneration=0,romanticTickerWatchdog=null;
+let db,state=structuredClone(DEFAULT),libraryHandle=null,backupFileHandle=null,backupMeta={lastSavedAt:0,lastAutoFileAt:0},hqSourceHandle=null,hqSourceMeta={name:'',manifestVersion:1},hqIndex=new Map(),hqBuildCheckpoint=null,hqBuildSelection=null,hqBuildStopRequested=false,photos=new Map(),sources=[],activeSourceId=null,scanProgresses={},permissionCache=new Set(),permissionDeniedCache=new Set(),searchState={query:'',messageId:'',fromSection:'home'},section='home',busy=false,scanLock=false,scanStopRequested=false,scanCancelRequested=false,scanInterruptWaiters=new Set(),scanCheckpoint=null,scanProgressWrite=Promise.resolve(),dragSelectMode=false,dragSelecting=false,dragSelectValue=true,dragVisited=new Set(),dragPointerId=null,dragScrollTimer=null,dragLastX=0,dragLastY=0,dragLongPressTimer=null,dragPending=false,dragPendingPhoto='',dragPendingItem=null,dragPendingX=0,dragPendingY=0,quickTapHandledUntil=0,reindexRestorePool=[],duplicateModalGroups=[],installEvent=null,soundOn=false,audioCtx=null,lb={ids:[],i:0,url:null,thumbUrl:null,loadToken:0,timer:null,touchX:null,touchY:null,zoom:1,panX:0,panY:0,dragX:null,dragY:null,dragPanX:0,dragPanY:0,pinchStart:0,pinchBase:1,lastTap:0,lastTapX:0,lastTapY:0,flipBusy:false,flipTimer:null,flipUrls:[]},currentMemoryId=null,selectedPhotos=new Set(),selectedMemories=new Set(),calendarDate=today(),calendarCursor=null,safetyTimer=null,recoveryCandidate=null,recoveryNoticeHidden=false,pendingFolderRoot=null,pendingFolderName='',albumBookIndex=0,albumBookBusy=false,albumBookTimer=null,albumBookToken=0;
+let lastLinkReport=null,linkProgresses={},linkProgressTimer=null,linkRunStartedAt=0,albumReviewState=null,manualLinkSession=null,visualLinkSession=null,visualLinkStopRequested=false,visualPreviewObserver=null,visualPreviewUrls=new Set(),romanticTickerTimer=null,romanticTickerCloseTimer=null,romanticDelightTimer=null,romanticKissTimer=null,romanticKissShownKey='',romanticLongBusy=false,romanticMessageCycle=0,romanticLongNextAt=4+Math.floor(Math.random()*3),occasionCelebrationBusy=false;
+let lastRomanticSceneStyle='',lastRomanticMotion='',lastRomanticSceneMessage='';
 const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const id=p=>p+'-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);
 function isImage(n){return /\.(jpe?g|png|webp|gif|avif|heic|heif|tif?f|bmp)$/i.test(String(n||''))}
@@ -209,7 +212,41 @@ function surpriseTimingProfile(){
 }
 function surpriseTimingLabel(){const m=String(state.settings.surpriseTiming||'10');return ({'3':'كل 3 ثوانٍ','5':'كل 5 ثوانٍ','10':'كل 10 ثوانٍ','20':'كل 20 ثانية','30':'كل 30 ثانية','60':'كل دقيقة','180':'كل 3 دقائق'})[m]||'كل 10 ثوانٍ'}
 function surpriseSpeedLabel(){const m=String(state.settings.surpriseSpeed||'normal');return ({fast:'سريع',normal:'متوسط',slow:'بطيء','random-fast':'عشوائي سريع','random-all':'عشوائي للكل'})[m]||'متوسط'}
+function bindOsra3DFallback(root=document){
+ if(!root?.querySelectorAll)return;
+ root.querySelectorAll('.osra-couple-person img').forEach(img=>{
+  const owner=img.closest('.osra-couple-person');if(!owner)return;
+  const fallback=()=>{owner.classList.add('asset-missing');img.removeAttribute('src')};
+  img.addEventListener('error',fallback,{once:true});
+  if(img.complete&&img.naturalWidth===0)fallback();
+ });
+}
+function coupleFigureMarkup(which){
+ const src=which==='osama'?OSRA_3D_ASSETS.osama:OSRA_3D_ASSETS.rania;
+ const alt=which==='osama'?'أسامة':'رانيا';
+ const fallback=which==='osama'?'🤵🏻‍♂️':'👗';
+ return `<div class="osra-couple-person osra-couple-${which}"><img src="${src}" alt="${alt}"><span class="osra-couple-fallback" aria-hidden="true">${fallback}</span></div>`;
+}
+function createOsraCoupleScene(root,extra=''){
+ if(!root)return null;
+ const scene=document.createElement('div');scene.className=`osra-couple-stage ${extra}`.trim();
+ scene.innerHTML=`${coupleFigureMarkup('osama')}${coupleFigureMarkup('rania')}<span class="osra-couple-heart" aria-hidden="true">♥</span><span class="osra-couple-handhold" aria-hidden="true">🤝</span><span class="osra-couple-highfive" aria-hidden="true">🖐️</span>`;
+ root.appendChild(scene);bindOsra3DFallback(scene);return scene;
+}
+function showPageTurnCouple(dir=1){
+ const host=document.getElementById('pageTurnCouple');if(!host)return;
+ clearTimeout(osraPageTurnCoupleTimer);
+ host.className=`osra-page-turn-couple ${dir>0?'forward':'backward'}`;
+ host.innerHTML=coupleFigureMarkup(dir>0?'osama':'rania')+`<span class="osra-page-push-hand" aria-hidden="true">${dir>0?'👉':'👈'}</span>`;
+ bindOsra3DFallback(host);
+ requestAnimationFrame(()=>host.classList.add('show'));
+ osraPageTurnCoupleTimer=setTimeout(()=>{host.classList.remove('show');setTimeout(()=>{if(!host.classList.contains('show')){host.className='osra-page-turn-couple';host.replaceChildren()}},180)},700);
+}
+function osraDanceDuration(){return 20000+Math.floor(Math.random()*10001)}
+function osraDancePick(){return 1+Math.floor(Math.random()*5)}
+
 function initBootRibbon(){
+ bindOsra3DFallback(document.getElementById('bootCoupleScene'));
  const el=document.getElementById('bootJoyRibbon');
  if(el){
   const palettes=['red-purple','purple-red','rose-violet','violet-rose'];
@@ -246,140 +283,68 @@ function initBootRibbon(){
  }
 }
 function runPostOpenCelebration(){
- const layer=document.getElementById('bootAfterOpenCelebration');
- if(!layer)return;
+ const layer=document.getElementById('bootAfterOpenCelebration');if(!layer)return;
  layer.innerHTML='';
  if(!surprisesAreEnabled()){setTimeout(()=>startRomanticTicker(),220);return}
- const glyphs=['❤️','💖','💕','💗','💛','🌹','🌷','🌸','💐','💋','😘','✨','🎀','🎉','🎈','🐶'];
- const countdown=document.createElement('div');
- countdown.className='boot-open-countdown';
- const countText=document.createElement('div');
- countText.className='boot-open-countdown-text';
- countdown.appendChild(countText);
- layer.appendChild(countdown);
-
- const showCount=(value,extra='')=>{
-   countText.className=`boot-open-countdown-text ${extra}`.trim();
-   countText.textContent=value;
-   countText.setAttribute('data-text',value);
-   void countText.offsetWidth;
-   countText.classList.add('boot-open-countdown-pop');
- };
+ const couple=createOsraCoupleScene(layer,'osra-couple-intro');
+ const glyphs=['❤️','💖','💕','💗','💛','🌹','🌷','🌸','💐','💋','😘','✨','🎀','🎉','🎈'];
+ const countdown=document.createElement('div');countdown.className='boot-open-countdown';
+ const countText=document.createElement('div');countText.className='boot-open-countdown-text';countdown.appendChild(countText);layer.appendChild(countdown);
+ const showCount=(value,extra='')=>{countText.className=`boot-open-countdown-text ${extra}`.trim();countText.textContent=value;countText.setAttribute('data-text',value);void countText.offsetWidth;countText.classList.add('boot-open-countdown-pop')};
  const explodeCount=()=>{
-   if(!document.body.contains(layer))return;
-   const rect=countText.getBoundingClientRect();
-   const cx=rect.left+rect.width/2, cy=rect.top+rect.height/2;
-   const shell=document.createElement('div');
-   shell.className='boot-countdown-explosion';
-   shell.style.left=`${cx}px`;shell.style.top=`${cy}px`;
-   const pieces=['✦','✧','♥','•','✿','❀','⋆','·'];
-   for(let i=0;i<34;i++){
-     const shard=document.createElement('span');
-     shard.className='boot-countdown-shard';
-     shard.textContent=pieces[i%pieces.length];
-     const a=Math.random()*Math.PI*2;
-     const d=90+Math.random()*280;
-     shard.style.setProperty('--x',`${Math.cos(a)*d}px`);
-     shard.style.setProperty('--y',`${Math.sin(a)*d}px`);
-     shard.style.setProperty('--r',`${-180+Math.random()*360}deg`);
-     shard.style.fontSize=`${10+Math.random()*34}px`;
-     shard.style.animationDelay=`${(Math.random()*.06).toFixed(2)}s`;
-     shell.appendChild(shard);
-   }
-   const flash=document.createElement('span');flash.className='boot-countdown-flash';shell.appendChild(flash);
-   layer.appendChild(shell);
-   countText.classList.remove('boot-open-countdown-pop');
-   countText.classList.add('boot-open-countdown-exit');
-   setTimeout(()=>shell.remove(),760);
- };
- showCount('3');
- // The first 3 seconds are always the countdown, directly over the home page.
- setTimeout(()=>{explodeCount();},720);
- setTimeout(()=>{showCount('2');},1000);
- setTimeout(()=>{explodeCount();},1720);
- setTimeout(()=>{showCount('1');},2000);
- setTimeout(()=>{explodeCount();},2720);
- setTimeout(()=>{beginCelebration();},3000);
-
- const addRain=(count,cls,durBase,spread=100)=>{
-  for(let i=0;i<count;i++){
-   const s=document.createElement('span');s.className=`boot-open-item boot-open-rain ${cls}`;
-   s.textContent=glyphs[Math.floor(Math.random()*glyphs.length)];
-   s.style.left=`${Math.random()*spread}%`;
-   s.style.setProperty('--dx',`${-18+Math.random()*36}vw`);
-   s.style.setProperty('--delay',`${(Math.random()*.65).toFixed(2)}s`);
-   s.style.setProperty('--dur',`${(durBase+Math.random()*1.15).toFixed(2)}s`);
-   s.style.fontSize=`${18+Math.random()*28}px`;
-   layer.appendChild(s);
+  if(!document.body.contains(layer))return;
+  const rect=countText.getBoundingClientRect(),cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
+  const shell=document.createElement('div');shell.className='boot-countdown-explosion';shell.style.left=`${cx}px`;shell.style.top=`${cy}px`;
+  const pieces=['✦','✧','♥','•','✿','❀','⋆','·'];
+  for(let i=0;i<34;i++){
+   const shard=document.createElement('span');shard.className='boot-countdown-shard';shard.textContent=pieces[i%pieces.length];
+   const a=Math.random()*Math.PI*2,d=90+Math.random()*280;
+   shard.style.setProperty('--x',`${Math.cos(a)*d}px`);shard.style.setProperty('--y',`${Math.sin(a)*d}px`);shard.style.setProperty('--r',`${-180+Math.random()*360}deg`);
+   shard.style.fontSize=`${10+Math.random()*34}px`;shard.style.animationDelay=`${(Math.random()*.06).toFixed(2)}s`;
+   shard.addEventListener('animationend',()=>shard.remove(),{once:true});shell.appendChild(shard);
   }
+  const flash=document.createElement('span');flash.className='boot-countdown-flash';shell.appendChild(flash);layer.appendChild(shell);
+  countText.classList.remove('boot-open-countdown-pop');countText.classList.add('boot-open-countdown-exit');
+  setTimeout(()=>shell.remove(),760);
  };
- const addBurst=(count,durBase)=>{
-  for(let i=0;i<count;i++){
-   const s=document.createElement('span');s.className='boot-open-item boot-open-burst';
-   s.textContent=glyphs[Math.floor(Math.random()*glyphs.length)];
-   s.style.setProperty('--left',`${4+Math.random()*92}%`);
-   s.style.setProperty('--dx',`${-18+Math.random()*36}vw`);
-   s.style.setProperty('--delay',`${(Math.random()*.6).toFixed(2)}s`);
-   s.style.setProperty('--dur',`${(durBase+Math.random()*1.1).toFixed(2)}s`);
-   s.style.fontSize=`${20+Math.random()*32}px`;
-   layer.appendChild(s);
-  }
- };
- const addMix=(count)=>{
-  for(let i=0;i<count;i++){
-   const s=document.createElement('span');s.className='boot-open-item boot-open-mix';
-   s.textContent=glyphs[Math.floor(Math.random()*glyphs.length)];
-   s.style.left=`${Math.random()*100}%`;
-   s.style.bottom=`${8+Math.random()*42}%`;
-   s.style.setProperty('--dx',`${-22+Math.random()*44}vw`);
-   s.style.setProperty('--delay',`${(Math.random()*1.1).toFixed(2)}s`);
-   s.style.setProperty('--dur',`${(2.3+Math.random()*2.5).toFixed(2)}s`);
-   s.style.fontSize=`${18+Math.random()*34}px`;
-   layer.appendChild(s);
-  }
- };
- const addDogs=()=>{
-  for(let i=0;i<3;i++){
-   const s=document.createElement('span');s.className='boot-open-item boot-open-dog';s.innerHTML=romanticWhiteDogSvg();
-   s.style.left=`${12+i*38}%`;
-   s.style.setProperty('--dx',`${-10+Math.random()*20}vw`);
-   s.style.setProperty('--delay',`${(.15+i*.35).toFixed(2)}s`);
-   s.style.setProperty('--dur',`${(3.0+Math.random()*.8).toFixed(2)}s`);
-   layer.appendChild(s);
-  }
- };
+ if(couple){couple.classList.add('osra-couple-walk-in');setTimeout(()=>couple.classList.add('osra-couple-joined'),1550)}
+ showCount('3');setTimeout(explodeCount,720);setTimeout(()=>showCount('2'),1000);setTimeout(explodeCount,1720);setTimeout(()=>showCount('1'),2000);setTimeout(explodeCount,2720);
+ const addEffect=(classes,text,dur,delay)=>{const el=document.createElement('span');el.className=`boot-open-item ${classes}`;el.textContent=text;el.style.animationDuration=`${dur.toFixed(2)}s`;el.style.animationDelay=`${delay.toFixed(2)}s`;el.addEventListener('animationend',()=>el.remove(),{once:true});return el};
+ const addRain=(count,cls,durBase)=>{for(let i=0;i<count;i++){const el=addEffect(`boot-open-rain ${cls}`,glyphs[Math.floor(Math.random()*glyphs.length)],durBase+Math.random()*1.15,Math.random()*.65);el.style.left=`${Math.random()*100}%`;el.style.setProperty('--dx',`${-18+Math.random()*36}vw`);layer.appendChild(el)}};
+ const addBurst=(count,durBase)=>{for(let i=0;i<count;i++){const el=addEffect('boot-open-burst',glyphs[Math.floor(Math.random()*glyphs.length)],durBase+Math.random()*1.1,Math.random()*.6);el.style.setProperty('--left',`${4+Math.random()*92}%`);el.style.setProperty('--dx',`${-18+Math.random()*36}vw`);layer.appendChild(el)}};
+ const addMix=(count)=>{for(let i=0;i<count;i++){const el=addEffect('boot-open-mix',glyphs[Math.floor(Math.random()*glyphs.length)],2.3+Math.random()*2.5,Math.random()*1.1);el.style.left=`${Math.random()*100}%`;el.style.bottom=`${8+Math.random()*42}%`;el.style.setProperty('--dx',`${-22+Math.random()*44}vw`);layer.appendChild(el)}};
+ const addOneDog=()=>{const el=addEffect('boot-open-dog','🐶',3.4,.15);el.style.left='50%';el.style.setProperty('--dx','4vw');el.addEventListener('animationend',()=>el.remove(),{once:true});layer.appendChild(el)};
  function beginCelebration(){
-   if(!document.body.contains(layer)||!surprisesAreEnabled())return;
-   countdown.classList.add('boot-open-countdown-celebrate');
-   showCount('احتفااااااال 🎉','celebrate');
-   // 0–2s: dense rain + strong upward burst.
-   addRain(58,'rain-heavy',1.7);
-   addBurst(38,3.0);
-   addDogs();
+  if(!document.body.contains(layer)||!surprisesAreEnabled())return;
+  startOsraExtendedCelebration(52000);
+  countdown.classList.add('boot-open-countdown-celebrate');showCount('احتفااااااال 🎉','celebrate');
+  addRain(58,'rain-heavy',1.7);addBurst(38,3.0);addOneDog();
+  setTimeout(()=>{if(document.body.contains(layer)&&surprisesAreEnabled())addRain(24,'rain-soft',2.6)},2000);
+  setTimeout(()=>{if(document.body.contains(layer)&&surprisesAreEnabled()){addRain(24,'rain-soft',3.5);addBurst(20,4);addMix(34)}},4000);
+  setTimeout(()=>countdown.classList.add('boot-open-countdown-hide'),1100);
+  const duration=osraDanceDuration();
+  setTimeout(()=>{
+   if(!couple||!document.body.contains(layer)||!surprisesAreEnabled())return;
+   couple.classList.remove('osra-couple-walk-in','osra-couple-joined');couple.classList.add('osra-couple-highfive-phase');
    setTimeout(()=>{
-     if(!document.body.contains(layer)||!surprisesAreEnabled())return;
-     addRain(24,'rain-soft',2.6);
-   },2000);
-   // 4–7s: rich mixed flow.
-   setTimeout(()=>{
-     if(!document.body.contains(layer)||!surprisesAreEnabled())return;
-     addRain(32,'rain-soft',3.5);addBurst(26,4.0);addMix(40);
-   },4000);
-   setTimeout(()=>{countdown.classList.add('boot-open-countdown-hide');},800);
-   // 3s countdown + 7s celebration = 10s total post-open intro.
-   setTimeout(()=>{
-     if(!layer)return;
-     layer.classList.add('boot-open-fade');
-     setTimeout(()=>{layer.innerHTML='';layer.classList.remove('boot-open-fade');},600);
-     if(surprisesAreEnabled())startRomanticTicker();
-   },7000);
+    if(!document.body.contains(layer)||!surprisesAreEnabled())return;
+    const dance=osraDancePick();couple.classList.remove('osra-couple-highfive-phase');couple.classList.add(`osra-dance-${dance}`);couple.dataset.dance=String(dance);
+   },900);
+  },300);
+  setTimeout(()=>{
+   if(!layer)return;
+   couple?.classList.add('osra-couple-leaving');layer.classList.add('boot-open-fade');
+   setTimeout(()=>{layer.innerHTML='';layer.classList.remove('boot-open-fade');if(surprisesAreEnabled())startRomanticTicker()},700);
+  },duration+1300);
  }
+ setTimeout(beginCelebration,3000);
 }
-function clearSurpriseLayers(){romanticTickerGeneration++;clearInterval(romanticTickerWatchdog);romanticTickerWatchdog=null;clearClassicSurpriseScenes();['romanticSceneLayer','romanticMessageBubble','romanticLongLayer','romanticBalloonLayer','romanticEffectLayer','romanticFloatLayer','occasionCelebration'].forEach(id=>{const el=document.getElementById(id);if(el)el.remove()});document.querySelectorAll('[id^="romanticSceneLayer-"]').forEach(el=>el.remove());const ticker=document.getElementById('romanticTicker');if(ticker){ticker.classList.remove('show');const tx=document.getElementById('romanticTickerText');if(tx)tx.textContent=''}clearTimeout(romanticTickerCloseTimer);clearTimeout(romanticKissTimer);romanticKissTimer=null;clearTimeout(romanticDelightTimer);romanticDelightTimer=null;occasionCelebrationBusy=false;romanticLongBusy=false;romanticMessageCycle=0;romanticLongNextAt=4+Math.floor(Math.random()*3)}
+
+function clearSurpriseLayers(){clearClassicSurpriseScenes();['romanticSceneLayer','romanticMessageBubble','romanticLongLayer','romanticBalloonLayer','romanticEffectLayer','romanticFloatLayer','occasionCelebration','osraExtendedFallLayer'].forEach(id=>{const el=document.getElementById(id);if(el)el.remove()});document.querySelectorAll('[id^="romanticSceneLayer-"]').forEach(el=>el.remove());const ticker=document.getElementById('romanticTicker');if(ticker){ticker.classList.remove('show');const tx=document.getElementById('romanticTickerText');if(tx)tx.textContent=''}clearTimeout(romanticTickerCloseTimer);clearTimeout(romanticKissTimer);romanticKissTimer=null;clearTimeout(romanticDelightTimer);romanticDelightTimer=null;stopOsraExtendedCelebration();occasionCelebrationBusy=false;romanticLongBusy=false;romanticMessageCycle=0;romanticLongNextAt=4+Math.floor(Math.random()*3);lastRomanticSceneMessage=''}
 async function toggleSurprises(){state.settings.surprisesEnabled=!surprisesAreEnabled();await save();if(!surprisesAreEnabled()){clearSurpriseLayers();document.getElementById('bootAfterOpenCelebration')?.replaceChildren();}updateSurpriseButton();updateBirthdayUi();if(surprisesAreEnabled()){startRomanticTicker();maybeRunOccasionCelebrations();}renderNoAnim();}
 function dataRecoveryCard(){if(!recoveryCandidate)return '';const score=recoveryScore(recoveryCandidate);if(score<=recoveryScore(state))return '';return `<div class="card recovery-card"><h3>🛟 نسخة أمان أفضل متاحة</h3><p>OsRa وجد نسخة أمان تحتوي، بحسب المقارنة الداخلية، على بيانات أكثر من الحالة الحالية.</p><div class="meta">تاريخ النسخة: ${esc(recoveryLabel(recoveryCandidate))}</div><div class="actions"><button class="btn primary" data-action="restoreLocalRecovery">استعادة النسخة</button><button class="btn" data-action="hideRecoveryNotice">إخفاء هذا التنبيه</button></div><p class="meta">لن يتم الاستبدال تلقائيًا. الاستعادة لا تحذف الصور الأصلية من الهاتف، ولا تتم إلا بعد ضغطك على زر الاستعادة.</p></div>`}
-function scanProgressText(cp){if(!cp)return'';const n=cp.processed||cp.count||0,a=cp.added||0,u=cp.updated||0,m=cp.moved||0,e=cp.excluded||0;return `تم فحص ${n} صورة${a?` — ${a} جديدة`:''}${u?` — ${u} محدثة`:''}${m?` — ${m} منقولة`:''}${e?` — ${e} مستبعدة`:''}`}
-function scanProgressCard(){const cp=scanCheckpoint;if(!cp||state.settings.hideScanProgressCard)return'';const running=cp.status==='running'||cp.status==='paused';if(!running)return'';const label=cp.lastRelPath?`آخر ملف وصل إليه الفحص: <b>${esc(cp.lastRelPath)}</b>`:'الفحص بدأ ولم يسجل أول صورة بعد.';return `<div class="card scan-progress-card"><h3>🔄 فحص الصور غير مكتمل</h3><p>${cp.status==='paused'?'الفحص متوقف ومحفوظ ويمكن استكماله.':'الفحص يعمل الآن، ويمكن إيقافه بأمان في أي لحظة.'}</p><div class="meta">${label}</div><div class="meta">${esc(scanProgressText(cp))}</div><div class="actions">${cp.status==='running'?`<button class="btn danger" data-action="stopScan">⏹ إيقاف الفحص</button>`:''}<button class="btn primary" data-action="resumeScan">استكمال الفحص</button><button class="btn" data-action="scanFresh">بدء فحص كامل</button><button class="btn" data-action="hideScanProgressCard">إخفاء القائمة</button></div></div>`}
+function scanProgressText(cp){if(!cp)return'';const n=cp.processed||cp.count||0,a=cp.added||0,u=cp.updated||0,m=cp.moved||0,e=cp.excluded||0,k=cp.skipped||0;return `تم فحص ${n} صورة${a?` — ${a} جديدة`:''}${u?` — ${u} محدثة`:''}${m?` — ${m} منقولة`:''}${e?` — ${e} مستبعدة`:''}${k?` — ${k} ملف متعذر تم تخطيه`:''}`}
+function scanProgressCard(){const cp=scanCheckpoint;if(!cp||state.settings.hideScanProgressCard)return'';const running=cp.status==='running'||cp.status==='paused';if(!running)return'';const isActive=cp.status==='running'&&scanLock;const label=cp.lastRelPath?`آخر ملف وصل إليه الفحص: <b>${esc(cp.lastRelPath)}</b>`:'الفحص بدأ ولم يسجل أول صورة بعد.';return `<div class="card scan-progress-card"><h3>🔄 فحص الصور غير مكتمل</h3><p>${cp.status==='paused'?'الفحص متوقف ومحفوظ ويمكن استكماله.':isActive?'الفحص يعمل الآن. يمكن إيقافه مؤقتًا أو إلغاؤه بأمان.':'الفحص غير مكتمل ويمكن استكماله.'}</p><div class="meta">${label}</div><div class="meta">${esc(scanProgressText(cp))}</div><div class="actions">${isActive?`<button class="btn danger" data-action="stopScan">⏸ إيقاف مؤقت</button>`:''}${running?`<button class="btn danger" data-action="cancelScan">✖ إلغاء الفحص نهائيًا</button>`:''}${!isActive?`<button class="btn primary" data-action="resumeScan">استكمال الفحص</button><button class="btn" data-action="scanFresh">بدء فحص كامل</button>`:''}<button class="btn" data-action="hideScanProgressCard">إخفاء القائمة</button></div></div>`}
 async function persistScanProgress(patch={}){const sid=scanCheckpoint?.sourceId||activeSourceId;if(!sid)return;scanCheckpoint={...(scanCheckpoint||{}),...patch,sourceId:sid,updatedAt:Date.now()};scanProgresses[sid]=structuredClone(scanCheckpoint);scanProgressWrite=scanProgressWrite.then(async()=>{await put('library',{key:'scanProgresses',value:structuredClone(scanProgresses)});await put('library',{key:'scanProgress',value:structuredClone(scanCheckpoint)})}).catch(e=>{console.warn('scan progress save failed',e)});return scanProgressWrite}
 async function clearScanProgress(sourceId=activeSourceId){if(!sourceId){scanCheckpoint=null;return}delete scanProgresses[sourceId];if(sourceId===activeSourceId)scanCheckpoint=null;scanProgressWrite=scanProgressWrite.then(async()=>{await put('library',{key:'scanProgresses',value:structuredClone(scanProgresses)});const a=activeSource();if(a&&a.id===sourceId)await del('library','scanProgress')}).catch(e=>{console.warn('scan progress clear failed',e)});return scanProgressWrite}
 async function consolidateNestedSources(){
@@ -664,6 +629,16 @@ function birthdayRaniaGreeting(){
 function isBirthdayRaniaToday(){const d=String(state.settings.birthdayRania||'');if(!/^\d{4}-\d{2}-\d{2}$/.test(d))return false;const now=today().slice(5);return d.slice(5)===now}
 function birthdayUiIsActive(){return isBirthdayRaniaToday()&&surprisesAreEnabled()&&!$('#lightbox')?.open}
 let birthdayEffectsTimer=0,birthdayClockTimer=0;
+let extendedFallInterval=0,extendedFireworkTimeout=0,extendedFallUntil=0,extendedBirthdayActive=false,extendedFireworkLastAt=0;
+function ensureExtendedFallLayer(){let layer=document.getElementById('osraExtendedFallLayer');if(!layer){layer=document.createElement('div');layer.id='osraExtendedFallLayer';layer.className='osra-extended-fall-layer';layer.setAttribute('aria-hidden','true');document.body.appendChild(layer)}return layer}
+function spawnExtendedFallingBatch(){if(!surprisesAreEnabled()||document.visibilityState==='hidden')return;const layer=ensureExtendedFallLayer();const gifts=['❤️','💖','💕','💗','💛','🌹','🌷','🌸','💐','💋','😘','✨','🎀','🎉','🎈','🥰','💝','🩷'];const count=2+(Math.random()<.36?2:Math.random()<.22?1:0);for(let i=0;i<count;i++){const item=document.createElement('span'),motion=['straight','sway','diagonal','zigzag','spin'][Math.floor(Math.random()*5)];item.className=`osra-extended-fall-item osra-fall-${motion}${Math.random()<.2?' osra-fall-balloon':''}`;item.textContent=gifts[Math.floor(Math.random()*gifts.length)];item.style.left=`${2+Math.random()*96}%`;item.style.fontSize=`${18+Math.random()*29}px`;item.style.setProperty('--dx',`${-15+Math.random()*30}vw`);item.style.setProperty('--sway',`${-7+Math.random()*14}vw`);item.style.setProperty('--spin',`${-480+Math.random()*960}deg`);item.style.setProperty('--dur',`${5.2+Math.random()*4.8}s`);item.style.animationDelay=`${Math.random()*.65}s`;item.addEventListener('animationend',()=>item.remove(),{once:true});layer.appendChild(item)}
+ // Sparse, lightweight bursts: enough to notice without covering the whole screen.
+ if((extendedBirthdayActive||Date.now()<extendedFallUntil)&&Date.now()-extendedFireworkLastAt>(extendedBirthdayActive?5200:3900+Math.random()*2300)&&Math.random()<.86){spawnOsraFirework(layer);extendedFireworkLastAt=Date.now()}
+}
+function spawnOsraFirework(layer=ensureExtendedFallLayer()){if(!surprisesAreEnabled()||!layer)return;const burst=document.createElement('div');burst.className='osra-firework-burst';burst.style.left=`${12+Math.random()*76}%`;burst.style.top=`${9+Math.random()*38}%`;const hue=Math.floor(Math.random()*360),count=18+Math.floor(Math.random()*10),radius=45+Math.random()*48;for(let i=0;i<count;i++){const p=document.createElement('i'),a=(Math.PI*2*i/count)+(Math.random()-.5)*.16,d=radius*(.62+Math.random()*.55);p.style.setProperty('--tx',`${Math.cos(a)*d}px`);p.style.setProperty('--ty',`${Math.sin(a)*d}px`);p.style.setProperty('--hue',String((hue+Math.random()*42-21+360)%360));p.style.animationDelay=`${Math.random()*.11}s`;burst.appendChild(p)}const core=document.createElement('b');core.className='osra-firework-core';burst.appendChild(core);layer.appendChild(burst);setTimeout(()=>burst.remove(),1750)}
+function startOsraExtendedCelebration(durationMs=48000){if(!surprisesAreEnabled())return;extendedFallUntil=Math.max(extendedFallUntil,Date.now()+Math.max(0,Number(durationMs)||0));ensureExtendedFallLayer();if(!extendedFallInterval){spawnExtendedFallingBatch();extendedFallInterval=setInterval(()=>{if(!surprisesAreEnabled()){stopOsraExtendedCelebration();return}if(!extendedBirthdayActive&&Date.now()>extendedFallUntil){stopOsraExtendedCelebration();return}if($('#lightbox')?.open&&extendedBirthdayActive)return;spawnExtendedFallingBatch()},470)}}
+function setExtendedCelebrationBirthday(active){extendedBirthdayActive=!!active;if(active&&surprisesAreEnabled())startOsraExtendedCelebration(0)}
+function stopOsraExtendedCelebration(){clearInterval(extendedFallInterval);extendedFallInterval=0;clearTimeout(extendedFireworkTimeout);extendedFireworkTimeout=0;extendedFallUntil=0;extendedBirthdayActive=false;extendedFireworkLastAt=0;document.getElementById('osraExtendedFallLayer')?.remove()}
 function stopBirthdayEffects(){
   clearInterval(birthdayEffectsTimer);birthdayEffectsTimer=0;
   const c=$('#birthday-effects');if(c)c.replaceChildren();
@@ -698,7 +673,9 @@ function updateBirthdayUi(){
   document.body.classList.toggle('birthday-lightbox-open',!!$('#lightbox')?.open);
   if(banner)banner.hidden=!active;
   if(effects)effects.hidden=!active;
+  setExtendedCelebrationBirthday(active);
   if(active){
+    startOsraExtendedCelebration(0);
     if(!birthdayEffectsTimer){
       for(let i=0;i<18;i++)setTimeout(spawnBirthdayEffect,i*110);
       birthdayEffectsTimer=setInterval(()=>{spawnBirthdayEffect();if(Math.random()<.28)spawnBirthdayBurst()},430);
@@ -725,7 +702,18 @@ function pageHome(){
 }
 function detailScore(m){const photoCount=photoFor(m).length;return (m.date?30:0)+(m.endDate&&m.endDate!==m.date?10:0)+(m.place?20:0)+(m.description?Math.min(25,5+Math.floor(String(m.description).length/60)*5):0)+(m.title?5:0)+Math.min(20,photoCount*2)}
 function orderedMemories(ms){return [...ms].sort((a,b)=>state.settings.albumOrderMode==='details'?(detailScore(b)-detailScore(a)):state.settings.albumOrderMode==='linked'?(originalCoverage(b)-originalCoverage(a)):(a.order??0)-(b.order??0))}
-function sourcesPanel(){const manual=new Map();for(const m of visibleMemories()){if(!m?.linkSourceId||!m?.linkFolderPath)continue;const s=sources.find(x=>String(x.id)===String(m.linkSourceId));if(!s)continue;const a=manual.get(s.id)||[];a.push(m);manual.set(s.id,a);for(const z of normalizeAlbumLinkFolders(m)){const ss=sources.find(x=>String(x.id)===String(z.sourceId));if(ss&&String(ss.id)!==String(s.id)){const aa=manual.get(ss.id)||[];if(!aa.some(x=>x.id===m.id))aa.push(m);manual.set(ss.id,aa)}}}return `<div class="card sources-panel"><h3>📁 مجلدات الصور الرئيسية</h3><p class="meta">تظهر هنا فقط المكتبات الرئيسية التي أضفتها. مجلدات الألبومات التي اخترتها يدويًا للربط السريع تظهر تحتها بشكل مختصر ولا تُعامل كمصادر مستقلة.</p>${sources.length?sources.map((x,i)=>{const cp=scanProgresses[x.id];const running=cp&&['running','paused'].includes(cp.status);const children=manual.get(x.id)||[];return `<div class="source-row ${x.id===activeSourceId?'active':''}"><div class="source-info"><b>${i===0?'⭐ ':''}${esc(sourceLabel(x))}</b><small>${i===0?'المكتبة الأساسية':'مكتبة رئيسية'}${sourceMergeLabel(x)}${cp?.status==='done'?' • آخر فحص مكتمل':''}${cp?.status==='paused'?' • فحص متوقف':''}${cp?.status==='running'?' • فحص جارٍ':''}${linkProgresses[x.id]?.status==='done'?` • ✅ الربط مكتمل (${linkProgresses[x.id].linked||0} جديد + ${linkProgresses[x.id].verified||0} محفوظ)`:linkProgresses[x.id]?.status==='running'?` • 🔗 ربط جارٍ ${linkProgresses[x.id].processed||0}/${linkProgresses[x.id].total||0}`:''}</small>${children.length?`<details class="source-manual-links"><summary class="source-manual-title">📎 مجلدات مربوطة يدويًا بالطريقة السريعة (${children.length})</summary><div class="source-manual-list">${children.map(m=>`<div class="source-manual-link"><b>${esc(m.title||m.album||'ألبوم')}</b><span>${esc(m.linkFolderPath)}</span></div>`).join('')}</div></details>`:''}</div><div class="actions"><button class="btn small" data-action="activateSource" data-id="${x.id}">${x.id===activeSourceId?'المحدد':'تحديد'}</button><button class="btn small" data-action="scanSource" data-id="${x.id}">↻ فحص هذا المجلد</button>${running?`<button class="btn small" data-action="resumeSource" data-id="${x.id}">▶ استكمال</button>`:''}</div></div>`}).join(''):`<div class="empty">لم تتم إضافة أي مجلد رئيسي بعد.</div>`}</div>`}
+function sourcesPanel(){
+ const manual=new Map();
+ for(const m of visibleMemories()){
+  if(!m?.linkSourceId||!m?.linkFolderPath)continue;
+  const s=sources.find(x=>String(x.id)===String(m.linkSourceId));if(!s)continue;
+  const a=manual.get(s.id)||[];a.push(m);manual.set(s.id,a);
+  for(const z of normalizeAlbumLinkFolders(m)){const ss=sources.find(x=>String(x.id)===String(z.sourceId));if(ss&&String(ss.id)!==String(s.id)){const aa=manual.get(ss.id)||[];if(!aa.some(x=>x.id===m.id))aa.push(m);manual.set(ss.id,aa)}}
+ }
+ const row=(x,i)=>{const cp=scanProgresses[x.id],running=cp&&['running','paused'].includes(cp.status),children=manual.get(x.id)||[];return `<div class="source-row ${x.id===activeSourceId?'active':''}"><div class="source-info"><b>${i===0?'⭐ ':''}${esc(sourceLabel(x))}</b><small>${i===0?'المكتبة الأساسية':'مكتبة رئيسية'}${sourceMergeLabel(x)}${cp?.status==='done'?' • آخر فحص مكتمل':''}${cp?.status==='paused'?' • فحص متوقف':''}${cp?.status==='running'?' • فحص جارٍ':''}${linkProgresses[x.id]?.status==='done'?` • ✅ الربط مكتمل (${linkProgresses[x.id].linked||0} جديد + ${linkProgresses[x.id].verified||0} محفوظ)`:linkProgresses[x.id]?.status==='running'?` • 🔗 ربط جارٍ ${linkProgresses[x.id].processed||0}/${linkProgresses[x.id].total||0}`:''}</small>${children.length?`<details class="source-manual-links"><summary class="source-manual-title">📎 مجلدات مربوطة يدويًا بالطريقة السريعة (${children.length})</summary><div class="source-manual-list">${children.map(m=>`<div class="source-manual-link"><b>${esc(m.title||m.album||'ألبوم')}</b><span>${esc(m.linkFolderPath)}</span></div>`).join('')}</div></details>`:''}</div><div class="actions"><button class="btn small" data-action="activateSource" data-id="${esc(x.id)}">${x.id===activeSourceId?'المحدد':'تحديد'}</button><button class="btn small" data-action="scanSource" data-id="${esc(x.id)}">↻ فحص هذا المجلد</button>${running?`<button class="btn small" data-action="resumeSource" data-id="${esc(x.id)}">▶ استكمال</button>`:''}</div></div>`};
+ const all=sources.map(row);const first=all.slice(0,1).join('');const rest=all.slice(1).join('');
+ return `<div class="card sources-panel"><h3>📁 مجلدات الصور الرئيسية</h3><p class="meta">تظهر هنا فقط المكتبات الرئيسية التي أضفتها. مجلدات الألبومات التي اخترتها يدويًا للربط السريع تظهر تحتها بشكل مختصر ولا تُعامل كمصادر مستقلة.</p>${sources.length?`${first}${rest?`<details class="sources-more"><summary>عرض المزيد (${sources.length-1} مكتبة)</summary><div class="sources-more-list">${rest}</div></details>`:''}`:`<div class="empty">لم تتم إضافة أي مجلد رئيسي بعد.</div>`}</div>`
+}
 function memoryListForBook(){const q=(pageMemories.q||'').toLowerCase();return orderedMemories(visibleMemories().filter(m=>!q||[m.title,m.date,m.endDate,m.place,m.description,m.album].join(' ').toLowerCase().includes(q)))}
 function albumMiniCard(m,idx){const sn=selectedIndex(selectedMemories,m.id),ps=photoFor(m);return `<article class="card album-mini-card album-tone-${idx%6}"><div class="album-mini-cover">${romanticMiniGallery(m,3)}${sn?`<span class="album-selection-number">#${sn}</span>`:''}</div><div class="album-mini-info"><div class="album-mini-title"><b>${esc(m.title||'ذكرى')}</b>${albumOriginalBadge(m)}</div><div class="meta">${ps.length} صورة${m.place?' • '+esc(m.place):''}${normalizeAlbumLinkFolders(m).length?` • 📁 ${normalizeAlbumLinkFolders(m).length} أصول`:(m.linkSourceId?` • 📁 ${esc(sourceLabel(sources.find(x=>x.id===m.linkSourceId)))}${m.linkFolderPath?' / '+esc(m.linkFolderPath):''}`:'')}</div><label class="photo-check"><input class="memory-select" type="checkbox" data-memory="${m.id}" ${selectedMemories.has(m.id)?'checked':''}> تحديد ${sn?`<span class="selection-badge">#${sn}</span>`:''}</label><div class="actions"><button class="btn small primary" data-action="memory" data-id="${m.id}">فتح</button><button class="icon-btn" data-action="moveMemoryUp" data-id="${m.id}" title="لأعلى">↑</button><button class="icon-btn" data-action="moveMemoryDown" data-id="${m.id}" title="لأسفل">↓</button></div></div></article>`}
 function toggleAlbumMiniView(){state.settings.albumMiniView=!state.settings.albumMiniView;albumBookIndex=0;save().catch(()=>{});renderNoAnim(true)}
@@ -742,12 +730,12 @@ function pageMemoriesAt(idx){const old=albumBookIndex;albumBookIndex=idx;const h
 function pageMemories(){const ms=memoryListForBook();if(albumBookIndex>=ms.length)albumBookIndex=Math.max(0,ms.length-1);const selectedVisible=ms.filter(m=>selectedMemories.has(m.id)).length;const m=ms[albumBookIndex];const prev=albumBookIndex>0?ms[albumBookIndex-1]:null,next=albumBookIndex<ms.length-1?ms[albumBookIndex+1]:null;return `<div class="inner memories-book-page"><div class="kicker">📸 ذكرياتنا</div><h1 class="title">ألبوماتنا</h1><p class="note">كل ألبوم له صفحة خاصة به داخل الكتاب. استخدم الأسهم أو اسحب الصفحة للتنقل بين الألبومات، بينما تبقى أدوات التحديد والترتيب كما هي.</p><div class="actions" style="margin:12px 0"><button class="btn primary" data-action="folder">📁 إضافة مجلد / ألبوم</button><button class="btn" data-action="scan">↻ فحص المجلد المحدد</button><button class="btn" data-action="addMemory">＋ ذكرى</button><button class="btn" data-action="newAlbum">＋ ألبوم</button><button class="btn" data-action="hiddenMemories">👁️ المخفي</button><button class="btn" data-action="dailyAlbums">✨ ألبومات صورة اليوم</button><button class="btn" data-action="go" data-section="calendar">📅 التقويم</button></div><div class="card bulk-tools"><div class="actions"><button class="btn small" data-action="selectAllMemories">☑ تحديد الكل</button><button class="btn small" data-action="clearMemorySelection">مسح التحديد</button><button class="btn small" data-action="commitMemoryOrder">✅ تثبيت ترتيب التحديد</button><button class="btn small" data-action="mergeSelectedMemories">📁 جمع المحدد في ألبوم واحد</button><button class="btn small" data-action="hideSelectedMemories">👁️ إخفاء المحدد</button></div><div class="meta">${selectedVisible} محددة من ${ms.length}. كل تحديد يأخذ رقمًا حسب ترتيب ضغطاتك.</div></div><div class="card album-order-bar" style="margin:10px 0"><div class="order-row"><b>ترتيب الألبومات</b><span class="album-book-count">${ms.length?`${albumBookIndex+1} / ${ms.length}`:'0 / 0'}</span></div><div class="actions" style="margin-top:8px"><button class="btn small" data-action="orderManual">↕ ترتيب يدوي</button><button class="btn small" data-action="orderDetails">✨ الأكثر تفاصيلًا أولًا</button><button class="btn small" data-action="orderLinked">💛 الأصول المكتشفة أولًا</button><button class="btn small ${state.settings.albumMiniView?'primary':''}" data-action="toggleAlbumMiniView">🗂️ ${state.settings.albumMiniView?'العودة إلى الكتاب':'عرض الألبومات مصغرة'}</button></div></div><div style="display:flex;gap:8px;margin-bottom:12px"><input id="searchMem" style="flex:1;padding:10px;border:1px solid var(--line);border-radius:12px;background:#fff8" placeholder="ابحث بالاسم أو المكان أو السنة" value="${esc(pageMemories.q||'')}"><button class="btn" data-action="search">بحث</button></div>${state.settings.albumMiniView?`<div class="album-mini-grid">${ms.length?ms.map(albumMiniCard).join(''):`<div class="empty">لا توجد ألبومات ظاهرة.</div>`}</div>`:`<><div class="memories-book-controls"><button class="round" data-action="albumPrev" ${prev?'':'disabled'} title="الألبوم السابق">‹</button><div class="book-control-center"><span>صفحة الألبوم</span><strong>${ms.length?`${albumBookIndex+1} من ${ms.length}`:'لا توجد ألبومات'}</strong></div><button class="round" data-action="albumNext" ${next?'':'disabled'} title="الألبوم التالي">›</button></div><div class="album-book-stage">${ms.length?`<div class="album-underlay">${next?memoryCard(next,albumBookIndex+1):memoryCard(m,albumBookIndex)}</div><div class="album-leaf">${memoryCard(m,albumBookIndex)}</div>`:`<div class="empty">لا توجد ألبومات ظاهرة.</div>`}</div></>`}</div>`}
 function restoreAlbumScroll(top,left){const apply=()=>{const inner=$('#currentPage .inner');if(!inner)return;inner.scrollTop=top;inner.scrollLeft=left};requestAnimationFrame(()=>{apply();requestAnimationFrame(apply)});setTimeout(apply,60);setTimeout(apply,220);setTimeout(apply,500)}
 function resetAlbumBookTurn(){albumBookToken++;if(albumBookTimer){clearTimeout(albumBookTimer);albumBookTimer=null}albumBookBusy=false;const stage=document.querySelector('.album-book-stage');if(stage)stage.classList.remove('turn-next','turn-prev')}
-function turnAlbumPage(dir){const duration=760;if(albumBookBusy)return;const ms=memoryListForBook();const target=albumBookIndex+dir;if(target<0||target>=ms.length)return;const stage=document.querySelector('.album-book-stage');if(!stage)return;const leaf=stage.querySelector('.album-leaf'),under=stage.querySelector('.album-underlay');if(!leaf||!under)return;const targetMemory=ms[target],token=++albumBookToken;albumBookBusy=true;stage.classList.remove('turn-next','turn-prev');void leaf.offsetWidth;under.innerHTML=memoryCard(targetMemory,target);fitAlbumBookStage();hydrate(under);requestAnimationFrame(()=>{if(token!==albumBookToken||!document.contains(stage)){albumBookBusy=false;return}stage.classList.add(dir>0?'turn-next':'turn-prev');paperSound(duration);albumBookTimer=setTimeout(()=>{if(token!==albumBookToken||!document.contains(stage)){albumBookBusy=false;albumBookTimer=null;return}albumBookTimer=null;stage.classList.remove('turn-next','turn-prev');void leaf.offsetWidth;const fresh=memoryListForBook(),targetIndex=Math.max(0,fresh.findIndex(m=>m.id===targetMemory.id));const resolvedTarget=fresh[targetIndex]||targetMemory,nextMemory=fresh[targetIndex+dir]||null;leaf.innerHTML=memoryCard(resolvedTarget,targetIndex);under.innerHTML=nextMemory?memoryCard(nextMemory,targetIndex+dir):memoryCard(resolvedTarget,targetIndex);albumBookIndex=targetIndex;fitAlbumBookStage();albumBookBusy=false;const countEl=document.querySelector('.album-book-count'),pageEl=document.querySelector('.book-control-center strong'),prevBtn=document.querySelector('[data-action="albumPrev"]'),nextBtn=document.querySelector('[data-action="albumNext"]');if(countEl)countEl.textContent=fresh.length?`${targetIndex+1} / ${fresh.length}`:'0 / 0';if(pageEl)pageEl.textContent=fresh.length?`${targetIndex+1} من ${fresh.length}`:'لا توجد ألبومات';if(prevBtn)prevBtn.disabled=targetIndex<=0;if(nextBtn)nextBtn.disabled=targetIndex>=fresh.length-1;hydrate(stage)},duration+8)})}
+function turnAlbumPage(dir){const duration=760;if(albumBookBusy)return;const ms=memoryListForBook();const target=albumBookIndex+dir;if(target<0||target>=ms.length)return;const stage=document.querySelector('.album-book-stage');if(!stage)return;const leaf=stage.querySelector('.album-leaf'),under=stage.querySelector('.album-underlay');if(!leaf||!under)return;const targetMemory=ms[target],token=++albumBookToken;albumBookBusy=true;showPageTurnCouple(dir);stage.classList.remove('turn-next','turn-prev');void leaf.offsetWidth;under.innerHTML=memoryCard(targetMemory,target);fitAlbumBookStage();hydrate(under);requestAnimationFrame(()=>{if(token!==albumBookToken||!document.contains(stage)){albumBookBusy=false;return}stage.classList.add(dir>0?'turn-next':'turn-prev');paperSound(duration);albumBookTimer=setTimeout(()=>{if(token!==albumBookToken||!document.contains(stage)){albumBookBusy=false;albumBookTimer=null;return}albumBookTimer=null;stage.classList.remove('turn-next','turn-prev');void leaf.offsetWidth;const fresh=memoryListForBook(),targetIndex=Math.max(0,fresh.findIndex(m=>m.id===targetMemory.id));const resolvedTarget=fresh[targetIndex]||targetMemory,nextMemory=fresh[targetIndex+dir]||null;leaf.innerHTML=memoryCard(resolvedTarget,targetIndex);under.innerHTML=nextMemory?memoryCard(nextMemory,targetIndex+dir):memoryCard(resolvedTarget,targetIndex);albumBookIndex=targetIndex;fitAlbumBookStage();albumBookBusy=false;const countEl=document.querySelector('.album-book-count'),pageEl=document.querySelector('.book-control-center strong'),prevBtn=document.querySelector('[data-action="albumPrev"]'),nextBtn=document.querySelector('[data-action="albumNext"]');if(countEl)countEl.textContent=fresh.length?`${targetIndex+1} / ${fresh.length}`:'0 / 0';if(pageEl)pageEl.textContent=fresh.length?`${targetIndex+1} من ${fresh.length}`:'لا توجد ألبومات';if(prevBtn)prevBtn.disabled=targetIndex<=0;if(nextBtn)nextBtn.disabled=targetIndex>=fresh.length-1;hydrate(stage)},duration+8)})}
 
 function selectedIndex(set,id){const a=[...set],i=a.indexOf(id);return i<0?0:i+1}
 function memoryCard(m,idx=0){const ps=photoFor(m),sn=selectedIndex(selectedMemories,m.id);return `<article class="card memory-card romantic-card album-tone-${idx%6}"><div class="romantic-card-cover">${romanticMiniGallery(m,4)}${sn?`<span class="album-selection-number">#${sn}</span>`:''}</div><div class="memory-body"><label class="photo-check"><input class="memory-select" type="checkbox" data-memory="${m.id}" ${selectedMemories.has(m.id)?'checked':''}> تحديد الألبوم ${sn?`<span class="selection-badge">#${sn}</span>`:''}</label><h3>${esc(m.title||'ذكرى')}${albumOriginalBadge(m)}</h3><div class="meta">${rangeLabel(m)}${m.place?' • '+esc(m.place):''} • ${ps.length} صورة${normalizeAlbumLinkFolders(m).length?` • 📁 ${normalizeAlbumLinkFolders(m).length} أصل`:(m.linkSourceId?` • 📁 مصدر الربط: ${esc(sourceLabel(sources.find(x=>x.id===m.linkSourceId)))}`:'')}</div><div class="actions album-card-actions"><button class="btn small primary" data-action="memory" data-id="${m.id}">فتح الألبوم</button><button class="btn small" data-action="editMemory" data-id="${m.id}">تعديل الألبوم</button><button class="btn small" data-action="hideMemory" data-id="${m.id}">إخفاء</button></div>${m.description?`<div class="album-notes"><b>ملاحظات الألبوم</b><p>${esc(m.description)}</p></div>`:''}</div></article>`}
-function photoTile(p,idx,total){const sn=dragSelectMode?0:selectedIndex(selectedPhotos,p.id);return `<article class="photo-item romantic-photo-item"><label class="photo-check"><input class="photo-select" type="checkbox" data-photo="${p.id}" ${selectedPhotos.has(p.id)?'checked':''}> تحديد ${sn?`<span class="selection-badge">#${sn}</span>`:''}</label><button class="thumb romantic-thumb" data-action="photo" data-id="${p.id}"><img data-thumb="${p.id}" alt="${esc(p.name)}">${originalBadge(p)}${sn?`<span class="photo-number selection-number">#${sn}</span>`:''}</button><div class="photo-item-footer"><span class="meta" title="${esc(p.name)}">${esc(p.name)}</span></div></article>`}
-function pageMemory(m){currentMemoryId=m.id;const ps=photoFor(m);selectedPhotos=new Set([...selectedPhotos].filter(id=>m.photoIds?.includes(id)));const hero=ps[0];return `<div class="inner memory-page"><div class="kicker">📖 ألبوم من القلب</div><div class="memory-heading"><div><h1 class="title">${esc(m.title||'ذكرى')}</h1><p class="note">${rangeLabel(m)}${m.place?' • '+esc(m.place):''}</p></div><div class="memory-heart">♥</div></div>${m.description?`<div class="quote romantic-quote">«${esc(m.description)}»</div>`:''}<div class="photo-toolbar"><span class="photo-count">📸 ${ps.length} صورة</span>${m.place?`<span class="photo-count">📍 ${esc(m.place)}</span>`:''}<span class="photo-count">📅 ${rangeLabel(m)}</span>${ps.length>1?`<span class="photo-count">✦ اسحب للتنقل</span>`:''}</div><section class="memory-feature">${hero?`<button class="memory-hero" data-action="photo" data-id="${hero.id}"><img data-thumb="${hero.id}" alt="${esc(hero.name)}"><span class="hero-shine"></span><span class="hero-open">اضغط لفتح الألبوم ♥</span></button>`:`<div class="memory-hero empty-hero">♥<span>ذكرى جميلة بلا صور</span></div>`}<div class="romantic-strip">${ps.slice(0,10).map((p,idx)=>`<button class="strip-thumb ${idx===0?'active':''}" data-action="photo" data-id="${p.id}"><img data-thumb="${p.id}" alt="${esc(p.name)}"><span>${idx+1}</span></button>`).join('')}</div></section>${ps.length?`<section class="photo-section"><div class="section-title-row"><h2>📸 الصور</h2><span class="meta">${ps.length}</span></div><div class="gallery managed-gallery romantic-gallery ${dragSelectMode?'drag-select-active':''}">${ps.map((p,idx)=>photoTile(p,idx,ps.length)).join('')}</div></section>`:''}<div class="actions memory-actions"><button class="btn primary" data-action="editMemory" data-id="${m.id}">✎ تعديل التفاصيل / مصدر الربط</button><button class="btn" data-action="pickAlbumLinkSource" data-id="${m.id}">📁 اختيار مجلد الألبوم نفسه — الأسرع</button><button class="btn" data-action="shareMemory" data-id="${m.id}">📤 مشاركة الصور</button><button class="btn" data-action="hideMemory" data-id="${m.id}">👁️ إخفاء الذكرى / المجلد</button><button class="btn" data-action="backMemories">↩ ألبوماتنا</button></div><div class="photo-manager card"><div class="manager-head"><b>إدارة الصور</b><span class="meta" id="selectionCount">${selectedPhotos.size} محددة</span></div><div class="actions"><button class="btn small" data-action="selectAllPhotos">تحديد الكل</button><button class="btn small" data-action="clearPhotoSelection">مسح التحديد</button><button class="btn small ${dragSelectMode?'primary':''}" data-action="toggleDragSelect">⚡ ${dragSelectMode?'إنهاء التحديد السريع':'تحديد سريع'}</button><button class="btn small" data-action="commitPhotoOrder">✅ تثبيت ترتيب التحديد</button><button class="btn small" data-action="moveSelected">نقل المحدد</button><button class="btn small" data-action="removeFromAlbum">إزالة من الألبوم</button><button class="btn small danger" data-action="excludeSelected">استبعاد من الفهرس</button></div><p class="meta">النظام المرقّم هو الأساس. «التحديد السريع» خيار إضافي: لمسة قصيرة للتحديد، سحب عادي للتمرير، وضغط مطوّل ثم سحب للتحديد المتواصل. إزالة الصورة من الألبوم/الفهرس لا تحذف الأصل من الجهاز.</p></div></div>`}
+function photoTile(p,idx,total,memoryId=currentMemoryId){const sn=dragSelectMode?0:selectedIndex(selectedPhotos,p.id);return `<article class="photo-item romantic-photo-item"><label class="photo-check"><input class="photo-select" type="checkbox" data-photo="${p.id}" ${selectedPhotos.has(p.id)?'checked':''}> تحديد ${sn?`<span class="selection-badge">#${sn}</span>`:''}</label><button class="thumb romantic-thumb" data-action="photo" data-id="${p.id}"><img data-thumb="${p.id}" alt="${esc(p.name)}">${originalBadge(p)}${sn?`<span class="photo-number selection-number">#${sn}</span>`:''}</button><div class="photo-item-footer"><span class="meta" title="${esc(p.name)}">${esc(p.name)}</span>${!hasOriginalLink(p)?`<button class="btn small primary missing-original-link" data-action="quickLinkMissingPhotoFromAlbum" data-id="${esc(p.id)}" data-memory-id="${esc(memoryId||'')}">⚡ ربط الأصل</button>`:''}</div></article>`}
+function pageMemory(m){currentMemoryId=m.id;const ps=photoFor(m);selectedPhotos=new Set([...selectedPhotos].filter(id=>m.photoIds?.includes(id)));const hero=ps[0];return `<div class="inner memory-page"><div class="kicker">📖 ألبوم من القلب</div><div class="memory-heading"><div><h1 class="title">${esc(m.title||'ذكرى')}</h1><p class="note">${rangeLabel(m)}${m.place?' • '+esc(m.place):''}</p></div><div class="memory-heart">♥</div></div>${m.description?`<div class="quote romantic-quote">«${esc(m.description)}»</div>`:''}<div class="photo-toolbar"><span class="photo-count">📸 ${ps.length} صورة</span>${m.place?`<span class="photo-count">📍 ${esc(m.place)}</span>`:''}<span class="photo-count">📅 ${rangeLabel(m)}</span>${ps.length>1?`<span class="photo-count">✦ اسحب للتنقل</span>`:''}</div><section class="memory-feature">${hero?`<button class="memory-hero" data-action="photo" data-id="${hero.id}"><img data-thumb="${hero.id}" alt="${esc(hero.name)}"><span class="hero-shine"></span><span class="hero-open">اضغط لفتح الألبوم ♥</span></button>`:`<div class="memory-hero empty-hero">♥<span>ذكرى جميلة بلا صور</span></div>`}<div class="romantic-strip">${ps.slice(0,10).map((p,idx)=>`<button class="strip-thumb ${idx===0?'active':''}" data-action="photo" data-id="${p.id}"><img data-thumb="${p.id}" alt="${esc(p.name)}"><span>${idx+1}</span></button>`).join('')}</div></section>${ps.length?`<section class="photo-section"><div class="section-title-row"><h2>📸 الصور</h2><span class="meta">${ps.length}</span></div><div class="gallery managed-gallery romantic-gallery ${dragSelectMode?'drag-select-active':''}">${ps.map((p,idx)=>photoTile(p,idx,ps.length,m.id)).join('')}</div></section>`:''}<div class="actions memory-actions"><button class="btn primary" data-action="editMemory" data-id="${m.id}">✎ تعديل التفاصيل / مصدر الربط</button><button class="btn" data-action="pickAlbumLinkSource" data-id="${m.id}">📁 اختيار مجلد الألبوم نفسه — الأسرع</button><button class="btn" data-action="shareMemory" data-id="${m.id}">📤 مشاركة الصور</button><button class="btn" data-action="hideMemory" data-id="${m.id}">👁️ إخفاء الذكرى / المجلد</button><button class="btn" data-action="backMemories">↩ ألبوماتنا</button></div><div class="photo-manager card"><div class="manager-head"><b>إدارة الصور</b><span class="meta" id="selectionCount">${selectedPhotos.size} محددة</span></div><div class="actions"><button class="btn small" data-action="selectAllPhotos">تحديد الكل</button><button class="btn small" data-action="clearPhotoSelection">مسح التحديد</button><button class="btn small ${dragSelectMode?'primary':''}" data-action="toggleDragSelect">⚡ ${dragSelectMode?'إنهاء التحديد السريع':'تحديد سريع'}</button><button class="btn small" data-action="commitPhotoOrder">✅ تثبيت ترتيب التحديد</button><button class="btn small" data-action="moveSelected">نقل المحدد</button><button class="btn small" data-action="removeFromAlbum">إزالة من الألبوم</button><button class="btn small danger" data-action="excludeSelected">استبعاد من الفهرس</button></div><p class="meta">النظام المرقّم هو الأساس. «التحديد السريع» خيار إضافي: لمسة قصيرة للتحديد، سحب عادي للتمرير، وضغط مطوّل ثم سحب للتحديد المتواصل. إزالة الصورة من الألبوم/الفهرس لا تحذف الأصل من الجهاز.</p></div></div>`}
 function pageStory(){const a=[...state.events.map(x=>({date:x.date,title:x.title,text:x.description,kind:'محطة'})),...visibleMemories().filter(x=>x.date).map(x=>({date:x.date,title:x.title,text:x.description,kind:'ذكرى',endDate:x.endDate}))].sort((x,y)=>(x.date||'').localeCompare(y.date||''));return `<div class="inner"><div class="kicker">◴ قصتنا</div><h1 class="title">رحلتنا</h1><p class="note">كل تاريخ وذكرى ومحطة يضيف صفحة جديدة.</p><button class="btn primary" data-action="event">＋ إضافة محطة</button><div class="timeline" style="margin-top:16px">${a.length?a.map(x=>`<div class="titem"><div class="tbox card"><div class="meta">${x.endDate&&x.endDate!==x.date?`من ${fmt(x.date)} إلى ${fmt(x.endDate)}`:fmt(x.date)} • ${x.kind}</div><h3>${esc(x.title)}</h3><p>${esc(x.text||'')}</p></div></div>`).join(''):`<div class="empty">لم نضف محطات بعد.</div>`}</div></div>`}
 function pageDreams(){const avg=state.dreams.length?Math.round(state.dreams.reduce((a,d)=>a+(+d.progress||0),0)/state.dreams.length):0;return `<div class="inner"><div class="kicker">✦ أحلامنا</div><h1 class="title">ما نحلم به</h1><p class="note">حلم + نسبة إنجاز + موعد، ثم يوم نكتب فيه «تحقق».</p><div class="card"><b>متوسط الإنجاز</b><p>${avg}%</p><div class="progress"><i style="width:${avg}%"></i></div></div><button class="btn primary" data-action="dream" style="margin:12px 0">＋ حلم</button><div class="cards">${state.dreams.length?state.dreams.map(d=>`<div class="card"><h3>${d.done?'✅':'🌱'} ${esc(d.title)}</h3><div class="meta">${d.targetDate?fmt(d.targetDate):'بدون موعد'}</div><p>${esc(d.note||'')}</p><div class="progress"><i style="width:${Math.min(100,Math.max(0,d.progress||0))}%"></i></div><p>${+d.progress||0}%</p><button class="btn small" data-action="editDream" data-id="${d.id}">تعديل</button></div>`).join(''):`<div class="empty">اكتبوا أول حلم.</div>`}</div></div>`}
 function pageSpiritual(){const vs=state.verses||[],ps=state.prayers||[],daily=vs.length?vs[seed()%vs.length]:null;return `<div class="inner"><div class="kicker">☼ روحياتنا</div><h1 class="title">ما نحفظه في القلب</h1>${daily?`<div class="quote">«${esc(daily.text)}»<div class="meta">— ${esc(daily.ref||'')}</div></div>`:`<div class="empty">أضيفوا أول آية مفضلة لتظهر «آية اليوم» هنا.</div>`}<div class="actions" style="margin:14px 0"><button class="btn primary" data-action="verse">＋ آية</button><button class="btn" data-action="prayer">＋ صلاة / أمنية</button></div><h3>آياتنا</h3><div class="cards">${vs.length?vs.map(v=>`<div class="card"><div class="meta">${v.favorite?'⭐ ':''}${esc(v.ref||'')}</div><p>«${esc(v.text)}»</p><div class="actions"><button class="btn small" data-action="favVerse" data-id="${v.id}">${v.favorite?'إزالة ⭐':'تمييز ⭐'}</button><button class="btn small" data-action="delVerse" data-id="${v.id}">حذف</button></div></div>`).join(''):`<div class="empty">لا توجد آيات.</div>`}</div><div class="line"></div><h3>صلوات وأمنيات</h3><div class="cards">${ps.length?ps.map(p=>`<div class="card"><h3>${p.done?'✅':'🙏'} ${esc(p.title)}</h3><p>${esc(p.text||'')}</p><div class="actions"><button class="btn small" data-action="togglePrayer" data-id="${p.id}">${p.done?'تراجع':'تحققت ♥'}</button><button class="btn small" data-action="editPrayer" data-id="${p.id}">تعديل</button><button class="btn small danger" data-action="deletePrayer" data-id="${p.id}">حذف</button></div></div>`).join(''):`<div class="empty">يمكنكم حفظ ما تصلّون أو تتمنون.</div>`}</div></div>`}
@@ -760,27 +748,13 @@ function occasionCountdownsToday(){const out=[];const todayKey=today();const bui
 async function toggleCountdownCelebrate(id){state.settings.countdownCelebrateOffOnDate=state.settings.countdownCelebrateOffOnDate||{};if(countdownCelebrateOff(id))delete state.settings.countdownCelebrateOffOnDate[id];else state.settings.countdownCelebrateOffOnDate[id]=today();await save();removeOccasionCelebration();renderNoAnim();if(!countdownCelebrateOff(id)&&occasionCountdownsToday().some(x=>x.id===id))setTimeout(()=>runOccasionCelebrationForId(id),120)}
 function countdownsPanel(){const xs=state.settings.countdowns||[];return `<div class="card"><h3>⏳ عدادات ومواعيد مستقلة</h3><p class="meta">ميزة اختيارية تمامًا. لا علاقة لها بقائمة الأحلام. أضف موعدًا عند الحاجة واختر بنفسك هل يظهر في الرئيسية أم يظل داخل الإعدادات فقط.</p><div class="cards">${xs.length?xs.map(x=>{const info=countdownInfo(x);const todayNow=!!info&&info.days===0;return `<div class="card"><div class="memory-body"><b>${esc(x.emoji)} ${esc(x.title)}</b><div class="meta">${esc(countdownDateLabel(x))} • ${x.showHome?'يظهر في الرئيسية':'مخفي من الرئيسية'}</div></div><div class="actions">${todayNow?`<button class="btn small occasion-celebrate-btn" data-action="toggleCountdownCelebrate" data-id="${x.id}" title="هذا الزر يوقف الاحتفال لباقي اليوم فقط">${countdownCelebrateLabel(x)}</button>`:''}<button class="btn small" data-action="editCountdown" data-id="${x.id}">✎ تعديل</button><button class="btn small danger" data-action="deleteCountdown" data-id="${x.id}">حذف</button></div></div>`}).join(''):`<div class="empty">لا توجد عدادات مضافة. كل شيء يبقى كما هو دونها.</div>`}</div><button class="btn primary" data-action="countdown">＋ إضافة عداد / موعد</button></div>`}
 function removeOccasionCelebration(){document.getElementById('occasionCelebration')?.remove();occasionCelebrationBusy=false}
-function runOccasionCelebrationForId(idv){if(!surprisesAreEnabled())return;const list=occasionCountdownsToday().filter(x=>String(x.id)===String(idv));if(!list.length||countdownCelebrateOff(idv)||occasionCelebrationBusy)return;removeOccasionCelebration();occasionCelebrationBusy=true;const layer=document.createElement('div');layer.id='occasionCelebration';layer.className='occasion-celebration';layer.setAttribute('aria-hidden','true');const fireworks=['🎆','✨','💥','🎇','⭐'];const fall=['❤️','🫂','🌹','🌷','🌸','💋','💛','🥰','💖','🎀'];for(let i=0;i<26;i++){const s=document.createElement('span');s.className='occasion-spark';s.textContent=fireworks[i%fireworks.length];s.style.left=`${4+Math.random()*92}%`;s.style.animationDelay=`${(Math.random()*.85).toFixed(2)}s`;s.style.animationDuration=`${(2.0+Math.random()*1.35).toFixed(2)}s`;layer.appendChild(s)}for(let i=0;i<44;i++){const s=document.createElement('span');s.className='occasion-confetti';s.textContent=fall[i%fall.length];s.style.left=`${Math.random()*100}%`;s.style.animationDelay=`${(Math.random()*1.5).toFixed(2)}s`;s.style.animationDuration=`${(3.0+Math.random()*2.0).toFixed(2)}s`;layer.appendChild(s)}for(let i=0;i<7;i++){const s=document.createElement('span');s.className='occasion-balloon';s.textContent=['🎈','🎈','🎈','💖'][i%4];s.style.left=`${8+Math.random()*84}%`;s.style.animationDelay=`${(Math.random()*.8).toFixed(2)}s`;s.style.animationDuration=`${(3.2+Math.random()*1.7).toFixed(2)}s`;layer.appendChild(s)}document.body.appendChild(layer);setTimeout(()=>{const label=list[0]?.title||'';showRomanticScene(label,{occasion:true,style:romanticScenePickStyle()});layer.classList.add('occasion-celebration-out');setTimeout(()=>{layer.remove();occasionCelebrationBusy=false},800)},2200)}
+function runOccasionCelebrationForId(idv){if(!surprisesAreEnabled())return;const list=occasionCountdownsToday().filter(x=>String(x.id)===String(idv));if(!list.length||countdownCelebrateOff(idv)||occasionCelebrationBusy)return;removeOccasionCelebration();startOsraExtendedCelebration(52000);occasionCelebrationBusy=true;const layer=document.createElement('div');layer.id='occasionCelebration';layer.className='occasion-celebration';layer.setAttribute('aria-hidden','true');const fireworks=['🎆','✨','💥','🎇','⭐'];const fall=['❤️','🫂','🌹','🌷','🌸','💋','💛','🥰','💖','🎀'];for(let i=0;i<26;i++){const s=document.createElement('span');s.className='occasion-spark';s.textContent=fireworks[i%fireworks.length];s.style.left=`${4+Math.random()*92}%`;s.style.animationDelay=`${(Math.random()*.85).toFixed(2)}s`;s.style.animationDuration=`${(2.0+Math.random()*1.35).toFixed(2)}s`;layer.appendChild(s)}for(let i=0;i<44;i++){const s=document.createElement('span');s.className='occasion-confetti';s.textContent=fall[i%fall.length];s.style.left=`${Math.random()*100}%`;s.style.animationDelay=`${(Math.random()*1.5).toFixed(2)}s`;s.style.animationDuration=`${(3.0+Math.random()*2.0).toFixed(2)}s`;layer.appendChild(s)}for(let i=0;i<7;i++){const s=document.createElement('span');s.className='occasion-balloon';s.textContent=['🎈','🎈','🎈','💖'][i%4];s.style.left=`${8+Math.random()*84}%`;s.style.animationDelay=`${(Math.random()*.8).toFixed(2)}s`;s.style.animationDuration=`${(3.2+Math.random()*1.7).toFixed(2)}s`;layer.appendChild(s)}document.body.appendChild(layer);setTimeout(()=>{const label=list[0]?.title||'';showRomanticScene(label,{occasion:true,style:romanticScenePickStyle()});layer.classList.add('occasion-celebration-out');setTimeout(()=>{layer.remove();occasionCelebrationBusy=false},800)},2200)}
 function maybeRunOccasionCelebrations(){if(!surprisesAreEnabled()||section!=='home')return;const key=today();for(const x of occasionCountdownsToday()){if(countdownCelebrateOff(x.id))continue;const shownKey=`osra-occasion-shown-${String(x.id)}-${key}`;if(localStorage.getItem(shownKey))continue;localStorage.setItem(shownKey,'1');setTimeout(()=>runOccasionCelebrationForId(x.id),350);break}}
-function ensureRomanticTicker(){let el=document.getElementById('romanticTicker'),tx=document.getElementById('romanticTickerText');if(el&&tx)return {el,tx};if(!el){el=document.createElement('div');el.id='romanticTicker';el.className='romantic-ticker';el.setAttribute('aria-live','polite');el.setAttribute('aria-hidden','true');document.body.appendChild(el)}if(!tx){tx=document.createElement('span');tx.id='romanticTickerText';el.appendChild(tx)}return {el,tx}}
-function renderRomanticTickerMessage(message,variant,duration=7200){if(!surprisesAreEnabled())return false;const {el,tx}=ensureRomanticTicker();tx.textContent=String(message||'');tx.dataset.variant=String(variant||0);el.classList.remove('show');void el.offsetWidth;el.classList.add('show');clearTimeout(romanticTickerCloseTimer);romanticTickerCloseTimer=setTimeout(()=>{el.classList.remove('show')},Math.max(2800,duration));return true}
-const ROMANTIC_TICKER_MESSAGES=['بحبك','👇انت مش لوحدك انا معاك🫂','🙏ربنا يخليك ليا🙏🤲','كلمتني النهاردة 🤔؟','بصليلك دايما🙏','واااااحشني 🙈🙊🫂','خد ورده 🌹','انت حلو😍🤩😘','😍❤️انت حبيبي 🥰💛','❤️😍🥰💛🌹ياروحي❤️😍🥰🌹♥️'];
-const ROMANTIC_LONG_MESSAGE='حلو انت وقاعد مستني الرساله اللي جاية؟ طيب مفيش رسايل جاية وانا اصلا هاجي بطريقة محدش يتوقعني 😉😅 قوم ذاكر ولا شوف وراك إيه ولا كده هغير من التطبيق هياخدك مني🙊';
+function renderRomanticTickerMessage(message,variant,duration=7200){const el=document.getElementById('romanticTicker');const tx=document.getElementById('romanticTickerText');if(!el||!tx)return;tx.textContent=message;tx.dataset.variant=String(variant||0);el.classList.remove('show');void el.offsetWidth;el.classList.add('show');clearTimeout(romanticTickerCloseTimer);romanticTickerCloseTimer=setTimeout(()=>el.classList.remove('show'),Math.max(2800,duration))}
+const ROMANTIC_TICKER_MESSAGES=['بحبك'];
+const ROMANTIC_LONG_MESSAGE='يا رانيا، إنتي من الحاجات الجميلة اللي مجرد وجودها بيخلي اليوم أهدى وأحلى… خدي بالك من نفسك، عشان مكانك في قلبي كبير أوي ❤️🌹';
 const ROMANTIC_FLOATS=['🎈','🌹','❤️','💛','💖','💕','🌷','🌸','💐','😘','🫂'];
-const ROMANTIC_EXTRA_MESSAGES=[
- 'وجودك في حياتي بيخلي كل حاجة صعبة تهون.. ربنا يديمك ليا ❤️',
- 'مش محتاج مناسَبة عشان أقولك إنك أحلى حاجة حصلتلي 🌹',
- 'ضحكتك لوحدها قادرة تظبط يومي كله 🥰',
- 'كل ثانية وأنتي في بالي وفي قلبي وفي كل دعوة بصليهالك 🙏❤️',
- 'يا بخت قلبي بيكي ويا بختي بوجودك يا روحي 🙈',
- 'سرحان فيكي ومش قادر أفكر في أي حاجة غيرك 😍❤️'
-];
-const APP_FLIRT_MESSAGES=[
- 'حاسس إن الكود بتاعي هيقف من كثر جمالك.. ارحمي التطبيق شوية يا قمري! 🙈❤️',
- 'أنا مجرد تطبيق على الموبايل وبجد مش عارف أركز في الشغل بسببك! 😍🙊',
- 'أنا التطبيق وبقولك: أسامة سيبك من كل حاجة وسرحان فيكي، وأنا كمان شكله هيهنج مني الكود بسببك! 😜🥰',
- 'هو ينفع تكوني قمر كده للتطبيق ولصاحب التطبيق في نفس الوقت؟ ده كتير علينا بصراحة! 🙈🌹'
-];
+const ROMANTIC_EXTRA_MESSAGES=['سرحان فيكي ومش قادر أفكر في أي حاجة غيرك 😍❤️'];
 // الرسالة السرية الليلية: هذه الرسالة وحدها تعمل في نافذة 11م–1ص وبحد أقصى مرة في اليوم.
 const ROMANTIC_KISS_MESSAGES=['هات بوسه🙈🙊'];
 function occasionJoyActive(){return surprisesAreEnabled()&&occasionCountdownsToday().some(x=>!countdownCelebrateOff(x.id))}
@@ -788,23 +762,32 @@ function showRomanticFloat(kind='random',profile=surpriseTimingProfile()){
  if(!surprisesAreEnabled())return;
  let layer=document.getElementById('romanticFloatLayer');
  if(!layer){layer=document.createElement('div');layer.id='romanticFloatLayer';layer.className='romantic-float-layer';document.body.appendChild(layer)}
+ const speed=Math.max(.65,Number(profile?.speed)||1);
+ layer.style.setProperty('--float-speed',String(speed));
  const pool=kind==='balloon'?['balloon','balloon','balloon','balloon']:kind==='rose'?['rose','rose','heart','flower']:kind==='heart'?['heart','heart','kiss','flower']:['heart','rose','kiss','flower','heart','balloon'];
  const count=3+Math.floor(Math.random()*3);
+ const cleanupLayer=()=>{if(layer.childElementCount===0)layer.remove()};
+ const cssTimeToMs=v=>{const x=String(v||'').trim();if(!x)return 0;const n=parseFloat(x);return Number.isFinite(n)?(x.endsWith('ms')?n:n*1000):0};
  for(let i=0;i<count;i++){
   const k=pool[Math.floor(Math.random()*pool.length)],el=document.createElement('span');
-  el.className='romantic-float-item';
-  if(k==='balloon'){el.classList.add('romantic-mini-balloon');el.innerHTML='<i></i>';el.style.setProperty('--balloon-hue',`${Math.floor(Math.random()*360)}deg`)}
-  else{el.textContent=k==='rose'?'🌹':k==='heart'?'❤️':k==='kiss'?'💋':k==='flower'?'🌸':ROMANTIC_FLOATS[Math.floor(Math.random()*ROMANTIC_FLOATS.length)]}
-  el.style.left=`${4+Math.random()*92}%`;
-  el.style.top=`${8+Math.random()*72}%`;
-  el.style.fontSize=`${24+Math.random()*24}px`;
-  el.style.animationDuration=`${((4.1+Math.random()*2.8)/Math.max(.65,profile.speed)).toFixed(2)}s`;
-  el.style.animationDelay=`${(Math.random()*.7).toFixed(2)}s`;
-  el.style.setProperty('--sway',`${-12+Math.random()*24}vw`);
-  el.style.setProperty('--driftX',`${-8+Math.random()*16}vw`);
-  el.style.setProperty('--driftY',`${-35+Math.random()*70}vh`);
+  const pos=Math.floor(Math.random()*12),size=Math.floor(Math.random()*5),delay=Math.floor(Math.random()*6),drift=Math.floor(Math.random()*10),duration=Math.floor(Math.random()*5);
+  el.className=`romantic-float-item rf-pos-${pos} rf-size-${size} rf-delay-${delay} rf-drift-${drift} rf-duration-${duration}`;
+  if(k==='balloon'){
+   el.classList.add('romantic-mini-balloon',`rf-hue-${Math.floor(Math.random()*7)}`);
+   el.innerHTML='<i></i>';
+  }else{
+   el.textContent=k==='rose'?'🌹':k==='heart'?'❤️':k==='kiss'?'💋':k==='flower'?'🌸':ROMANTIC_FLOATS[Math.floor(Math.random()*ROMANTIC_FLOATS.length)];
+  }
   layer.appendChild(el);
-  setTimeout(()=>el.remove(),8500);
+
+  const cs=getComputedStyle(el);
+  const animationDuration=cssTimeToMs(cs.animationDuration);
+  const animationDelay=Math.max(0,cssTimeToMs(cs.animationDelay));
+  const lifeMs=Math.max(0,animationDuration+animationDelay);
+  let removed=false;
+  const cleanup=()=>{if(removed)return;removed=true;el.removeEventListener('animationend',cleanup);el.remove();cleanupLayer()};
+  el.addEventListener('animationend',cleanup,{once:true});
+  setTimeout(cleanup,Math.max(20,lifeMs+80));
  }
 }
 function romanticWhiteDogSvg(){return `<svg class="romantic-white-dog" viewBox="0 0 96 72" aria-hidden="true"><ellipse cx="48" cy="57" rx="34" ry="9" fill="rgba(30,18,25,.14)"/><path d="M29 25c-8-11-1-20 8-11l7 7c4-3 11-4 17-1l7-8c9-9 16 0 8 12 4 5 6 11 4 20-3 13-16 20-32 20S18 57 18 44c0-7 4-14 11-19Z" fill="#fff" stroke="#e5d9df" stroke-width="2"/><circle cx="38" cy="38" r="2.7" fill="#392b31"/><circle cx="58" cy="38" r="2.7" fill="#392b31"/><ellipse cx="48" cy="46" rx="7" ry="5" fill="#392b31"/><path d="M42 52c4 4 8 4 12 0" fill="none" stroke="#392b31" stroke-width="2" stroke-linecap="round"/><path d="M24 28 16 19c-4-5-7 1-5 9l9 9" fill="#fff" stroke="#e5d9df" stroke-width="2"/><path d="M72 28 80 19c4-5 7 1 5 9l-9 9" fill="#fff" stroke="#e5d9df" stroke-width="2"/></svg>`}
@@ -812,69 +795,191 @@ const ROMANTIC_SCENE_STYLES=[
  'ribbon','spotlight','postcard','burst','neon','heartframe','flowerframe','balloons','orbit','stamp','sticker','cloud','shooting','curtain','split','bottomwave','topwave','giantcenter','sidecard','tiltcard','bubblefield','confetti','rain','ticket','polaroid','halo','bootribbon','dogsign'
 ];
 const ROMANTIC_SCENE_EMOJIS=['❤️','💖','💕','💛','💗','🌹','🌷','🌸','💐','💋','😘','🥰','🫂','🎀','✨','⭐','🎈','💞','🌺','🩷'];
-const ROMANTIC_MOTION_STYLES=['drop','rise','slide-left','slide-right','zoom','spin','bounce','float-left','float-right','soft'];
+const ROMANTIC_MOTION_STYLES=['drop','rise','slide-left','slide-right','zoom','spin','bounce','float-left','float-right','soft','gentle-fall','feather','rise-balloon','sway','drop-sway','spiral-in'];
+const ROMANTIC_COMMON_STYLES=['ribbon','postcard','bottomwave','topwave','sidecard','tiltcard','bubblefield','cloud','stamp','sticker','shooting','ticket','balloons','flowerframe','split','curtain','orbit'];
+const ROMANTIC_PLAYFUL_STYLES=['burst','confetti','rain','neon','polaroid','bootribbon','dogsign'];
+const ROMANTIC_STATEMENT_STYLES=['giantcenter','heartframe','spotlight','halo'];
+const ROMANTIC_COMMON_MOTIONS=['soft','gentle-fall','feather','rise','float-left','float-right','slide-left','slide-right','sway','drop-sway'];
+const ROMANTIC_PLAYFUL_MOTIONS=['bounce','zoom','rise-balloon','spiral-in','drop'];
+const ROMANTIC_STATEMENT_MOTIONS=['spin'];
+function pickWeightedDistinct(groups,previous){
+ const preferred=Array.isArray(groups?.[0])?groups[0].filter(x=>x!==previous):[];
+ if(preferred.length)return preferred[Math.floor(Math.random()*preferred.length)];
+ const fallback=groups.filter(g=>Array.isArray(g)&&g.length).flat().filter(x=>x!==previous);
+ return fallback[Math.floor(Math.random()*fallback.length)]||groups.flat().find(Boolean);
+}
 function romanticScenePickStyle(){
- const choices=ROMANTIC_SCENE_STYLES.filter(x=>x!==lastRomanticSceneStyle);
- const v=choices[Math.floor(Math.random()*choices.length)]||ROMANTIC_SCENE_STYLES[0];
+ const roll=Math.random();
+ const group=roll<.76?ROMANTIC_COMMON_STYLES:roll<.94?ROMANTIC_PLAYFUL_STYLES:ROMANTIC_STATEMENT_STYLES;
+ const v=pickWeightedDistinct([group,ROMANTIC_COMMON_STYLES,ROMANTIC_PLAYFUL_STYLES,ROMANTIC_STATEMENT_STYLES],lastRomanticSceneStyle)||ROMANTIC_SCENE_STYLES[0];
  lastRomanticSceneStyle=v;return v;
 }
 function romanticMotionPick(){
- const choices=ROMANTIC_MOTION_STYLES.filter(x=>x!==lastRomanticMotion);
- const v=choices[Math.floor(Math.random()*choices.length)]||'soft';
+ const roll=Math.random();
+ const group=roll<.66?ROMANTIC_COMMON_MOTIONS:roll<.94?ROMANTIC_PLAYFUL_MOTIONS:ROMANTIC_STATEMENT_MOTIONS;
+ const v=pickWeightedDistinct([group,ROMANTIC_COMMON_MOTIONS,ROMANTIC_PLAYFUL_MOTIONS,ROMANTIC_STATEMENT_MOTIONS],lastRomanticMotion)||'soft';
  lastRomanticMotion=v;return v;
+}
+function romanticSceneDecor(count=10){
+ const main=['❤️','🌹','💋','💖','💕','🌷','🌸','💐','🫂','😘','💗','🎀','✨','🥰'];
+ let html='';
+ for(let i=0;i<count;i++){
+  const glyph=main[Math.floor(Math.random()*main.length)];
+  html+=`<span class="rs-decor" style="left:${(2+Math.random()*96).toFixed(1)}%;top:${(-8+Math.random()*105).toFixed(1)}%;--drift:${(-12+Math.random()*24).toFixed(1)}vw;--sc:${(.72+Math.random()*.72).toFixed(2)};--sd:${(2.8+Math.random()*3.8).toFixed(2)}s;--delay:${(Math.random()*1.2).toFixed(2)}s;--r:${(-30+Math.random()*60).toFixed(1)}deg">${glyph}</span>`;
+ }
+ // Cake/candy accents are intentionally uncommon, never the main visual language.
+ if(Math.random()<.24){
+  const sprinkleCount=3+Math.floor(Math.random()*4);
+  for(let i=0;i<sprinkleCount;i++){
+   html+=`<span class="rs-sprinkle" style="left:${(8+Math.random()*84).toFixed(1)}%;top:${(-5+Math.random()*95).toFixed(1)}%;--sprinkle:${['#ff3b30','#ffd60a','#34c759','#0a84ff','#bf5af2'][Math.floor(Math.random()*5)]};--sprinkle-r:${(-65+Math.random()*130).toFixed(1)}deg;--sprinkle-d:${(2.6+Math.random()*2.8).toFixed(2)}s;--sprinkle-delay:${(Math.random()*.9).toFixed(2)}s"></span>`;
+  }
+ }
+ if(Math.random()<.12){
+  const left=(31+Math.random()*38).toFixed(1);
+  html+=`<span class="rs-candle" style="left:${left}%;top:${(8+Math.random()*20).toFixed(1)}%;--candle-d:${(3.2+Math.random()*2).toFixed(2)}s;--candle-delay:${(Math.random()*.7).toFixed(2)}s">🕯️</span>`;
+ }
+ return html;
 }
 function romanticSceneHtml(message,style,occasion=false){
  const second=['💖','🌹','💋','🫂','🎈','✨','🌸','💐','💕'][Math.floor(Math.random()*9)];
  const third=['❤️','🌸','💕','🥰','⭐','💛','🌷','😘','🎀'][Math.floor(Math.random()*9)];
  const len=Array.from(String(message||'')).length;
- const scale=len>92?0.66:len>64?0.75:len>40?0.84:len>24?0.93:1.02;
- const left=(8+Math.random()*84).toFixed(1), top=(10+Math.random()*68).toFixed(1);
- return `<div class="romantic-scene-backdrop"></div><div class="romantic-scene-shower">${romanticSceneDecor(10)}</div><div class="romantic-scene-core"><div class="rs-card" style="left:${left}%;top:${top}%;--msg-scale:${scale}"><div class="rs-message">${esc(message)}</div><div class="rs-mini-row"><span>${second}</span><span>${third}</span><span>♥</span></div></div><div class="rs-ring r1">♥</div><div class="rs-ring r2">♥</div></div>`;
+ const scale=len>150?0.66:len>120?0.72:len>92?0.79:len>68?0.86:len>44?0.95:1.04;
+ const centered=len>68;
+ const left=(centered?50:(14+Math.random()*72)).toFixed(1), top=(centered?46:(16+Math.random()*66)).toFixed(1);
+ const useOsamaSticker=style!=='dogsign' && Math.random()<0.72;
+ const sticker=useOsamaSticker?`<div class="rs-sticker"><img src="${OSRA_3D_ASSETS.osama}" alt="" onerror="this.parentElement.classList.add('missing')"></div>`:'';
+ return `<div class="romantic-scene-backdrop"></div><div class="romantic-scene-shower">${romanticSceneDecor(12)}</div><div class="romantic-scene-core"><div class="rs-card" style="left:${left}%;top:${top}%;--msg-scale:${scale}">${sticker}<div class="rs-message">${esc(message)}</div><div class="rs-mini-row"><span>${second}</span><span>${third}</span><span>♥</span></div></div><div class="rs-ring r1">♥</div><div class="rs-ring r2">♥</div></div>`;
+}
+function romanticViewport(){
+ const vv=window.visualViewport;
+ return {w:Math.max(1,Math.round(vv?.width||window.innerWidth||1)),h:Math.max(1,Math.round(vv?.height||window.innerHeight||1))};
+}
+function clampRomanticSceneCard(layer){
+ try{
+  const card=layer?.querySelector?.('.rs-card');if(!card)return;
+  const {w,h}=romanticViewport(),margin=10;
+  const rect=card.getBoundingClientRect();
+  let dx=0,dy=0;
+  if(rect.left<margin)dx=margin-rect.left;
+  else if(rect.right>w-margin)dx=(w-margin)-rect.right;
+  if(rect.top<margin)dy=margin-rect.top;
+  else if(rect.bottom>h-margin)dy=(h-margin)-rect.bottom;
+  if(!dx&&!dy)return;
+  const currentLeft=parseFloat(card.style.left)||50,currentTop=parseFloat(card.style.top)||50;
+  card.style.left=`${Math.min(94,Math.max(6,currentLeft+(dx/w)*100)).toFixed(2)}%`;
+  card.style.top=`${Math.min(92,Math.max(8,currentTop+(dy/h)*100)).toFixed(2)}%`;
+ }catch(err){console.warn('OsRa romantic card clamp skipped',err)}
+}
+function fitRomanticSceneCard(layer){
+ try{
+  const card=layer?.querySelector?.('.rs-card');if(!card)return;
+  const {w,h}=romanticViewport();
+  card.style.maxWidth=`${Math.max(120,w-18)}px`;
+  card.style.maxHeight=`${Math.max(120,h-92)}px`;
+  clampRomanticSceneCard(layer);
+ }catch(err){console.warn('OsRa romantic card fit skipped',err)}
+}
+function enableRomanticCardDrag(layer){
+ try{
+  const card=layer?.querySelector?.('.rs-card');if(!card||card.dataset.dragReady==='1')return;
+  card.dataset.dragReady='1';
+  let active=false,moved=false,pid=null,sx=0,sy=0,sl=50,st=50;
+  const stop=()=>{
+   if(!active)return;
+   active=false;card.classList.remove('user-dragged');
+   if(pid!==null)try{card.releasePointerCapture(pid)}catch{}
+   pid=null;clampRomanticSceneCard(layer);
+  };
+  card.addEventListener('pointerdown',e=>{
+   if(e.button!==undefined&&e.button!==0)return;
+   if(e.target?.closest?.('button,a,input,select,textarea'))return;
+   const rect=card.getBoundingClientRect();
+   sx=e.clientX;sy=e.clientY;sl=parseFloat(card.style.left)||((rect.left+rect.width/2)/romanticViewport().w*100);st=parseFloat(card.style.top)||((rect.top+rect.height/2)/romanticViewport().h*100);
+   active=true;moved=false;pid=e.pointerId;
+   try{card.setPointerCapture(pid)}catch{}
+  });
+  card.addEventListener('pointermove',e=>{
+   if(!active)return;
+   const {w,h}=romanticViewport(),dx=e.clientX-sx,dy=e.clientY-sy;
+   if(!moved&&(Math.abs(dx)+Math.abs(dy))<4)return;
+   moved=true;card.classList.add('user-dragged');
+   card.style.left=`${Math.min(94,Math.max(6,sl+(dx/w)*100)).toFixed(2)}%`;
+   card.style.top=`${Math.min(92,Math.max(8,st+(dy/h)*100)).toFixed(2)}%`;
+  });
+  card.addEventListener('pointerup',stop);card.addEventListener('pointercancel',stop);card.addEventListener('lostpointercapture',()=>{if(active)stop()});
+ }catch(err){console.warn('OsRa romantic card drag skipped',err)}
+}
+function trimRomanticSceneOverlays(limit=2){
+ try{
+  const nodes=[...document.querySelectorAll('[id^="romanticSceneLayer-"]')];
+  while(nodes.length>limit){nodes.shift()?.remove()}
+ }catch(err){console.warn('OsRa romantic overlay trim skipped',err)}
+}
+function safeRomanticRun(label,fn,fallback=null){
+ try{return fn()}catch(err){console.warn(`OsRa romantic ${label} failed; continuing safely.`,err);return fallback}
 }
 function showRomanticScene(message,opts={}){
  if(!surprisesAreEnabled())return null;
- const oldLayer=document.getElementById('romanticSceneLayer');if(oldLayer&&!opts.allowOverlap)oldLayer.remove();
- const style=opts.style||romanticScenePickStyle();
- const motion=opts.motion||romanticMotionPick();
- const prof=opts.profile||surpriseTimingProfile();
- const layer=document.createElement('div');
- layer.id=opts.allowOverlap?`romanticSceneLayer-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,6)}`:'romanticSceneLayer';
- layer.className=`romantic-scene-layer scene-${style} motion-${motion} surprise-speed-${prof.key}${opts.occasion?' scene-occasion':''}`;
- layer.setAttribute('aria-hidden','true');
- layer.innerHTML=romanticSceneHtml(message,style,!!opts.occasion);
- document.body.appendChild(layer);
- requestAnimationFrame(()=>{
-  fitRomanticSceneCard(layer);layer.classList.add('is-visible');enableRomanticCardDrag(layer);
-  setTimeout(()=>clampRomanticSceneCard(layer),Math.max(90,Math.min(450,650/prof.speed)));
-  setTimeout(()=>clampRomanticSceneCard(layer),Math.max(250,Math.min(900,1100/prof.speed)));
- });
- const baseLife=opts.occasion?9800:(style==='dogsign'?11200:8200);
- const life=Math.round(Math.max(6500,Math.min(opts.allowOverlap?10500:11200,baseLife)));
- layer.style.setProperty('--surprise-speed',String(prof.speed));
- setTimeout(()=>layer.classList.add('is-leaving'),Math.max(4300,life-1100));
- setTimeout(()=>layer.remove(),life);
- return {life,style,motion};
+ try{
+  const oldLayer=document.getElementById('romanticSceneLayer');
+  if(oldLayer&&!opts.allowOverlap)oldLayer.remove();
+  const style=opts.style||romanticScenePickStyle();
+  const motion=opts.motion||romanticMotionPick();
+  const prof=opts.profile||surpriseTimingProfile();
+  const speed=Math.max(.72,Number(prof?.speed)||1);
+  const layer=document.createElement('div');
+  layer.id=opts.allowOverlap?`romanticSceneLayer-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,6)}`:'romanticSceneLayer';
+  layer.className=`romantic-scene-layer scene-${style} motion-${motion} surprise-speed-${prof.key}${opts.occasion?' scene-occasion':''}`;
+  layer.setAttribute('aria-hidden','true');
+  layer.innerHTML=romanticSceneHtml(String(message??''),style,!!opts.occasion);
+  document.body.appendChild(layer);
+  if(opts.allowOverlap)trimRomanticSceneOverlays(2);
+  requestAnimationFrame(()=>{
+   if(!layer.isConnected)return;
+   safeRomanticRun('card setup',()=>{fitRomanticSceneCard(layer);layer.classList.add('is-visible');enableRomanticCardDrag(layer)});
+   setTimeout(()=>{if(layer.isConnected)clampRomanticSceneCard(layer)},Math.max(90,Math.min(450,650/speed)));
+   setTimeout(()=>{if(layer.isConnected)clampRomanticSceneCard(layer)},Math.max(250,Math.min(900,1100/speed)));
+  });
+  const statementStyle=style==='giantcenter'||style==='heartframe'||style==='spotlight'||style==='halo'||style==='burst';
+  const baseLife=opts.occasion?9800:(style==='dogsign'?11200:(statementStyle?9000:8200));
+  const life=Math.round(Math.max(6500,Math.min(opts.allowOverlap?10500:11200,baseLife)));
+  layer.style.setProperty('--surprise-speed',String(speed));
+  setTimeout(()=>{if(layer.isConnected)layer.classList.add('is-leaving')},Math.max(4300,life-1100));
+  setTimeout(()=>{if(layer.isConnected)layer.remove()},life);
+  return {life,style,motion};
+ }catch(err){
+  console.warn('OsRa romantic scene failed; safe fallback used.',err);
+  const fallbackMessage=String(message??'بحبك');
+  try{renderRomanticTickerMessage(fallbackMessage,Math.floor(Math.random()*5),Math.min(7200,Math.max(3500,(opts.profile?.interval||7000))));}catch{}
+  return {life:0,style:'fallback',motion:'none'};
+ }
 }
 function showRomanticLongMessage(){
  if(!surprisesAreEnabled()||romanticLongBusy)return false;
  romanticLongBusy=true;
- const longStyle=Math.random()<.5?'dogsign':'polaroid';
- if(longStyle==='dogsign'){
-  renderRomanticTickerMessage(ROMANTIC_LONG_MESSAGE,Math.floor(Math.random()*5),10000);
-  setTimeout(()=>{
-   let layer=document.getElementById('romanticLongLayer');if(layer)layer.remove();
-   layer=document.createElement('div');layer.id='romanticLongLayer';layer.className='romantic-long-layer';
-   layer.innerHTML=`<div class="romantic-long-sign"><div class="romantic-sign-face">${esc(ROMANTIC_LONG_MESSAGE)}</div></div><div class="romantic-dog-target">${romanticWhiteDogSvg()}</div>`;
-   document.body.appendChild(layer);
-   setTimeout(()=>layer.classList.add('landed'),4200);
-   setTimeout(()=>layer.classList.add('romantic-long-fade'),9000);
-   setTimeout(()=>{layer.remove();romanticLongBusy=false;romanticLongNextAt=4+Math.floor(Math.random()*3);romanticMessageCycle=0},11200);
-  },900);
- }else{
-  showRomanticScene(ROMANTIC_LONG_MESSAGE,{style:'polaroid',profile:surpriseTimingProfile()});
-  setTimeout(()=>{romanticLongBusy=false;romanticLongNextAt=4+Math.floor(Math.random()*3);romanticMessageCycle=0},9800);
- }
- return true;
+ const resetLongState=()=>{romanticLongBusy=false;romanticLongNextAt=4+Math.floor(Math.random()*3);romanticMessageCycle=0};
+ try{
+  const longStyle=Math.random()<.5?'dogsign':'polaroid';
+  if(longStyle==='dogsign'){
+   renderRomanticTickerMessage(ROMANTIC_LONG_MESSAGE,Math.floor(Math.random()*5),10000);
+   setTimeout(()=>{
+    try{
+     let layer=document.getElementById('romanticLongLayer');if(layer)layer.remove();
+     layer=document.createElement('div');layer.id='romanticLongLayer';layer.className='romantic-long-layer';
+     layer.innerHTML=`<div class="romantic-long-sign"><div class="romantic-sign-face">${esc(ROMANTIC_LONG_MESSAGE)}</div></div><div class="romantic-dog-target">${romanticWhiteDogSvg()}</div>`;
+     document.body.appendChild(layer);
+     setTimeout(()=>{if(layer.isConnected)layer.classList.add('landed')},4200);
+     setTimeout(()=>{if(layer.isConnected)layer.classList.add('romantic-long-fade')},9000);
+     setTimeout(()=>{if(layer.isConnected)layer.remove();resetLongState()},11200);
+    }catch(err){console.warn('OsRa long surprise failed',err);resetLongState();}
+   },900);
+  }else{
+   showRomanticScene(ROMANTIC_LONG_MESSAGE,{style:'polaroid',profile:surpriseTimingProfile()});
+   setTimeout(resetLongState,9800);
+  }
+  return true;
+ }catch(err){console.warn('OsRa long surprise dispatch failed',err);resetLongState();return false}
 }
 
 
@@ -893,7 +998,7 @@ function classicSceneFinalize(el,life){
 function triggerDogFallingSign(messageText,profile=surpriseTimingProfile(),allowOverlap=false){
  if(!surprisesAreEnabled())return null;if(!allowOverlap)clearClassicSurpriseScenes();
  const el=document.createElement('div');el.className='osra-classic-scene osra-classic-dog-sign';
- el.innerHTML=`<div class="osra-walking-dog"><div class="osra-falling-board"><span>${esc(messageText)}</span></div><div class="osra-cute-white-dog">🐶</div></div>`;
+ el.innerHTML=`<div class="osra-walking-dog"><div class="osra-falling-board"><span>${esc(messageText)}</span></div><div class="osra-cute-white-dog">${romanticWhiteDogSvg()}</div></div>`;
  el.style.setProperty('--classic-speed',String(Math.max(.72,profile.speed||1)));document.body.appendChild(el);
  classicSceneFinalize(el,Math.max(8500,classicSceneLife(profile)));return el;
 }
@@ -914,49 +1019,45 @@ function triggerCinderellaMagic(msgText,profile=surpriseTimingProfile(),allowOve
 function triggerGermanShepherdGift(msgText,profile=surpriseTimingProfile(),allowOverlap=false){
  if(!surprisesAreEnabled())return null;if(!allowOverlap)clearClassicSurpriseScenes();
  const el=document.createElement('div');el.className='osra-classic-scene osra-classic-gift';
- el.innerHTML=`<div class="osra-gift-inner"><div class="osra-dog-head">🐶</div><div class="osra-gift-box">🎁</div><div class="osra-gift-message">🌹🥰😍 بحبك وبموت فيكي 🌹♥️❤️<br><br>${esc(msgText)}</div></div>`;
+ el.innerHTML=`<div class="osra-gift-inner"><div class="osra-dog-head osra-dog-head-svg">${romanticWhiteDogSvg()}</div><div class="osra-gift-box">🎁</div><div class="osra-gift-message">🎁 ${esc(msgText)}</div></div>`;
  el.style.setProperty('--classic-speed',String(Math.max(.72,profile.speed||1)));document.body.appendChild(el);
  classicSceneFinalize(el,Math.max(8500,classicSceneLife(profile)+400));return el;
 }
-function triggerTomAndJerry(msgText,profile=surpriseTimingProfile(),allowOverlap=false){
+function triggerWhiteDogDelivery(msgText,profile=surpriseTimingProfile(),allowOverlap=false){
  if(!surprisesAreEnabled())return null;if(!allowOverlap)clearClassicSurpriseScenes();
- const el=document.createElement('div');el.className='osra-classic-scene osra-classic-tomjerry';
- el.innerHTML=`<div class="osra-cartoon-fight-cloud">💥💨</div><div class="osra-flying-birds">🐤🐤🐤</div><div class="osra-birds-message">${esc(msgText)}</div>`;
+ const el=document.createElement('div');el.className='osra-classic-scene osra-classic-white-dog-delivery';
+ el.innerHTML=`<div class="osra-dog-delivery"><div class="osra-dog-delivery-art">${romanticWhiteDogSvg()}<span class="osra-dog-flower">🌹</span></div><div class="osra-dog-delivery-card"><div class="osra-dog-delivery-heart">❤️</div><div>${esc(msgText)}</div></div></div><div class="osra-dog-delivery-sprinkles">✨ 💕 🌸 💋</div>`;
  el.style.setProperty('--classic-speed',String(Math.max(.72,profile.speed||1)));document.body.appendChild(el);
- classicSceneFinalize(el,Math.max(8000,classicSceneLife(profile)));return el;
+ classicSceneFinalize(el,Math.max(8200,classicSceneLife(profile)));return el;
 }
 function showClassicSurpriseScene(message,profile,allowOverlap=false){
- const fns=[triggerDogFallingSign,triggerFishPopBalloon,triggerCinderellaMagic,triggerGermanShepherdGift,triggerTomAndJerry];
- const fn=fns[Math.floor(Math.random()*fns.length)];fn(message,profile,allowOverlap);return 'classic';
+ const fns=[triggerDogFallingSign,triggerFishPopBalloon,triggerCinderellaMagic,triggerGermanShepherdGift,triggerWhiteDogDelivery];
+ const idx=Math.floor(Math.random()*fns.length),fn=fns[idx],isDogScene=idx===0||idx===3||idx===4;
+ if(isDogScene)clearClassicSurpriseScenes();
+ safeRomanticRun('classic scene',()=>fn(message,profile,allowOverlap&&!isDogScene));return 'classic';
 }
 
 function showRomanticMessage(profile=surpriseTimingProfile()){
  if(!surprisesAreEnabled())return 'off';
- try{
-  if(!romanticLongBusy){
-   romanticMessageCycle++;
-   if(romanticMessageCycle>=romanticLongNextAt){
-    if(showRomanticLongMessage())return 'long';
-   }
+ if(!romanticLongBusy){
+  romanticMessageCycle++;
+  if(romanticMessageCycle>=romanticLongNextAt){
+   if(showRomanticLongMessage())return 'long';
   }
-  const message=randomSurpriseMessage();
-  // Guaranteed text channel: even if a decorative scene/effect fails, the message is still visible.
-  renderRomanticTickerMessage(message,Math.floor(Math.random()*5),Math.max(4300,Math.min(7600,(profile.interval||7200)*.72)));
-  const isFast=profile.speedKey==='random-fast' || (profile.randomAll&&profile.speedKey==='fast');
-  const allowOverlap=isFast&&Math.random()<.62;
-  if(Math.random()<.17){showClassicSurpriseScene(message,profile,allowOverlap)}
-  else if(Math.random()<(isFast?.16:.10)){showMessageBalloon(message)}
-  else{showRomanticScene(message,{style:romanticScenePickStyle(),motion:romanticMotionPick(),occasion:occasionJoyActive(),profile,allowOverlap})}
-  // Decorative effects are deliberately non-critical. They can never stop the message cycle.
-  if(Math.random()<(isFast?.86:.48))setTimeout(()=>{try{if(surprisesAreEnabled())showRomanticEffect(profile)}catch{}},90+Math.random()*240);
-  if(Math.random()<(isFast?.72:.42)){const k=Math.random();setTimeout(()=>{try{if(surprisesAreEnabled())showRomanticFloat(k<.25?'balloon':k<.55?'rose':k<.78?'heart':'random',profile)}catch{}},120+Math.random()*280)}
-  return 'message';
- }catch(error){
-  console.warn('OsRa surprise renderer recovered:',error);
-  const fallback=randomSurpriseMessage();
-  renderRomanticTickerMessage(fallback,0,6200);
-  return 'message';
  }
+ const isFast=profile.speedKey==='random-fast' || (profile.randomAll&&profile.speedKey==='fast');
+ const allowOverlap=isFast&&Math.random()<.62;
+ // مشاهد كرتونية خفيفة ضمن نفس مولّد المفاجآت، بدون إغراق الوضع العادي.
+ if(Math.random()<.17){
+  const message=randomSurpriseMessage();lastRomanticSceneMessage=message;
+  showClassicSurpriseScene(message,profile,allowOverlap);
+ }else if(Math.random()<(isFast?.16:.10)){
+  const m=randomSurpriseMessage();showMessageBalloon(m);
+ }else{
+  const message=randomSurpriseMessage();lastRomanticSceneMessage=message;
+  showRomanticScene(message,{style:romanticScenePickStyle(),motion:romanticMotionPick(),occasion:occasionJoyActive(),profile,allowOverlap});
+ }
+ return 'message';
 }
 
 function showMessageBalloon(message){
@@ -964,7 +1065,7 @@ function showMessageBalloon(message){
  let layer=document.getElementById('romanticBalloonLayer');if(layer)layer.remove();layer=document.createElement('div');layer.id='romanticBalloonLayer';layer.className='romantic-balloon-layer';const sparks=['✨','💖','🌹','💕','🥰','🎀','💛','😘'];layer.innerHTML=`<div class="romantic-balloon-wrap"><div class="romantic-balloon"><span class="romantic-balloon-knot"></span><span class="romantic-balloon-text">${esc(message)}</span></div></div>${sparks.map((x,i)=>`<span class="balloon-pop-spark s${i}">${x}</span>`).join('')}`;document.body.appendChild(layer);setTimeout(()=>layer.classList.add('pop'),4200);setTimeout(()=>layer.classList.add('fade'),6500);setTimeout(()=>layer.remove(),9800)
 }
 function inKissWindow(){const d=new Date();const mins=d.getHours()*60+d.getMinutes();return mins>=23*60||mins<60}
-function tryScheduleKissBalloon(){if(!surprisesAreEnabled())return;clearTimeout(romanticKissTimer);const key=`${today()}-kiss-balloon`;if(localStorage.getItem('osra-kiss-balloon-shown')===key)return;const d=new Date(),mins=d.getHours()*60+d.getMinutes();if(mins>=23*60||mins<60){const delay=5200+Math.random()*4200;romanticKissTimer=setTimeout(()=>{if(!inKissWindow()||localStorage.getItem('osra-kiss-balloon-shown')===key)return;localStorage.setItem('osra-kiss-balloon-shown',key);const msg=ROMANTIC_KISS_MESSAGES[0]||'هات بوسه🙈🙊';renderRomanticTickerMessage(msg,4,6200);},delay);return}if(mins<23*60){const until23=(23*60-mins)*60000-d.getSeconds()*1000;romanticKissTimer=setTimeout(()=>tryScheduleKissBalloon(),Math.max(30000,until23));return}const tomorrow=new Date(d);tomorrow.setDate(tomorrow.getDate()+1);tomorrow.setHours(23,0,5,0);romanticKissTimer=setTimeout(()=>tryScheduleKissBalloon(),Math.max(60000,tomorrow-d))}
+function tryScheduleKissBalloon(){if(!surprisesAreEnabled())return;clearTimeout(romanticKissTimer);const key=`${today()}-kiss-balloon`;if(localStorage.getItem('osra-kiss-balloon-shown')===key)return;const d=new Date(),mins=d.getHours()*60+d.getMinutes();if(mins>=23*60||mins<60){const delay=5200+Math.random()*4200;romanticKissTimer=setTimeout(()=>{if(!inKissWindow()||localStorage.getItem('osra-kiss-balloon-shown')===key)return;localStorage.setItem('osra-kiss-balloon-shown',key);const msg=ROMANTIC_KISS_MESSAGES[Math.floor(Math.random()*ROMANTIC_KISS_MESSAGES.length)]||'هات بوسه🙈🙊';safeRomanticRun('night secret message',()=>showRomanticScene(msg,{style:Math.random()<.72?'balloons':'giantcenter',motion:Math.random()<.5?'rise-balloon':'gentle-fall'}));},delay);return}if(mins<23*60){const until23=(23*60-mins)*60000-d.getSeconds()*1000;romanticKissTimer=setTimeout(()=>tryScheduleKissBalloon(),Math.max(30000,until23));return}const tomorrow=new Date(d);tomorrow.setDate(tomorrow.getDate()+1);tomorrow.setHours(23,0,5,0);romanticKissTimer=setTimeout(()=>tryScheduleKissBalloon(),Math.max(60000,tomorrow-d))}
 function showRomanticEffect(profile=surpriseTimingProfile()){
  if(!surprisesAreEnabled())return;
  const layer=document.getElementById('romanticEffectLayer')||(()=>{const x=document.createElement('div');x.id='romanticEffectLayer';x.className='romantic-effect-layer';document.body.appendChild(x);return x})();
@@ -974,46 +1075,40 @@ function showRomanticEffect(profile=surpriseTimingProfile()){
  const n=mode==='balloons'?8:20+Math.floor(Math.random()*10);
  const motionFactor=profile.speed;
  for(let i=0;i<n;i++){const s=document.createElement('span');s.className=`romantic-effect-item effect-${mode}`;s.textContent=sets[mode][Math.floor(Math.random()*sets[mode].length)];s.style.left=`${3+Math.random()*94}%`;s.style.top=`${3+Math.random()*90}%`;s.style.setProperty('--drift',`${-14+Math.random()*28}vw`);s.style.setProperty('--delay',`${(Math.random()*.6).toFixed(2)}s`);s.style.setProperty('--dur',`${((3+Math.random()*3.2)/motionFactor).toFixed(2)}s`);s.style.fontSize=`${28+Math.random()*34}px`;s.addEventListener('animationend',()=>s.remove(),{once:true});layer.appendChild(s)}
+ if(Math.random()<.32){
+  const bits=7+Math.floor(Math.random()*6);
+  for(let i=0;i<bits;i++){const s=document.createElement('span');s.className='cake-sprinkle-fall';s.textContent='•';s.style.left=`${5+Math.random()*90}%`;s.style.top='-4%';s.style.setProperty('--sprinkle-color',['#ff3b30','#ffd60a','#34c759','#0a84ff','#bf5af2'][Math.floor(Math.random()*5)]);s.style.setProperty('--sprinkle-drift',`${-12+Math.random()*24}vw`);s.style.setProperty('--sprinkle-delay',`${(Math.random()*1.2).toFixed(2)}s`);s.style.setProperty('--sprinkle-duration',`${(3.8+Math.random()*2.4).toFixed(2)}s`);s.addEventListener('animationend',()=>s.remove(),{once:true});layer.appendChild(s)}
+  if(Math.random()<.45){const c=document.createElement('span');c.className='cake-candle-fall';c.textContent='🕯️';c.style.left=`${18+Math.random()*64}%`;c.style.setProperty('--candle-drift',`${-8+Math.random()*16}vw`);c.style.setProperty('--candle-delay',`${(Math.random()*.7).toFixed(2)}s`);c.style.setProperty('--candle-duration',`${(4.2+Math.random()*1.8).toFixed(2)}s`);c.addEventListener('animationend',()=>c.remove(),{once:true});layer.appendChild(c)}
+ }
  setTimeout(()=>{if(layer&&!layer.children.length)layer.remove()},Math.round(7600/motionFactor))
 }
 function startRomanticTicker(){
  if(!surprisesAreEnabled())return;
- clearTimeout(romanticTickerTimer);clearTimeout(romanticDelightTimer);clearInterval(romanticTickerWatchdog);
- const generation=++romanticTickerGeneration;
+ clearTimeout(romanticTickerTimer);clearTimeout(romanticDelightTimer);
  const schedule=(delay)=>{
-  if(generation!==romanticTickerGeneration||!surprisesAreEnabled())return;
-  clearTimeout(romanticTickerTimer);
-  const safeDelay=Math.max(220,Number(delay)||10000);
-  romanticTickerTimer=setTimeout(()=>{
-   romanticTickerTimer=null;romanticDelightTimer=null;
-   if(generation!==romanticTickerGeneration||!surprisesAreEnabled())return;
+  romanticDelightTimer=setTimeout(()=>{
+   if(!surprisesAreEnabled())return;
    const prof=surpriseTimingProfile();
-   // Compute the next wake-up first. A rendering exception therefore cannot kill the loop.
-   const preliminaryNext=Math.max(3000,Math.round(prof.interval||10000));
-   schedule(preliminaryNext);
-   try{
-    const result=showRomanticMessage(prof);
-    localStorage.setItem('osra-romantic-day-message',today());
-    // Long message and other special scenes can take longer; push only the next wake-up without ever stopping the cycle.
-    if(result==='long'){
-      const longNext=Math.max(10500,Math.min(13000,prof.interval||10000));
-      schedule(longNext);
-    }
-   }catch(error){
-    console.warn('OsRa surprise scheduler recovered:',error);
-    schedule(preliminaryNext);
+   let result='message';
+   try{result=showRomanticMessage(prof)}catch(err){console.warn('OsRa romantic cycle failed; loop continues.',err);try{showMessageBalloon('بحبك')}catch{}}
+   if(result==='off')return;
+   localStorage.setItem('osra-romantic-day-message',today());
+   if(prof.speedKey==='random-fast'&&Math.random()<.48){
+    const extra={...prof,speed:Math.max(1.5,prof.speed*(.96+Math.random()*.34)),key:'fast'};
+    setTimeout(()=>{if(surprisesAreEnabled()&&!romanticLongBusy)showRomanticMessage(extra)},430+Math.random()*900);
    }
-  },safeDelay);
-  romanticDelightTimer=romanticTickerTimer;
+   const effectChance=prof.speedKey==='random-fast'?.86:.48;
+   const floatChance=prof.speedKey==='random-fast'?.72:.42;
+   if(Math.random()<effectChance)setTimeout(()=>showRomanticEffect(prof),100+Math.random()*260);
+   if(Math.random()<floatChance){const k=Math.random();setTimeout(()=>showRomanticFloat(k<.25?'balloon':k<.55?'rose':k<.78?'heart':'random',prof),120+Math.random()*300)}
+   const next=result==='long'?Math.max(10500,Math.min(13000,prof.interval||10000)):Math.max(3000,Math.round(prof.interval));
+   schedule(next);
+  },Math.max(0,delay));
+  romanticTickerTimer=romanticDelightTimer;
  };
- // First message: immediately after the post-open celebration has been cleared.
- schedule(220);
+ // The first surprise is deliberately separated from the 10-second opening celebration; this is only a start offset.
+ schedule(1200);
  tryScheduleKissBalloon();
- // Lightweight watchdog: if a browser/WebView throttles or loses the timeout, revive the loop while enabled.
- romanticTickerWatchdog=setInterval(()=>{
-  if(!surprisesAreEnabled()){clearInterval(romanticTickerWatchdog);romanticTickerWatchdog=null;return}
-  if(!romanticTickerTimer&&!romanticDelightTimer)startRomanticTicker();
- },20000);
 }
 
 function countdownForm(existing=null){const x=existing||{title:'',date:'',emoji:'⏳',showHome:true,annual:false};modal(`<h2>${existing?'تعديل':'إضافة'} عداد / موعد</h2>${field('cTitle','اسم الموعد',x.title,'text')}${field('cDate','التاريخ',x.date,'date')}${field('cEmoji','الرمز (اختياري)',x.emoji,'text')}<label class="field" style="display:flex;align-items:center;gap:8px"><span><input id="cAnnual" type="checkbox" ${x.annual?'checked':''}> يتكرر سنويًا</span></label><label class="field" style="display:flex;align-items:center;gap:8px"><span><input id="cHome" type="checkbox" ${x.showHome?'checked':''}> إظهار العداد في الرئيسية</span></label><div class="actions"><button class="btn primary" data-action="saveCountdown" data-id="${existing?.id||''}">حفظ</button><button class="btn" data-action="closeModal">إلغاء</button></div>`)}
@@ -1032,7 +1127,7 @@ async function saveSettings(){
  if(speedEl)state.settings.surpriseSpeed=speedEl.value;
  normalizeState();await save();soundOn=!!state.settings.soundEnabled;updateSoundButton();updateSurpriseButton();toast('تم حفظ الإعدادات.');renderNoAnim(true);
 }
-function pageSettings(){const ex=state.excludedPhotos.length;return `<div class="inner">${scanProgressCard()}${linkProgressCard()}${hqBuildProgressCard()}${hqLastBuildCard()}${dataRecoveryCard()}${reindexRestorePool.length?`<div class="card scan-progress-card"><h3>↻ إعادة فهرسة مستبعدة معلقة</h3><p>هناك ${reindexRestorePool.length} صورة ما زالت في قائمة الاسترجاع الآمن. شغّل «السماح بها وإعادة فحصها» لإكمالها.</p></div>`:''}<div class="kicker">⚙ المزيد</div><h1 class="title">إعدادات OsRa</h1><div class="cards"><div class="card"><h3>📁 مكتبات الصور</h3><p>${sources.length?`تم ربط ${sources.length} مجلد${sources.length===1?'':'ات'} — المصدر الأساسي: ${esc(sourceLabel(sources[0]))}`:'غير مرتبطة'}</p><div class="actions"><button class="btn primary" data-action="folder">＋ إضافة مجلد / ألبوم</button><button class="btn" data-action="scan">↻ فحص المجلد المحدد</button><button class="btn" data-action="matchAlbumsByName">🔤 مطابقة الألبومات بالأسماء</button><button class="btn primary" data-action="linkAllSources">⚡ ربط كل المصادر — سريع وذكي + تقرير</button>${state.settings.hideScanProgressCard?`<button class="btn" data-action="showScanProgressCard">↶ إظهار قائمة متابعة الفحص</button>`:''}<button class="btn" data-action="diag">تشخيص</button><button class="btn" data-action="duplicateManager">🔎 مراجعة التكرارات عند الطلب</button><button class="btn" data-action="visualRecoveryChooser">🔍 المطابقة البصرية عند فشل الربط</button>${lastLinkReport?`<button class="btn" data-action="linkReport">🧾 آخر تقرير ربط</button>`:''}</div><p class="meta">${visiblePhotoCount()} صورة داخل الألبومات الظاهرة — ${allPhotos().length} سجل صور محفوظ إجمالًا. «ربط كل المصادر — سريع وذكي + تقرير» يتحقق من الروابط الحالية أولًا ثم يربط الأصول الحقيقية مصدرًا بعد الآخر، ولا يحفظ مصدرًا جديدًا إذا ربط صفر صور، ويجعل الصور المتبقية هي هدف المصدر التالي فقط. لا ينشئ صورًا أو ألبومات ولا يولّد صورًا مصغرة، وعند انتهاء المصادر يدويًا يمكن استخدام المطابقة البصرية كحل أخير وبموافقة المستخدم فقط، ثم يعرض تقريرًا نهائيًا واضحًا لكل صورة بقيت بلا أصل.</p></div>${sourcesPanel()}<div class="card"><h3>🧹 الصور المستبعدة من الفهرس</h3><p>${ex} صورة مستبعدة حاليًا. الأصل يبقى في مجلد الهاتف ولا يُحذف.</p><p class="meta">إعادة الفحص العادي لا تعيد أي صورة مستبعدة. هذا الزر وحده هو الذي يرفع الاستبعاد، ثم يعيد إدخال الصور التي تجد أصولها مع محاولة استرجاع ترتيبها وألبوماتها السابقة.</p><button class="btn" data-action="restoreExcluded" ${ex||reindexRestorePool.length?'':'disabled'}>↻ السماح بها وإعادة فحصها</button></div><div class="card"><h3>📅 التواريخ</h3><div class="formgrid">${field('setStart','بداية قصتنا',state.settings.startDate,'date')}${field('setEng','تاريخ الخطوبة',state.settings.engagementDate,'date')}${field('setBirth','عيد ميلاد رانيا',state.settings.birthdayRania,'date')}</div></div>${countdownsPanel()}<div class="card surprise-settings-card"><h3>🎉 المفاجآت والاحتفالات</h3><p class="meta">وقت الظهور هو الفاصل الفعلي بين بداية كل مفاجأة والتي تليها. وسرعة الحركة إعداد مستقل.</p><label class="field"><span>وقت الظهور والفاصل الزمني</span><select id="surpriseTimingSetting" class="setting-select"><option value="3" ${state.settings.surpriseTiming==='3'?'selected':''}>كل 3 ثوانٍ</option><option value="5" ${state.settings.surpriseTiming==='5'?'selected':''}>كل 5 ثوانٍ</option><option value="10" ${state.settings.surpriseTiming==='10'?'selected':''}>كل 10 ثوانٍ</option><option value="20" ${state.settings.surpriseTiming==='20'?'selected':''}>كل 20 ثانية</option><option value="30" ${state.settings.surpriseTiming==='30'?'selected':''}>كل 30 ثانية</option><option value="60" ${state.settings.surpriseTiming==='60'?'selected':''}>كل دقيقة</option><option value="180" ${state.settings.surpriseTiming==='180'?'selected':''}>كل 3 دقائق</option></select></label><label class="field"><span>سرعة حركة المفاجأة</span><select id="surpriseSpeedSetting" class="setting-select"><option value="fast" ${state.settings.surpriseSpeed==='fast'?'selected':''}>سريع</option><option value="normal" ${state.settings.surpriseSpeed==='normal'?'selected':''}>متوسط</option><option value="slow" ${state.settings.surpriseSpeed==='slow'?'selected':''}>بطيء</option><option value="random-fast" ${state.settings.surpriseSpeed==='random-fast'?'selected':''}>عشوائي سريع</option><option value="random-all" ${state.settings.surpriseSpeed==='random-all'?'selected':''}>عشوائي للكل</option></select></label><div class="meta" id="surpriseTimingHint">الفاصل: ${surpriseTimingLabel()} • الحركة: ${surpriseSpeedLabel()}</div></div><div class="card surprise-custom-messages-card"><h3>💌 رسائل المفاجآت العشوائية</h3><p class="meta">أي رسالة تضيفها هنا تدخل مباشرة في قائمة الرسائل التي تظهر عشوائيًا، وتُحفظ مع بيانات OsRa.</p><div class="actions" style="margin-bottom:10px"><button class="btn primary" data-action="addSurpriseMessage">＋ إضافة رسالة</button></div><div class="cards">${(state.settings.customSurpriseMessages||[]).length?(state.settings.customSurpriseMessages||[]).map((msg,idx)=>`<div class="card surprise-custom-message-item"><div style="flex:1;min-width:0"><b>💌</b> <span style="overflow-wrap:anywhere">${esc(msg)}</span></div><div class="actions"><button class="btn small" data-action="editSurpriseMessage" data-id="${idx}">تعديل</button><button class="btn small danger" data-action="deleteSurpriseMessage" data-id="${idx}">حذف</button></div></div>`).join(''):`<div class="empty">لم تضف رسائل مخصصة بعد.</div>`}</div></div><div class="card"><h3>📱 التواصل</h3><div class="formgrid">${field('setOsama','رقم أسامة',state.settings.osamaPhone,'tel')}${field('setRania','رقم رانيا',state.settings.raniaPhone,'tel')}${field('setWA','رابط واتساب',state.settings.whatsappUrl,'url')}</div><button class="btn primary" data-action="settingsSave" style="margin-top:10px">حفظ</button></div><div class="card"><h3>💾 النسخة الاحتياطية والأمان</h3><p>النسخة تحفظ بيانات OsRa ومراجع الصور وتواريخ التقاط EXIF والإخفاء والاستبعاد واختيار ألبومات صورة اليوم ومعاينات مصغرة خفيفة، وليست الملفات الأصلية.</p><p class="meta">نسخة البيانات القديمة تظل كما هي. مصدر الصور عالي الجودة منفصل عنها ولا يدخل في قاعدة OsRa اليومية.</p><div class="actions"><button class="btn primary" data-action="chooseBackup">📁 تحديد مكان الحفظ</button><button class="btn" data-action="backup">💾 حفظ نسخة الآن</button><button class="btn" data-action="restore">↩ استرجاع ملف كامل</button><button class="btn" data-action="restoreMerge">📦 استيراد ودمج نسخة</button><button class="btn" data-action="restoreSafety">🛟 استرجاع آخر نسخة أمان</button></div><div class="meta">${backupFileHandle?`ملف النسخة: ${esc(backupFileHandle.name||'محدد')}${backupMeta.lastSavedAt?' — آخر حفظ: '+new Date(backupMeta.lastSavedAt).toLocaleString('ar-EG'):''}`:'لم تحدد ملفًا ثابتًا بعد. عند الحفظ الأول سيطلب منك OsRa اختيار المكان.'}</div></div><div class="card"><h3>🖼️ مصدر الصور عالي الجودة</h3><p>ينشئ OsRa مجلدًا مستقلًا بصور حتى 2048px وجودة JPEG 88 تقريبًا. هذا المصدر بديل خفيف عن الأصل، ولا يغيّر الأصل ولا يحمّل الصور العالية داخل OsRa أثناء الاستخدام.</p><p class="meta">يدخل فقط الصور الموجودة في ألبومات ظاهرة. الصور المخفية أو التي أزلتها من الألبومات أو المستبعدة من الفهرس لا تُنسخ كملفات هنا؛ تبقى معلوماتها فقط داخل Backup البيانات.</p><div class="actions"><button class="btn primary" data-action="buildHQSource">🖼️ إنشاء / تحديث مصدر HQ</button><button class="btn" data-action="hqZip">📦 إنشاء ZIP للمشاركة</button><button class="btn" data-action="linkHQSource">🔗 ربط مصدر HQ موجود</button>${hqSourceHandle?`<button class="btn" data-action="clearHQSource">فصل مصدر HQ</button>`:''}</div><div class="meta">${hqSourceHandle?`مصدر HQ مرتبط: ${esc(hqSourceMeta.name||'OsRa_HQ_Source')} — ${hqIndex.size} صورة، والربط يقرأ manifest فقط بدون فحص الصور.`:'لا يوجد مصدر HQ مرتبط حاليًا.'}</div><div class="notice" style="margin-top:10px">جودة HQ الحالية ثابتة عند 2048px تقريبًا / JPEG 88؛ لم نضف جودة أعلى لأنها غالبًا تزيد الحجم أكثر من الفائدة على الهاتف.</div></div></div></div>`}
+function pageSettings(){const ex=state.excludedPhotos.length;return `<div class="inner">${scanProgressCard()}${linkProgressCard()}${hqBuildProgressCard()}${hqLastBuildCard()}${dataRecoveryCard()}${reindexRestorePool.length?`<div class="card scan-progress-card"><h3>↻ إعادة فهرسة مستبعدة معلقة</h3><p>هناك ${reindexRestorePool.length} صورة ما زالت في قائمة الاسترجاع الآمن. شغّل «السماح بها وإعادة فحصها» لإكمالها.</p></div>`:''}<div class="kicker">⚙ المزيد</div><h1 class="title">إعدادات OsRa</h1><div class="cards"><div class="card"><h3>📁 مكتبات الصور</h3><p>${sources.length?`تم ربط ${sources.length} مجلد${sources.length===1?'':'ات'} — المصدر الأساسي: ${esc(sourceLabel(sources[0]))}`:'غير مرتبطة'}</p><div class="actions"><button class="btn primary" data-action="folder">＋ إضافة مجلد / ألبوم</button><button class="btn" data-action="scan">↻ فحص المجلد المحدد</button><button class="btn" data-action="matchAlbumsByName">🔤 مطابقة الألبومات بالأسماء</button><button class="btn primary" data-action="linkAllSources">⚡ ربط كل المصادر — سريع وذكي + تقرير</button>${state.settings.hideScanProgressCard?`<button class="btn" data-action="showScanProgressCard">↶ إظهار قائمة متابعة الفحص</button>`:''}<button class="btn" data-action="diag">تشخيص</button><button class="btn" data-action="duplicateManager">🔎 مراجعة التكرارات عند الطلب</button>${lastLinkReport?`<button class="btn" data-action="linkReport">🧾 آخر تقرير ربط</button>`:''}</div><p class="meta">${visiblePhotoCount()} صورة داخل الألبومات الظاهرة — ${allPhotos().length} سجل صور محفوظ إجمالًا. «ربط كل المصادر — سريع وذكي + تقرير» يتحقق من الروابط الحالية أولًا ثم يربط الأصول الحقيقية مصدرًا بعد الآخر، ولا يحفظ مصدرًا جديدًا إذا ربط صفر صور، ويجعل الصور المتبقية هي هدف المصدر التالي فقط. لا ينشئ صورًا أو ألبومات ولا يولّد صورًا مصغرة، وعند انتهاء المصادر يدويًا يمكن استخدام المطابقة البصرية كحل أخير وبموافقة المستخدم فقط، ثم يعرض تقريرًا نهائيًا واضحًا لكل صورة بقيت بلا أصل.</p></div>${sourcesPanel()}<div class="card"><h3>🧹 الصور المستبعدة من الفهرس</h3><p>${ex} صورة مستبعدة حاليًا. الأصل يبقى في مجلد الهاتف ولا يُحذف.</p><p class="meta">إعادة الفحص العادي لا تعيد أي صورة مستبعدة. هذا الزر وحده هو الذي يرفع الاستبعاد، ثم يعيد إدخال الصور التي تجد أصولها مع محاولة استرجاع ترتيبها وألبوماتها السابقة.</p><button class="btn" data-action="restoreExcluded" ${ex||reindexRestorePool.length?'':'disabled'}>↻ السماح بها وإعادة فحصها</button></div><div class="card"><h3>📅 التواريخ</h3><div class="formgrid">${field('setStart','بداية قصتنا',state.settings.startDate,'date')}${field('setEng','تاريخ الخطوبة',state.settings.engagementDate,'date')}${field('setBirth','عيد ميلاد رانيا',state.settings.birthdayRania,'date')}</div></div>${countdownsPanel()}<div class="card surprise-settings-card"><h3>🎉 المفاجآت والاحتفالات</h3><p class="meta">وقت الظهور هو الفاصل الفعلي بين بداية كل مفاجأة والتي تليها. وسرعة الحركة إعداد مستقل.</p><label class="field"><span>وقت الظهور والفاصل الزمني</span><select id="surpriseTimingSetting" class="setting-select"><option value="3" ${state.settings.surpriseTiming==='3'?'selected':''}>كل 3 ثوانٍ</option><option value="5" ${state.settings.surpriseTiming==='5'?'selected':''}>كل 5 ثوانٍ</option><option value="10" ${state.settings.surpriseTiming==='10'?'selected':''}>كل 10 ثوانٍ</option><option value="20" ${state.settings.surpriseTiming==='20'?'selected':''}>كل 20 ثانية</option><option value="30" ${state.settings.surpriseTiming==='30'?'selected':''}>كل 30 ثانية</option><option value="60" ${state.settings.surpriseTiming==='60'?'selected':''}>كل دقيقة</option><option value="180" ${state.settings.surpriseTiming==='180'?'selected':''}>كل 3 دقائق</option></select></label><label class="field"><span>سرعة حركة المفاجأة</span><select id="surpriseSpeedSetting" class="setting-select"><option value="fast" ${state.settings.surpriseSpeed==='fast'?'selected':''}>سريع</option><option value="normal" ${state.settings.surpriseSpeed==='normal'?'selected':''}>متوسط</option><option value="slow" ${state.settings.surpriseSpeed==='slow'?'selected':''}>بطيء</option><option value="random-fast" ${state.settings.surpriseSpeed==='random-fast'?'selected':''}>عشوائي سريع</option><option value="random-all" ${state.settings.surpriseSpeed==='random-all'?'selected':''}>عشوائي للكل</option></select></label><div class="meta" id="surpriseTimingHint">الفاصل: ${surpriseTimingLabel()} • الحركة: ${surpriseSpeedLabel()}</div></div><div class="card surprise-custom-messages-card"><h3>💌 رسائل المفاجآت العشوائية</h3><p class="meta">أي رسالة تضيفها هنا تدخل مباشرة في قائمة الرسائل التي تظهر عشوائيًا، وتُحفظ مع بيانات OsRa.</p><div class="actions" style="margin-bottom:10px"><button class="btn primary" data-action="addSurpriseMessage">＋ إضافة رسالة</button></div><div class="cards">${(state.settings.customSurpriseMessages||[]).length?(state.settings.customSurpriseMessages||[]).map((msg,idx)=>`<div class="card surprise-custom-message-item"><div style="flex:1;min-width:0"><b>💌</b> <span style="overflow-wrap:anywhere">${esc(msg)}</span></div><div class="actions"><button class="btn small" data-action="editSurpriseMessage" data-id="${idx}">تعديل</button><button class="btn small danger" data-action="deleteSurpriseMessage" data-id="${idx}">حذف</button></div></div>`).join(''):`<div class="empty">لم تضف رسائل مخصصة بعد.</div>`}</div></div><div class="card"><h3>📱 التواصل</h3><div class="formgrid">${field('setOsama','رقم أسامة',state.settings.osamaPhone,'tel')}${field('setRania','رقم رانيا',state.settings.raniaPhone,'tel')}${field('setWA','رابط واتساب',state.settings.whatsappUrl,'url')}</div><button class="btn primary" data-action="settingsSave" style="margin-top:10px">حفظ</button></div><div class="card"><h3>💾 النسخة الاحتياطية والأمان</h3><p>النسخة تحفظ بيانات OsRa ومراجع الصور وتواريخ التقاط EXIF والإخفاء والاستبعاد واختيار ألبومات صورة اليوم ومعاينات مصغرة خفيفة، وليست الملفات الأصلية.</p><p class="meta">نسخة البيانات القديمة تظل كما هي. مصدر الصور عالي الجودة منفصل عنها ولا يدخل في قاعدة OsRa اليومية.</p><div class="actions"><button class="btn primary" data-action="chooseBackup">📁 تحديد مكان الحفظ</button><button class="btn" data-action="backup">💾 حفظ نسخة الآن</button><button class="btn" data-action="restore">↩ استرجاع ملف كامل</button><button class="btn" data-action="restoreMerge">📦 استيراد ودمج نسخة</button><button class="btn" data-action="restoreSafety">🛟 استرجاع آخر نسخة أمان</button></div><div class="meta">${backupFileHandle?`ملف النسخة: ${esc(backupFileHandle.name||'محدد')}${backupMeta.lastSavedAt?' — آخر حفظ: '+new Date(backupMeta.lastSavedAt).toLocaleString('ar-EG'):''}`:'لم تحدد ملفًا ثابتًا بعد. عند الحفظ الأول سيطلب منك OsRa اختيار المكان.'}</div></div><div class="card"><h3>🖼️ مصدر الصور عالي الجودة</h3><p>ينشئ OsRa مجلدًا مستقلًا بصور حتى 2048px وجودة JPEG 88 تقريبًا. هذا المصدر بديل خفيف عن الأصل، ولا يغيّر الأصل ولا يحمّل الصور العالية داخل OsRa أثناء الاستخدام.</p><p class="meta">يدخل فقط الصور الموجودة في ألبومات ظاهرة. الصور المخفية أو التي أزلتها من الألبومات أو المستبعدة من الفهرس لا تُنسخ كملفات هنا؛ تبقى معلوماتها فقط داخل Backup البيانات.</p><div class="actions"><button class="btn primary" data-action="buildHQSource">🖼️ إنشاء / تحديث مصدر HQ</button><button class="btn" data-action="hqZip">📦 إنشاء ZIP للمشاركة</button><button class="btn" data-action="linkHQSource">🔗 ربط مصدر HQ موجود</button>${hqSourceHandle?`<button class="btn" data-action="clearHQSource">فصل مصدر HQ</button>`:''}</div><div class="meta">${hqSourceHandle?`مصدر HQ مرتبط: ${esc(hqSourceMeta.name||'OsRa_HQ_Source')} — ${hqIndex.size} صورة، والربط يقرأ manifest فقط بدون فحص الصور.`:'لا يوجد مصدر HQ مرتبط حاليًا.'}</div><div class="notice" style="margin-top:10px">جودة HQ الحالية ثابتة عند 2048px تقريبًا / JPEG 88؛ لم نضف جودة أعلى لأنها غالبًا تزيد الحجم أكثر من الفائدة على الهاتف.</div></div></div></div>`}
 function field(id,l,v,t){return `<div class="field"><label>${l}</label><input id="${id}" type="${t}" value="${esc(v||'')}"></div>`}
 function pageAbout(){return `<div class="inner"><div class="kicker">♥ عن OsRa</div><h1 class="title">عن البرنامج</h1><div class="card dedication-card"><div class="about-text"><p><b>إلى أحب إنسانة إلى قلبي</b> ♥️💛❤️</p><p>إلى تلك التي أضاءت سماء حياتي،<br>بل هي التي جعلت لحياتي سماء.</p><p>إهداء إلى جميلتي، وحبيبتي، وملاكي الصغير...<br>إلى القلب العجيب، والوجه الجميل، والابتسامة الرقيقة المنعشة،<br>يا من يسكنكِ كل شيء جميل.</p><p>يا من بها رقة وصفاء وطهارة السماء،<br>مع قوة وعنفوان ورهوان 😉 الأرض<br>التقيا وتلاقيا.</p><p>إهداء إلى تلك اليد الصغيرة،<br>التي تحمل حبًا كبيرًا،<br>وتتفتح بلمساتها أزهار سماوية،<br>مانحةً إياها الأبدية والحب والجمال.</p><p>إلى صوت همساتك،<br>وضحكاتك العفوية،<br>وإلى غمازة الخد اليمين...</p><p>أرسل قلبي وحبي، دائمًا وأبدًا،<br>لروحي... يا روحي، يا رنووووشي 😍😘</p><p>يا من أحببتها للمنتهى،<br>وأحبها، وسأحبها...</p><p><b>أحبك جدًا، وجداً، وجداًااا... ❤️</b></p><p><b>رانيا...<br>حبيبتي، ورفيقة دربي،<br>وأجمل ما أعطاني إِلهُ السَّمَاءِ.</b> ❤️</p></div></div><div class="security-note"><b>خصوصية OsRa</b><br>الصور الأصلية تبقى في مجلدكم المحلي. OsRa لا يرفع الصور إلى خادم، والمعاينات المخزنة هي داخل مساحة الموقع المحلية على الجهاز.</div></div>`}
 function pageCalendar(){
@@ -1043,45 +1138,66 @@ function pageCalendar(){
 function pageHTML(s){return s==='home'?pageHome():s==='memories'?pageMemories():s==='calendar'?pageCalendar():s==='story'?pageStory():s==='dreams'?pageDreams():s==='spiritual'?pageSpiritual():s==='messages'?pageMessages():s==='about'?pageAbout():pageSettings()}
 function hideBootSplash(){return new Promise(resolve=>{const el=document.getElementById('bootSplash');if(!el||el.classList.contains('boot-done')){resolve();return}const elapsed=performance.now()-(window.__osraBootAt||performance.now());const wait=Math.max(0,3000-elapsed);setTimeout(()=>requestAnimationFrame(()=>{el.classList.add('boot-done');setTimeout(resolve,460)}),wait)})}
 function renderNoAnim(preserveScroll=false){resetAlbumBookTurn();const oldInner=$('#currentPage .inner');const scrollTop=preserveScroll?(oldInner?.scrollTop||0):0;const scrollLeft=preserveScroll?(oldInner?.scrollLeft||0):0;$('#currentPage').innerHTML=pageHTML(section);hydrate();setNav();updateSelectionCount();requestAnimationFrame(()=>{fitAlbumBookStage();if(preserveScroll){const inner=$('#currentPage .inner');if(inner){inner.scrollTop=scrollTop;inner.scrollLeft=scrollLeft}}if(section==='home')maybeRunOccasionCelebrations()})}
-function navigate(to,dir=1){if(to===section||busy)return;resetAlbumBookTurn();busy=true;const book=$('#book'),current=$('#currentPage'),back=$('#backPage'),duration=760;back.innerHTML=pageHTML(to);hydrate();book.classList.remove('turn-next','turn-prev');requestAnimationFrame(()=>book.classList.add(dir>0?'turn-next':'turn-prev'));paperSound(duration);setTimeout(()=>{section=to;current.innerHTML=pageHTML(section);back.innerHTML='';book.classList.remove('turn-next','turn-prev');busy=false;hydrate();setNav();updateSelectionCount()},duration)}
+function navigate(to,dir=1){if(to===section||busy)return;resetAlbumBookTurn();showPageTurnCouple(dir);busy=true;const book=$('#book'),current=$('#currentPage'),back=$('#backPage'),duration=760;back.innerHTML=pageHTML(to);hydrate();book.classList.remove('turn-next','turn-prev');requestAnimationFrame(()=>book.classList.add(dir>0?'turn-next':'turn-prev'));paperSound(duration);setTimeout(()=>{section=to;current.innerHTML=pageHTML(section);back.innerHTML='';book.classList.remove('turn-next','turn-prev');busy=false;hydrate();setNav();updateSelectionCount()},duration)}
 const thumbObserver=('IntersectionObserver' in window)?new IntersectionObserver(entries=>{for(const ent of entries){if(!ent.isIntersecting)continue;thumbObserver.unobserve(ent.target);queueThumbHydrate(ent.target)}},{rootMargin:'800px 0px'}):null;
 async function getThumbBlob(id){if(thumbCache.has(id))return thumbCache.get(id);let b=null;try{const rec=await get('thumbs',id);b=rec?.blob||null}catch{}if(!b){const legacy=await get('photos',id).catch(()=>null);b=legacy?.thumbBlob||null}if(b){thumbCache.set(id,b);while(thumbCache.size>THUMB_CACHE_MAX){const first=thumbCache.keys().next().value;thumbCache.delete(first)}}return b}
-function setThumbElement(el,b){if(!el||!b)return false;const u=URL.createObjectURL(b);el.dataset.thumbBound='1';el.dataset.thumbQueued='';el.loading='eager';el.decoding='async';el.addEventListener('load',()=>URL.revokeObjectURL(u),{once:true});el.addEventListener('error',()=>URL.revokeObjectURL(u),{once:true});el.src=u;return true}
-async function hydrateThumbFallback(el){
- if(!el||el.dataset.thumbFallbackTried==='1')return false;
- el.dataset.thumbFallbackTried='1';
- const p=photos.get(el.dataset.thumb);if(!p?.id||p.excluded)return false;
- try{
-  const hit=await findOriginalFile(p,false);
-  if(!hit?.file)return false;
-  const b=await thumb(hit.file);
-  if(b){await savePhoto({...p,thumbBlob:b,thumbVersion:THUMB_VERSION});setThumbElement(el,b);return true}
-  const u=URL.createObjectURL(hit.file);el.dataset.thumbBound='1';el.src=u;el.addEventListener('load',()=>URL.revokeObjectURL(u),{once:true});el.addEventListener('error',()=>URL.revokeObjectURL(u),{once:true});return true;
- }catch(e){return false}
+function markThumbUnavailable(el){if(!el)return;el.dataset.thumbBound='';el.dataset.thumbQueued='';el.classList.add('thumb-unavailable');el.removeAttribute('src')}
+function bindThumbBlob(el,b,isOriginal=false){if(!el||!b)return false;const u=URL.createObjectURL(b);el.dataset.thumbBound='1';el.dataset.thumbQueued='';el.classList.remove('thumb-unavailable');if(isOriginal){el.dataset.originalFallback='1';el.classList.add('original-direct-fallback')}el.loading='eager';el.decoding='async';const cleanup=()=>{try{URL.revokeObjectURL(u)}catch{}el.removeEventListener('load',onLoad);el.removeEventListener('error',onError)};const onLoad=()=>cleanup();const onError=()=>{cleanup();el.dataset.thumbBound='';if(isOriginal){markThumbUnavailable(el);return}const p=photos.get(el.dataset.thumb);hydrateMissingThumbFromOriginal(el,p).then(ok=>{if(!ok)markThumbUnavailable(el)}).catch(()=>markThumbUnavailable(el))};el.addEventListener('load',onLoad,{once:true});el.addEventListener('error',onError,{once:true});el.src=u;return true}
+function setThumbElement(el,b){return bindThumbBlob(el,b,false)}
+async function resolveThumbFallbackBlob(p){
+ if(!p?.id||p.excluded)return null;
+ let pending=thumbFallbackPromises.get(p.id);
+ if(!pending){
+  pending=(async()=>{
+   const found=await findOriginalFile(p,false);if(!found?.file)return null;
+   let small=null;try{small=await thumb(found.file)}catch{}
+   if(small){thumbCache.set(p.id,small);while(thumbCache.size>THUMB_CACHE_MAX){thumbCache.delete(thumbCache.keys().next().value)}await put('thumbs',{id:p.id,blob:small,version:THUMB_VERSION}).catch(()=>{});return {blob:small,original:false}}
+   return {blob:found.file,original:true};
+  })().finally(()=>thumbFallbackPromises.delete(p.id));
+  thumbFallbackPromises.set(p.id,pending);
+ }
+ try{return await pending}catch{return null}
 }
-async function hydrateThumbBatch(elements){const els=[...elements].filter(el=>el&&el.dataset.thumbBound!=='1');if(!els.length)return;const unique=[],seen=new Set();for(const el of els){const p=photos.get(el.dataset.thumb);if(!p?.id||p.excluded)continue;const k=p.id;if(seen.has(k))continue;seen.add(k);unique.push({id:p.id,el})}if(!unique.length)return;const ids=unique.map(x=>x.id),batch=await getThumbBlobsBatch(ids),missing=[];for(const x of unique){const b=batch.get(x.id);if(b)setThumbElement(x.el,b);else missing.push(x)}if(missing.length){for(const x of missing){const b=await getThumbBlob(x.id);if(b)setThumbElement(x.el,b);else {x.el.dataset.thumbQueued='';await hydrateThumbFallback(x.el);}}}}
-function queueThumbHydrate(el){if(!el||el.dataset.thumbBound==='1'||el.dataset.thumbQueued==='1')return;el.dataset.thumbQueued='1';thumbHydrateQueue.add(el);if(thumbHydrateTimer)return;thumbHydrateTimer=setTimeout(async()=>{thumbHydrateTimer=0;const batch=[...thumbHydrateQueue];thumbHydrateQueue.clear();await hydrateThumbBatch(batch)},0)}
+async function hydrateMissingThumbFromOriginal(el,p){
+ if(!el||!p||el.dataset.originalFallbackBound==='1'||el.dataset.originalFallback==='1')return false;
+ el.dataset.originalFallbackBound='1';
+ const fallback=await resolveThumbFallbackBlob(p);
+ if(!fallback){el.dataset.originalFallbackBound='';return false}
+ return bindThumbBlob(el,fallback.blob,fallback.original);
+}
+async function hydrateThumbBatch(elements){
+ const els=[...new Set([...elements].filter(el=>el&&el.dataset.thumbBound!=='1'))];if(!els.length)return;
+ const byId=new Map();for(const el of els){const pid=el.dataset.thumb,p=photos.get(pid);if(!p?.id||p.excluded)continue;const list=byId.get(p.id)||[];list.push(el);byId.set(p.id,list)}if(!byId.size)return;
+ let batch=new Map();try{batch=await getThumbBlobsBatch([...byId.keys()])}catch(e){console.warn('thumbnail batch read failed',e)}
+ const missing=[];for(const [pid,photoEls] of byId){const blob=batch.get(pid);if(blob){for(const el of photoEls)setThumbElement(el,blob)}else missing.push({pid,photoEls})}
+ // One source lookup per photo; every visible copy of that thumbnail receives the real image.
+ for(let i=0;i<missing.length;i+=3){await Promise.all(missing.slice(i,i+3).map(async item=>{const p=photos.get(item.pid);const results=await Promise.all(item.photoEls.map(el=>hydrateMissingThumbFromOriginal(el,p).catch(()=>false)));if(!results.some(Boolean))for(const el of item.photoEls)markThumbUnavailable(el)}))}
+}
+function queueThumbHydrate(el){if(!el||el.dataset.thumbBound==='1'||el.dataset.thumbQueued==='1'||el.classList.contains('thumb-unavailable'))return;el.dataset.thumbQueued='1';thumbHydrateQueue.add(el);if(thumbHydrateTimer)return;thumbHydrateTimer=setTimeout(async()=>{thumbHydrateTimer=0;const batch=[...thumbHydrateQueue];thumbHydrateQueue.clear();await hydrateThumbBatch(batch)},0)}
 function hydrate(root=document){const els=[...(root.querySelectorAll?.('[data-thumb]')||[])];if(!els.length)return;const first=els.slice(0,24),rest=els.slice(24);for(const el of first){el.loading='eager';el.decoding='async';if(el.dataset.thumbBound!=='1')queueThumbHydrate(el)}for(const el of rest){el.loading='eager';el.decoding='async';if(el.dataset.thumbBound==='1')continue;if(thumbObserver)thumbObserver.observe(el);else queueThumbHydrate(el)}}
 
 function go(to){const order=['home','memories','calendar','story','dreams','spiritual','messages','settings','about'];if(to==='memories'&&section!=='memories')albumBookIndex=0;navigate(to,order.indexOf(to)>order.indexOf(section)?1:-1)}
 async function resolve(root,relPath){const parts=String(relPath||'').split('/').filter(Boolean);if(!parts.length)throw new Error('مسار صورة فارغ');let dir=root;for(let i=0;i<parts.length-1;i++){dir=await dir.getDirectoryHandle(parts[i],{create:false})}return dir.getFileHandle(parts.at(-1),{create:false})}
 let pendingFolderMatch=null;
-async function manualLinkAlbumFromFolder(memoryId){
- closeModal();const m=state.memories.find(x=>x.id===memoryId);if(!m||!window.showDirectoryPicker){toast('اختيار مجلد المصدر غير متاح في هذا المتصفح.');return}if(!isSecureContext){toast('OsRa يحتاج إلى HTTPS لاختيار مجلد المصدر.');return}if(scanLock||busy){toast('أنهِ عملية الربط الحالية أولًا.');return}
- const missingBefore=(m.photoIds||[]).map(pid=>photos.get(pid)).filter(p=>isPhotoRecord(p)&&!hasOriginalLink(p));if(!missingBefore.length){toast('هذا الألبوم لا يحتوي صورًا ناقصة المصدر حاليًا.');return}
+async function manualLinkAlbumFromFolder(memoryId,photoId=null,origin='album'){
+ closeModal();const m=state.memories.find(x=>String(x.id)===String(memoryId));if(!m||!window.showDirectoryPicker){toast('اختيار مجلد المصدر غير متاح في هذا المتصفح.');return}if(!isSecureContext){toast('OsRa يحتاج إلى HTTPS لاختيار مجلد المصدر.');return}if(scanLock||busy){toast('أنهِ عملية الربط الحالية أولًا.');return}
+ const missingBefore=(m.photoIds||[]).map(pid=>photos.get(pid)).filter(p=>isPhotoRecord(p)&&!hasOriginalLink(p)&&(!photoId||String(p.id)===String(photoId)));if(!missingBefore.length){toast('هذه الصورة/هذا الألبوم لا يحتوي صورًا ناقصة المصدر حاليًا.');return}
+ manualLinkSession=manualLinkSession||{cancelled:false,history:[]};manualLinkSession.cancelled=false;manualLinkSession.history=manualLinkSession.history||[];
  try{
   const chosen=await window.showDirectoryPicker({mode:'read'});let source=await getSourceByHandle(chosen),relPath='';if(!source){const containing=await findContainingSource(chosen);if(containing){source=containing.source;relPath=normalizeFolderRelPath(containing.relPath)}}
-  const tempSource=source||{id:id('src'),name:chosen.name||'مجلد مصدر',handle:chosen,asAlbum:false,directAlbumFolder:false,mergeIntoMemoryId:'',createdAt:Date.now()};if(!(await ensureSourcePermission(tempSource,true))){manualLinkSession.history.push({albumId:m.id,albumTitle:m.title||m.album||'ألبوم',sourceName:sourceLabel(tempSource),folderPath:relPath,filesScanned:0,matched:0,missingBefore:missingBefore.length,rejected:true,error:'لم يُمنح إذن قراءة المصدر.',createdAt:Date.now()});refreshLinkReportAfterManual();toast('لم يُمنح إذن قراءة المصدر. اختر مصدرًا آخر.');return}
-  manualLinkSession=manualLinkSession||{cancelled:false,history:[]};manualLinkSession.cancelled=false;manualLinkSession.history=manualLinkSession.history||[];const statusId='manualLinkStatus';modal(`<h2>🔗 التحقق من مصدر «${esc(m.title||'الألبوم')}»</h2><p id="${statusId}">جارٍ فحص المجلد وكل ما بداخله…</p><p class="meta">لن يُحفظ المصدر إلا إذا تم ربط صورة واحدة على الأقل.</p><div class="actions"><button class="btn danger" data-action="cancelManualLink">إلغاء</button></div>`);
-  const status=$('#'+statusId),wanted=missingBefore.map(p=>({photo:p,album:m,folderPath:''}));const fb=await buildRecursiveNameIndex(chosen,'',wanted,info=>{if(status)status.textContent=`فحص ${info.filesSeen||0} ملفًا… وجد ${info.candidates||0} مرشحًا`});if(manualLinkSession?.cancelled){manualLinkSession.cancelled=false;return}
-  const staged=[];for(const p of missingBefore){const row=folderCandidate({photo:p},fb);if(!row)continue;const actualRel=relPath?normalizeFolderRelPath(relPath+'/'+row.relPath):normalizeFolderRelPath(row.relPath);staged.push({p,row,actualRel})}
-  if(!staged.length){manualLinkSession.history.push({albumId:m.id,albumTitle:m.title||m.album||'ألبوم',sourceName:sourceLabel(tempSource),folderPath:relPath,filesScanned:fb.filesSeen||0,matched:0,missingBefore:missingBefore.length,rejected:true,createdAt:Date.now()});refreshLinkReportAfterManual();modal(`<h2>❌ اختيار غير مناسب</h2><p>لم يتم العثور على أي صورة من الصور المتبقية لهذا الألبوم داخل المصدر المختار.</p><p class="meta">لم يتم حفظ المصدر ولم يتم تعديل أي رابط. اختر مجلدًا آخر.</p><div class="actions"><button class="btn primary" data-action="retryManualLink" data-id="${m.id}">📁 اختيار مصدر آخر</button><button class="btn" data-action="closeModal">إغلاق</button></div>`);return}
+  const tempSource=source||{id:id('src'),name:chosen.name||'مجلد مصدر',handle:chosen,asAlbum:false,directAlbumFolder:false,mergeIntoMemoryId:'',createdAt:Date.now()};
+  if(!(await ensureSourcePermission(tempSource,true))){manualLinkSession.history.push({albumId:m.id,albumTitle:m.title||m.album||'ألبوم',sourceId:tempSource.id,sourceName:sourceLabel(tempSource),folderPath:relPath,filesScanned:0,matched:0,missingBefore:missingBefore.length,rejected:true,error:'لم يُمنح إذن قراءة المصدر.',createdAt:Date.now()});refreshLinkReportAfterManual();toast('لم يُمنح إذن قراءة المصدر. اختر مصدرًا آخر.');return}
+  manualLinkSession.running=true;const statusId='manualLinkStatus';modal(`<h2>🔗 التحقق من مصدر «${esc(m.title||'الألبوم')}»</h2><p id="${statusId}">جارٍ فحص المجلد وكل ما بداخله…</p><p class="meta">لن يُحفظ المصدر ضمن ربط الألبوم إلا إذا تم التحقق من صورة واحدة على الأقل.</p><div class="actions"><button class="btn danger" data-action="cancelManualLink">إلغاء</button></div>`);
+  const status=$('#'+statusId),wanted=missingBefore.map(p=>({photo:p,album:m,folderPath:''}));const fb=await buildRecursiveNameIndex(chosen,'',wanted,info=>{if(status)status.textContent=`فحص ${info.filesSeen||0} ملفًا… وجد ${info.candidates||0} مرشحًا`});manualLinkSession.running=false;if(manualLinkSession?.cancelled){manualLinkSession.cancelled=false;return}
+  const staged=[];for(const p of missingBefore){const row=folderCandidate({photo:p},fb);if(!row)continue;try{const file=await row.entry.getFile();const identity=await verifyExactPhotoCandidate(p,file);if(!identity.matched)continue;const actualRel=relPath?normalizeFolderRelPath(relPath+'/'+row.relPath):normalizeFolderRelPath(row.relPath);staged.push({p,row,file,identity,actualRel})}catch{}}
+  if(!staged.length){manualLinkSession.history.push({albumId:m.id,albumTitle:m.title||m.album||'ألبوم',sourceId:tempSource.id,sourceName:sourceLabel(tempSource),folderPath:relPath,filesScanned:fb.filesSeen||0,matched:0,missingBefore:missingBefore.length,rejected:true,createdAt:Date.now()});refreshLinkReportAfterManual();modal(`<h2>❌ اختيار غير مناسب</h2><p>لم يتم العثور على أي صورة مطابقة للصور المتبقية في الألبوم داخل المصدر المختار.</p><p class="meta">لم يتم ربط الألبوم بهذا المصدر ولم يتم اعتماد أي رابط. اختر مصدرًا آخر أو جرّب البحث البصري.</p><div class="actions"><button class="btn primary" data-action="retryManualLink" data-id="${esc(m.id)}" data-photo-id="${esc(photoId||'')}" data-origin="${esc(origin)}">📁 اختيار مصدر آخر</button>${origin==='report'?`<button class="btn" data-action="startVisualFallback" data-id="${esc(m.id)}">🔍 تجربة البحث البصري</button>`:''}<button class="btn" data-action="closeModal">إغلاق</button></div>`);return}
   if(!source){sources.push(tempSource);source=tempSource}
-  let linked=0;for(const x of staged){const had=photoLocations(x.p).some(l=>String(l.sourceId)===String(source.id)&&String(l.relPath)===String(x.actualRel));markPhotoLinkVerified(x.p,source.id,x.actualRel);await savePhoto(x.p);photos.set(x.p.id,x.p);if(!had)linked++}
+  let linked=0;const parents=new Set();for(const x of staged){const had=photoLocations(x.p).some(l=>String(l.sourceId)===String(source.id)&&String(l.relPath)===String(x.actualRel));markPhotoLinkVerified(x.p,source.id,x.actualRel);const link=photoLocations(x.p).find(l=>String(l.sourceId)===String(source.id)&&String(l.relPath)===String(x.actualRel));if(link){link.name=x.file.name;link.size=Number(x.file.size)||0;link.lastModified=Number(x.file.lastModified)||0;link.mimeType=x.file.type||link.mimeType||'';link.contentKey=x.identity?.key||link.contentKey||'';link.fingerprint=x.identity?.fingerprint||link.fingerprint||'';link.verified=true;link.verifiedAt=Date.now()}await savePhoto(x.p);photos.set(x.p.id,x.p);if(!had)linked++;const parts=x.actualRel.split('/').filter(Boolean);parents.add(normalizeFolderRelPath(parts.slice(0,-1).join('/')))}
   manualLinkSession.history.push({albumId:m.id,albumTitle:m.title||m.album||'ألبوم',sourceName:sourceLabel(source),folderPath:relPath,filesScanned:fb.filesSeen||0,matched:linked,missingBefore:missingBefore.length,createdAt:Date.now()});
-  addAlbumLinkFolder(m,source.id,relPath,!normalizeAlbumLinkFolders(m).length);m.userEdited=true;normalizeState();await persistSources();await save();closeModal();const remaining=remainingPhotoIdsForAlbum(m).length;toast(`✅ تم ربط ${linked} صورة من هذا المصدر (${fb.filesSeen||0} صورة فُحصت).${remaining?` يتبقى ${remaining} صورة.`:' اكتمل الألبوم.'}`);renderNoAnim();
-  if(remaining)showManualLinkNext(m.id);else showAlbumLinkFinalReport(m.id);
- }catch(e){if(e?.name==='AbortError')return;console.error(e);toast('تعذر التحقق من المجلد المختار.')}
+  // Only remember a folder as an album shortcut when every accepted file came from that same folder.
+  if(parents.size===1)addAlbumLinkFolder(m,source.id,[...parents][0],!normalizeAlbumLinkFolders(m).length);m.userEdited=true;normalizeState();await persistSources();await save();closeModal();refreshLinkReportAfterManual();const remaining=remainingPhotoIdsForAlbum(m).length;toast(`✅ تم التحقق وربط ${linked} صورة من «${sourceLabel(source)}» (${fb.filesSeen||0} ملفًا فُحص).${remaining?` يتبقى ${remaining} صورة.`:' اكتمل الألبوم.'}`);renderNoAnim();
+  if(origin==='report'){if(lastLinkReport)linkReportModal(lastLinkReport);else showAlbumLinkFinalReport(m.id)}else if(remaining)showManualLinkNext(m.id);else showAlbumLinkFinalReport(m.id);
+ }catch(e){if(manualLinkSession)manualLinkSession.running=false;if(e?.name==='AbortError')return;if(e?.message==='MANUAL_LINK_CANCELLED'){toast('تم إلغاء الربط دون حفظ مصدر أو روابط جديدة.');return}console.error(e);toast('تعذر التحقق من المجلد المختار. لم يتم اعتماد مصدر جديد تلقائيًا.')}
 }
 function manualHistoryForAlbum(memoryId){return manualLinkSession?.history?.filter(x=>String(x.albumId)===String(memoryId))||[]}
 function refreshLinkReportAfterManual(){
@@ -1099,7 +1215,7 @@ async function finishManualSources(){
 function showManualLinkNext(preferredId=''){
  const incomplete=visibleMemories().map(m=>({m,missing:remainingPhotoIdsForAlbum(m).length})).filter(x=>x.missing).sort((a,b)=>(a.m.id===preferredId?-1:0)-(b.m.id===preferredId?-1:0));
  if(!incomplete.length){showAlbumLinkFinalReport(preferredId);return}
- modal(`<h2>🔗 ربط الصور المتبقية</h2><p class="note">المصدر الذي يربط صفر صور يُرفض ولا يُحفظ. يمكنك إعطاء الألبوم أكثر من مصدر، وكل مصدر جديد يبحث في الصور المتبقية فقط.</p><p class="meta">ابدأ بالمصادر المعروفة. وإذا فشل الربط، يمكنك الانتقال للمطابقة البصرية كحل أخير؛ وهي لا تحفظ شيئًا إلا بعد اعتمادك للنتائج.</p><div class="cards">${incomplete.slice(0,80).map(({m,missing})=>`<div class="card"><b>📁 ${esc(m.title||'ألبوم')}</b><div class="meta">باقي ${missing} صورة بلا أصل</div><div class="actions"><button class="btn small primary" data-action="chooseManualLinkSource" data-id="${m.id}">📁 اختيار مصدر</button><button class="btn small" data-action="startVisualFallback" data-id="${m.id}" data-exhausted="1">🔍 مطابقة بصرية</button></div></div>`).join('')}</div><div class="actions"><button class="btn" data-action="finishManualSources">✅ معنديش مصادر أخرى</button></div>`);
+ modal(`<h2>🔗 ربط الصور المتبقية</h2><p class="note">المصدر الذي يربط صفر صور يُرفض ولا يُحفظ. يمكنك إعطاء الألبوم أكثر من مصدر، وكل مصدر جديد يبحث في الصور المتبقية فقط.</p><p class="meta">اختر «📁 اختيار مصدر» لكل ألبوم يحتاج أصولًا. عندما تنتهي من كل المصادر التي تعرفها اضغط «✅ معنديش مصادر أخرى»؛ عندها فقط يظهر خيار المطابقة البصرية كحل أخير.</p><div class="cards">${incomplete.slice(0,80).map(({m,missing})=>`<div class="card"><b>📁 ${esc(m.title||'ألبوم')}</b><div class="meta">باقي ${missing} صورة بلا أصل</div><div class="actions"><button class="btn small primary" data-action="chooseManualLinkSource" data-id="${m.id}">📁 اختيار مصدر</button></div></div>`).join('')}</div><div class="actions"><button class="btn" data-action="finishManualSources">✅ معنديش مصادر أخرى</button></div>`);
 }
 function showAlbumLinkFinalReport(memoryId){
  const m=state.memories.find(x=>x.id===memoryId);if(!m){renderNoAnim();return}
@@ -1108,39 +1224,62 @@ function showAlbumLinkFinalReport(memoryId){
 }
 function remainingPhotoIdsForAlbum(m){return (m?.photoIds||[]).map(pid=>photos.get(pid)).filter(p=>isPhotoRecord(p)&&!hasOriginalLink(p)).map(p=>p.id)}
 function showLinkWorkflow(){if(scanLock||busy){toast('هناك عملية ربط تعمل بالفعل.');return}if(!manualLinkSession||manualLinkSession.cancelled)manualLinkSession={cancelled:false,history:[]};showManualLinkNext()}
-function visualRecoveryChooser(){
- const incomplete=visibleMemories().map(m=>({m,missing:remainingPhotoIdsForAlbum(m).length})).filter(x=>x.missing).slice(0,80);
- if(!incomplete.length){toast('كل الصور الظاهرة لها أصول مرتبطة بالفعل.');return}
- modal(`<h2>🔍 المطابقة البصرية — الصور التي فشل ربطها</h2><p class="note">هذا خيار استرجاع حقيقي للصور التي ما زالت بلا أصل. اختر الألبوم، ثم حدد مجلدًا أو أكثر كنطاق بحث. لن يتم حفظ أي رابط قبل اعتمادك للنتائج.</p><div class="cards">${incomplete.map(({m,missing})=>`<div class="card"><b>📁 ${esc(m.title||'ألبوم')}</b><div class="meta">باقي ${missing} صورة</div><div class="actions"><button class="btn small primary" data-action="startVisualFallback" data-id="${m.id}" data-exhausted="1">🔍 اختيار نطاق والبحث البصري</button></div></div>`).join('')}</div><div class="actions"><button class="btn" data-action="closeModal">إغلاق</button></div>`);
+function openQuickLinkSourceChooser(memoryId,photoId=null,origin='album'){
+ const m=state.memories.find(x=>String(x.id)===String(memoryId));if(!m)return;const missing=remainingPhotoIdsForAlbum(m).filter(pid=>!photoId||String(pid)===String(photoId));if(!missing.length){toast('لم تعد هناك صورة ناقصة الأصل في هذا الألبوم.');return}
+ const sample=photos.get(photoId||missing[0]);const rejectedSourceIds=new Set((manualLinkSession?.history||[]).filter(h=>String(h.albumId)===String(m.id)&&h.rejected).map(h=>String(h.sourceId||'')).filter(Boolean));const availableSources=sources.filter(src=>!rejectedSourceIds.has(String(src.id)));const rows=availableSources.map((src,idx)=>`<div class="quick-source-option"><div class="quick-source-detail"><b>${idx===0?'⭐ ':''}${esc(sourceLabel(src))}</b><small>${src.id===activeSourceId?'المصدر المحدد حاليًا':'مصدر محفوظ'}${scanProgresses[src.id]?.status==='done'?' • سبق فحصه':''}</small></div><button class="btn small primary" data-action="quickLinkFromSource" data-id="${esc(m.id)}" data-source-id="${esc(src.id)}" data-photo-id="${esc(photoId||'')}" data-origin="${esc(origin)}">تجربة هذا المصدر</button></div>`).join('');
+ modal(`<h2>⚡ الربط السريع والتحقق</h2><div class="card quick-link-target"><div class="quick-link-target-thumb">${sample?`<img data-thumb="${esc(sample.id)}" alt="">`:''}</div><div><b>الألبوم الثابت: ${esc(m.title||m.album||'ألبوم')}</b><p class="meta">${photoId?`الصورة المطلوبة: ${esc(sample?.name||'صورة')}`:`عدد الصور التي لم يُعثر على أصولها: ${missing.length}`}</p><p class="meta">اختر المصدر المحتمل فقط. سيبحث OsRa داخل المصدر ويتحقق من النتائج. المصدر الذي يعطي صفر تطابق لا يُحفظ كرابط لهذا الألبوم.</p></div></div><div class="quick-source-list">${rows||`<div class="empty">لا توجد مصادر مرشحة متبقية لهذه المحاولة. قد تكون المصادر المتبقية قد أعطت صفر تطابق سابقًا؛ اختر مجلدًا جديدًا أو استخدم البحث البصري.</div>`}</div><div class="actions"><button class="btn primary" data-action="pickNewQuickLinkSource" data-id="${esc(m.id)}" data-photo-id="${esc(photoId||'')}" data-origin="${esc(origin)}">📁 اختيار مصدر جديد / مجلد آخر</button><button class="btn" data-action="startVisualFallback" data-id="${esc(m.id)}">🔍 البحث البصري</button><button class="btn" data-action="closeModal">إلغاء</button></div>`);hydrate($('#modalBody'));
 }
-async function pickAlbumLinkSource(memoryId){return manualLinkAlbumFromFolder(memoryId)}
+async function pickAlbumLinkSource(memoryId){return openQuickLinkSourceChooser(memoryId,null,'album')}
+async function quickLinkFromSource(memoryId,sourceId,photoId=null,origin='album'){
+ const m=state.memories.find(x=>String(x.id)===String(memoryId)),source=sources.find(x=>String(x.id)===String(sourceId));if(!m||!source?.handle){toast('المصدر المحدد غير متاح. اختر مصدرًا آخر.');return}if(scanLock||busy){toast('هناك عملية أخرى تعمل حاليًا.');return}
+ const targets=(m.photoIds||[]).map(pid=>photos.get(pid)).filter(p=>isPhotoRecord(p)&&!hasOriginalLink(p)&&(!photoId||String(p.id)===String(photoId)));if(!targets.length){toast('لا توجد صور ناقصة الأصل في الهدف المحدد.');return}if(!(await ensureSourcePermission(source,true))){manualLinkSession=manualLinkSession||{history:[]};manualLinkSession.history.push({albumId:m.id,albumTitle:m.title||m.album||'ألبوم',sourceId:source.id,sourceName:sourceLabel(source),filesScanned:0,matched:0,missingBefore:targets.length,rejected:true,error:'لم يُمنح إذن قراءة المصدر.',createdAt:Date.now()});refreshLinkReportAfterManual();toast('لم يُمنح إذن المصدر. لم يتم ربط أي شيء.');return}
+ manualLinkSession=manualLinkSession||{cancelled:false,history:[]};manualLinkSession.cancelled=false;manualLinkSession.running=true;const statusId='quickLinkStatus';modal(`<h2>⚡ التحقق من «${esc(sourceLabel(source))}»</h2><p id="${statusId}">جارٍ البحث عن ${targets.length} صورة في الألبوم الثابت «${esc(m.title||'ألبوم')}»…</p><div class="actions"><button class="btn danger" data-action="cancelManualLink">إلغاء البحث</button></div>`);const status=$('#'+statusId);
+ try{
+  const index=await buildRecursiveNameIndex(source.handle,'',targets.map(photo=>({photo,album:m,folderPath:''})),info=>{if(status)status.textContent=`فحص ${info.filesSeen||0} ملفًا في «${esc(sourceLabel(source))}»… ${info.candidates||0} مرشحًا`});manualLinkSession.running=false;if(manualLinkSession.cancelled){manualLinkSession.cancelled=false;return}
+  const staged=[];for(const p of targets){const row=folderCandidate({photo:p},index);if(!row)continue;try{const f=await row.entry.getFile();const identity=await verifyExactPhotoCandidate(p,f);if(!identity.matched)continue;const rel=normalizeFolderRelPath(row.relPath);staged.push({p,row,f,identity,rel})}catch{}}
+  if(!staged.length){manualLinkSession.history.push({albumId:m.id,albumTitle:m.title||m.album||'ألبوم',sourceId:source.id,sourceName:sourceLabel(source),filesScanned:index.filesSeen||0,matched:0,missingBefore:targets.length,rejected:true,createdAt:Date.now()});refreshLinkReportAfterManual();modal(`<h2>❌ لم تحدث مطابقة</h2><p>فُحص المصدر «${esc(sourceLabel(source))}» ولم يُعثر على أصل مطابق للصور المحددة.</p><p class="meta">لم يتم ربط الألبوم بهذا المصدر ولم يتم حفظه كرابط ناجح. جرّب مصدرًا آخر أو البحث البصري.</p><div class="actions"><button class="btn primary" data-action="retryManualLink" data-id="${esc(m.id)}" data-photo-id="${esc(photoId||'')}" data-origin="${esc(origin)}">↻ اختيار مصدر آخر</button><button class="btn" data-action="startVisualFallback" data-id="${esc(m.id)}">🔍 البحث البصري</button><button class="btn" data-action="closeModal">إغلاق</button></div>`);return}
+  let linked=0;const parents=new Set();for(const x of staged){const had=photoLocations(x.p).some(l=>String(l.sourceId)===String(source.id)&&String(l.relPath)===String(x.rel));markPhotoLinkVerified(x.p,source.id,x.rel);const link=photoLocations(x.p).find(l=>String(l.sourceId)===String(source.id)&&String(l.relPath)===String(x.rel));if(link){link.name=x.f.name;link.size=Number(x.f.size)||0;link.lastModified=Number(x.f.lastModified)||0;link.mimeType=x.f.type||link.mimeType||'';link.contentKey=x.identity?.key||link.contentKey||'';link.fingerprint=x.identity?.fingerprint||link.fingerprint||'';link.verified=true;link.verifiedAt=Date.now()}await savePhoto(x.p);photos.set(x.p.id,x.p);if(!had)linked++;const parts=x.rel.split('/').filter(Boolean);parents.add(normalizeFolderRelPath(parts.slice(0,-1).join('/')))}
+  manualLinkSession.history.push({albumId:m.id,albumTitle:m.title||m.album||'ألبوم',sourceName:sourceLabel(source),folderPath:parents.size===1?[...parents][0]:'',filesScanned:index.filesSeen||0,matched:linked,missingBefore:targets.length,createdAt:Date.now()});if(parents.size===1)addAlbumLinkFolder(m,source.id,[...parents][0],!normalizeAlbumLinkFolders(m).length);m.userEdited=true;normalizeState();await persistSources();await save();refreshLinkReportAfterManual();closeModal();toast(`✅ تم التحقق وربط ${linked} صورة من «${sourceLabel(source)}».${remainingPhotoIdsForAlbum(m).length?` يتبقى ${remainingPhotoIdsForAlbum(m).length} صورة.`:' اكتمل الألبوم.'}`);renderNoAnim();if(origin==='report'){if(lastLinkReport)linkReportModal(lastLinkReport);else showAlbumLinkFinalReport(m.id)}else if(remainingPhotoIdsForAlbum(m).length)showManualLinkNext(m.id);else showAlbumLinkFinalReport(m.id);
+ }catch(e){if(manualLinkSession)manualLinkSession.running=false;if(e?.message==='MANUAL_LINK_CANCELLED'){toast('تم إلغاء عملية الربط دون حفظ أي نتيجة جديدة.');return}console.error(e);modal(`<h2>⚠️ تعذر التحقق من المصدر</h2><p>لم يتم اعتماد أي مطابقة جديدة. يمكنك اختيار مصدر مختلف والمحاولة مجددًا.</p><div class="actions"><button class="btn primary" data-action="retryManualLink" data-id="${esc(m.id)}" data-photo-id="${esc(photoId||'')}" data-origin="${esc(origin)}">اختيار مصدر آخر</button><button class="btn" data-action="closeModal">إغلاق</button></div>`)}
+}
 
 function visualCandidateScore(a,b){if(!a||!b)return 0;const pd=duplicateHamming(a.pHash,b.pHash),dd=duplicateHamming(a.dHash,b.dHash),ad=duplicateHamming(a.aHash,b.aHash);if(pd>18&&dd>22&&ad>22)return 0;const aspect=Math.min(1,Math.abs((a.aspect||1)-(b.aspect||1))/.12),bright=Math.min(1,Math.abs((a.brightness||0)-(b.brightness||0))/.25);return Math.max(0,1-(pd/64*.52+dd/64*.25+ad/64*.13+aspect*.05+bright*.05))}
-async function openVisualFallbackForAlbum(memoryId,origin='album'){const m=state.memories.find(x=>x.id===memoryId);if(!m)return;visualLinkSession={albumId:m.id,roots:[],results:[],sourceRows:[],status:'idle',origin};await openVisualFallbackChooser()}
+async function openVisualFallbackForAlbum(memoryId,origin='album',photoId=null){const m=state.memories.find(x=>String(x.id)===String(memoryId));if(!m)return;visualLinkSession={albumId:m.id,roots:[],results:[],sourceRows:[],status:'idle',origin,filterPhotoId:photoId?String(photoId):null};await openVisualFallbackChooser()}
 async function openVisualFallbackChooser(){
- const m=state.memories.find(x=>x.id===visualLinkSession?.albumId);if(!m){toast('لم نحدد ألبومًا للمطابقة البصرية.');return}const remain=remainingPhotoIdsForAlbum(m);if(!remain.length){toast('لا توجد صور متبقية لهذا الألبوم.');return}const roots=visualLinkSession.roots||[];
+ const m=state.memories.find(x=>String(x.id)===String(visualLinkSession?.albumId));if(!m){toast('لم نحدد ألبومًا للمطابقة البصرية.');return}const remain=remainingPhotoIdsForAlbum(m).filter(pid=>!visualLinkSession.filterPhotoId||String(pid)===String(visualLinkSession.filterPhotoId));if(!remain.length){toast('لا توجد صور متبقية لهذا الألبوم.');return}const roots=visualLinkSession.roots||[];
  modal(`<h2>🔍 المطابقة البصرية القوية</h2><div class="card"><b>الألبوم: ${esc(m.title||'ألبوم')}</b><p>المتبقي: <b>${remain.length}</b> صورة بدون أصل.</p><p class="meta">اختر مجلدًا واحدًا أو عدة مجلدات، أو مجلدًا رئيسيًا ليُبحث داخله مع كل المجلدات الفرعية. هذه اقتراحات فقط ولن يتم الربط دون موافقتك.</p></div><div class="cards">${roots.length?roots.map((r,i)=>`<div class="card"><b>📁 ${esc(r.name||'مجلد')}</b><div class="meta">${r.relPath?`داخل المصدر: ${esc(r.relPath)}`:'نطاق كامل للمجلد المختار'}${r.fileCount!=null?` • ${r.fileCount} صورة`:''}</div><button class="btn small" data-action="visualCancelRoot" data-id="${i}">إزالة النطاق</button></div>`).join(''):`<div class="empty">لم تضف نطاق بحث بعد.</div>`}</div><div class="actions"><button class="btn" data-action="visualAddRoot">＋ إضافة مجلد بحث</button>${roots.length?`<button class="btn primary" data-action="visualRun">🔎 ابدأ البحث البصري</button>`:''}<button class="btn" data-action="visualCancel">إلغاء</button></div>`);
 }
 async function visualAddRoot(){
  if(!visualLinkSession)return;if(!window.showDirectoryPicker){toast('اختيار المجلد غير مدعوم هنا.');return}try{const chosen=await window.showDirectoryPicker({mode:'read'});let source=await getSourceByHandle(chosen),relPath='';if(!source){const containing=await findContainingSource(chosen);if(containing){source=containing.source;relPath=normalizeFolderRelPath(containing.relPath)}}const tempId=id('vsrc');const root={id:tempId,name:chosen.name||'مجلد',handle:chosen,source,relPath};visualLinkSession.roots=visualLinkSession.roots||[];const dup=visualLinkSession.roots.some(r=>(r.source?.id&&source?.id&&String(r.source.id)===String(source.id)&&r.relPath===relPath)||(r.handle&&root.handle&&r.handle===root.handle));if(!dup)visualLinkSession.roots.push(root);openVisualFallbackChooser()}catch(e){if(e?.name!=='AbortError')toast('تعذر إضافة نطاق البحث.')}}
 
 function visualCancelRoot(index){if(!visualLinkSession?.roots)return;const i=Number(index);if(!Number.isInteger(i)||i<0||i>=visualLinkSession.roots.length)return;visualLinkSession.roots.splice(i,1);openVisualFallbackChooser()}
-function visualCancelFallback(){const aid=visualLinkSession?.albumId;visualLinkStopRequested=true;visualLinkSession=null;closeModal();if(aid)showAlbumLinkFinalReport(aid);else if(lastLinkReport)linkReportModal(lastLinkReport);else renderNoAnim()}
+function visualCancelFallback(){const aid=visualLinkSession?.albumId;visualLinkStopRequested=true;clearVisualPreviewUrls();visualLinkSession=null;closeModal();if(aid)showAlbumLinkFinalReport(aid);else if(lastLinkReport)linkReportModal(lastLinkReport);else renderNoAnim()}
 async function runVisualFallback(){
- if(!visualLinkSession||!visualLinkSession.roots?.length){toast('أضف مجلدًا أو أكثر للبحث أولًا.');return}const m=state.memories.find(x=>x.id===visualLinkSession.albumId);if(!m)return;const remain=remainingPhotoIdsForAlbum(m);if(!remain.length){toast('لا توجد صور متبقية.');return}visualLinkStopRequested=false;busy=true;scanLock=true;
+ if(!visualLinkSession||!visualLinkSession.roots?.length){toast('أضف مجلدًا أو أكثر للبحث أولًا.');return}const m=state.memories.find(x=>String(x.id)===String(visualLinkSession.albumId));if(!m)return;const remain=remainingPhotoIdsForAlbum(m).filter(pid=>!visualLinkSession.filterPhotoId||String(pid)===String(visualLinkSession.filterPhotoId));if(!remain.length){toast('لا توجد صور متبقية.');return}visualLinkStopRequested=false;busy=true;scanLock=true;
  modal(`<h2>🔍 البحث البصري</h2><p id="visualStatus">بدء التحليل…</p><div class="progress"><i id="visualBar" style="width:0%"></i></div><div class="actions"><button class="btn danger" data-action="visualCancel">إلغاء</button></div>`);const status=$('#visualStatus'),bar=$('#visualBar');
  try{
-  const targetSigs=[];const tb=await getThumbBlobsBatch(remain);for(let i=0;i<remain.length;i++){if(visualLinkStopRequested)throw new Error('visual-cancelled');const sig=await imageSignatureFromThumb(tb.get(remain[i]));if(sig)targetSigs.push({id:remain[i],sig});if(status)status.textContent=`تحليل صور OsRa ${i+1} / ${remain.length}`}
+  const targetSigs=[];const tb=await getThumbBlobsBatch(remain);for(let i=0;i<remain.length;i++){if(visualLinkStopRequested)throw new Error('visual-cancelled');const pid=remain[i],p=photos.get(pid);let blob=tb.get(pid)||null;if(!blob&&p){const fallback=await resolveThumbFallbackBlob(p);blob=fallback?.blob||null}const sig=await imageSignatureFromThumb(blob);if(sig)targetSigs.push({id:pid,sig});if(status)status.textContent=`تحليل صور OsRa ${i+1} / ${remain.length}`}
   const allFiles=[];for(const root of visualLinkSession.roots){let count=0;const walk=async(cur,base='')=>{for await(const [name,entry] of cur.entries()){if(visualLinkStopRequested)throw new Error('visual-cancelled');const rel=base?base+'/'+name:name;if(entry.kind==='directory'){await walk(entry,rel);continue}if(!isImage(name))continue;allFiles.push({entry,root,relPath:root.relPath?normalizeFolderRelPath(root.relPath+'/'+rel):normalizeFolderRelPath(rel),name});count++;if(count%16===0&&status)status.textContent=`جمع ملفات المصدر… ${allFiles.length}`}};await walk(root.handle,'');root.fileCount=count}
   const sourceSigs=[];const BATCH=4;for(let i=0;i<allFiles.length;i+=BATCH){for(const row of allFiles.slice(i,i+BATCH)){if(visualLinkStopRequested)throw new Error('visual-cancelled');try{const f=await row.entry.getFile(),sig=await imageSignatureFromThumb(f);if(sig)sourceSigs.push({...row,sig})}catch{}}if(bar)bar.style.width=Math.min(80,Math.round((Math.min(i+BATCH,allFiles.length)*80)/Math.max(1,allFiles.length)))+'%';if(status)status.textContent=`تحليل صور المصدر ${Math.min(i+BATCH,allFiles.length)} / ${allFiles.length}`;await new Promise(r=>setTimeout(r,0))}
   const buckets=new Map();for(const row of sourceSigs){for(let shift=0;shift<64;shift+=8){const key=`${shift}:${Number((row.sig.pHash>>BigInt(shift))&255n)}`;const a=buckets.get(key)||[];a.push(row);buckets.set(key,a)}}
-  const results=[];for(let ti=0;ti<targetSigs.length;ti++){const t=targetSigs[ti],cand=new Set();for(let shift=0;shift<64;shift+=8){for(const row of buckets.get(`${shift}:${Number((t.sig.pHash>>BigInt(shift))&255n)}`)||[])cand.add(row)}const pool=cand.size?[...cand]:sourceSigs.slice();const ranked=pool.map(r=>({...r,score:visualCandidateScore(t.sig,r.sig)})).filter(r=>r.score>=.80).sort((a,b)=>b.score-a.score).slice(0,3);results.push({photoId:t.id,candidates:ranked});if(status)status.textContent=`ترشيح نتائج ${ti+1} / ${targetSigs.length}`;if(bar)bar.style.width=(80+Math.round((ti+1)*20/targetSigs.length))+'%';await new Promise(r=>setTimeout(r,0))}
+  const results=[];for(let ti=0;ti<targetSigs.length;ti++){const t=targetSigs[ti],cand=new Set();for(let shift=0;shift<64;shift+=8){for(const row of buckets.get(`${shift}:${Number((t.sig.pHash>>BigInt(shift))&255n)}`)||[])cand.add(row)}const pool=cand.size?[...cand]:sourceSigs.slice();const ranked=pool.map(r=>({...r,score:visualCandidateScore(t.sig,r.sig)})).filter(r=>r.score>=.80).sort((a,b)=>b.score-a.score).slice(0,5);results.push({photoId:t.id,candidates:ranked});if(status)status.textContent=`ترشيح نتائج ${ti+1} / ${targetSigs.length}`;if(bar)bar.style.width=(80+Math.round((ti+1)*20/targetSigs.length))+'%';await new Promise(r=>setTimeout(r,0))}
   visualLinkSession.results=results;visualLinkSession.status='ready';busy=false;scanLock=false;visualLinkStopRequested=false;visualResultsModal();
  }catch(e){busy=false;scanLock=false;visualLinkStopRequested=false;if(e?.message==='visual-cancelled'){closeModal();toast('تم إلغاء البحث البصري دون تعديل.')}else{console.error(e);modal(`<h2>🔍 البحث البصري</h2><div class="empty">تعذر إكمال المطابقة. لم يتم تعديل أي رابط.</div><div class="actions"><button class="btn" data-action="closeModal">إغلاق</button></div>`)}}
 }
-function visualResultsModal(){const s=visualLinkSession,m=state.memories.find(x=>x.id===s?.albumId),rows=s?.results||[];if(!m)return;const html=rows.map((r,ri)=>{const p=photos.get(r.photoId);if(!p)return '';const cands=r.candidates||[];return `<div class="card visual-link-row"><h3>📷 ${esc(p.name||'صورة')}</h3>${cands.length?cands.map((c,ci)=>`<label class="card" style="display:block;margin:8px 0;cursor:pointer"><input type="radio" name="visual-${ri}" class="visual-link-radio" data-row="${ri}" data-candidate="${ci}"> <b>${esc(c.name||'ملف')}</b><div class="meta">${esc(c.relPath||'')} • تشابه ${(c.score*100).toFixed(1)}%</div></label>`).join(''):'<p class="meta">لم يوجد مرشح بصري قوي بما يكفي.</p>'}</div>`}).join('');modal(`<h2>🔍 مراجعة المطابقة البصرية</h2><p class="note">اختر أصلًا واحدًا فقط لكل صورة. هذه اقتراحات وليست ربطًا تلقائيًا.</p><div style="max-height:68vh;overflow:auto">${html||'<div class="empty">لا توجد اقتراحات بصرية.</div>'}</div><div class="actions"><button class="btn primary" data-action="applyVisualLinks">✅ اعتماد المختارات</button><button class="btn" data-action="startVisualFallback" data-id="${m.id}">↻ إعادة البحث بمصادر أخرى</button><button class="btn" data-action="visualCancel">إغلاق</button></div>`)}
-async function applyVisualLinks(){const s=visualLinkSession;if(!s)return;const accepted=[...document.querySelectorAll('.visual-link-radio:checked')].map(x=>({row:Number(x.dataset.row),candidate:Number(x.dataset.candidate)}));if(!accepted.length){toast('لم تعتمد أي نتيجة.');return}const album=state.memories.find(x=>x.id===s.albumId);if(!album)return;let linked=0;const createdSources=[];for(const a of accepted){const r=s.results[a.row],c=r?.candidates?.[a.candidate];if(!r||!c)continue;let source=c.root?.source;if(!source){const root=s.roots.find(x=>x.id===c.root?.id);if(!root)continue;source=root.source;if(!source){source={id:id('src'),name:root.name||'مجلد بصري',handle:root.handle,asAlbum:false,directAlbumFolder:false,mergeIntoMemoryId:'',createdAt:Date.now()};root.source=source;sources.push(source);createdSources.push(source)}}if(!source?.handle)continue;const p=photos.get(r.photoId);if(!p)continue;const had=photoLocations(p).some(l=>String(l.sourceId)===String(source.id)&&String(l.relPath)===String(c.relPath));markPhotoLinkVerified(p,source.id,c.relPath);await savePhoto(p);photos.set(p.id,p);if(!had)linked++;/* Visual roots are temporary search scopes; persist the exact photo source link only. */}
- normalizeState();if(linked||createdSources.length){await persistSources();await save()}refreshLinkReportAfterManual();const remain=remainingPhotoIdsForAlbum(album).length;visualLinkSession=null;closeModal();toast(`تم اعتماد ${linked} ربط بصري.${remain?` يتبقى ${remain} صورة.`:' اكتمل الألبوم.'}`);renderNoAnim();if(remain){if(s.origin==='manual-exhausted')showAlbumLinkFinalReport(album.id);else showManualLinkNext(album.id)}else showAlbumLinkFinalReport(album.id)}
+function clearVisualPreviewUrls(){if(visualPreviewObserver){visualPreviewObserver.disconnect();visualPreviewObserver=null}for(const url of visualPreviewUrls){try{URL.revokeObjectURL(url)}catch{}}visualPreviewUrls.clear()}
+async function loadVisualCandidatePreview(img){
+ if(!img||img.dataset.visualLoaded==='1'||img.dataset.visualLoading==='1')return;const s=visualLinkSession;if(!s)return;const ri=Number(img.dataset.visualRow),ci=Number(img.dataset.visualCandidate),candidate=s.results?.[ri]?.candidates?.[ci];if(!candidate?.entry)return;img.dataset.visualLoading='1';
+ try{const file=await candidate.entry.getFile();let preview=file;try{const bitmap=await createImageBitmap(file);const scale=Math.min(1,220/Math.max(bitmap.width,bitmap.height)),canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(bitmap.width*scale));canvas.height=Math.max(1,Math.round(bitmap.height*scale));const ctx=canvas.getContext('2d',{alpha:false});if(ctx){ctx.drawImage(bitmap,0,0,canvas.width,canvas.height);const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',.76));if(blob)preview=blob}bitmap.close?.()}catch{}const url=URL.createObjectURL(preview);visualPreviewUrls.add(url);img.dataset.visualLoaded='1';const done=()=>{try{URL.revokeObjectURL(url)}catch{}visualPreviewUrls.delete(url);img.removeEventListener('load',done);img.removeEventListener('error',failed)};const failed=()=>{try{URL.revokeObjectURL(url)}catch{}visualPreviewUrls.delete(url);img.removeEventListener('load',done);img.removeEventListener('error',failed);img.classList.add('visual-preview-unavailable');img.removeAttribute('src')};img.addEventListener('load',done,{once:true});img.addEventListener('error',failed,{once:true});img.src=url;
+ }catch{img.classList.add('visual-preview-unavailable');img.removeAttribute('src')}finally{img.dataset.visualLoading='';}
+}
+function hydrateVisualCandidatePreviews(){clearVisualPreviewUrls();const imgs=[...($('#modalBody')?.querySelectorAll('[data-visual-row][data-visual-candidate]')||[])];if(!imgs.length)return;const root=$('#visualResultsScroll');if('IntersectionObserver'in window){visualPreviewObserver=new IntersectionObserver(entries=>{for(const entry of entries){if(!entry.isIntersecting)continue;visualPreviewObserver?.unobserve(entry.target);loadVisualCandidatePreview(entry.target)}},{root,rootMargin:'120px 0px'});imgs.forEach(img=>visualPreviewObserver.observe(img))}else imgs.slice(0,16).forEach(img=>loadVisualCandidatePreview(img));}
+function visualResultsModal(){
+ const s=visualLinkSession,m=state.memories.find(x=>String(x.id)===String(s?.albumId)),rows=s?.results||[];if(!m)return;clearVisualPreviewUrls();
+ const html=rows.map((r,ri)=>{const p=photos.get(r.photoId);if(!p)return '';const cands=r.candidates||[];return `<section class="card visual-link-row"><div class="visual-target-heading"><div class="visual-target-thumb"><img data-thumb="${esc(p.id)}" alt=""></div><div><h3>📷 الصورة المطلوبة: ${esc(p.name||'صورة')}</h3><div class="meta">هذه الصورة داخل ألبوم «${esc(m.title||m.album||'ألبوم')}»</div><span class="visual-choice-count">اختر مرشحًا واحدًا لهذه الصورة</span></div></div>${cands.length?`<div class="visual-options-grid">${cands.map((c,ci)=>`<label class="visual-candidate-card"><div class="visual-candidate-top"><span class="visual-candidate-number">الخيار ${ci+1}</span><input type="checkbox" class="visual-link-check" data-row="${ri}" data-candidate="${ci}" aria-label="اختيار الخيار ${ci+1}"></div><div class="visual-candidate-preview"><img data-visual-row="${ri}" data-visual-candidate="${ci}" alt="" loading="lazy"><span class="visual-preview-placeholder" aria-hidden="true">🖼️</span></div><b class="visual-candidate-name">${esc(c.name||'ملف')}</b><div class="visual-candidate-path" dir="ltr">${esc(c.relPath||'—')}</div><div class="visual-candidate-score">التشابه: <b>${(c.score*100).toFixed(1)}%</b></div></label>`).join('')}</div>`:'<p class="meta">لم يوجد مرشح بصري قوي بما يكفي. يمكنك تجربة مصدر آخر.</p>'}</section>`}).join('');
+ modal(`<h2>🔍 مراجعة المطابقة البصرية</h2><p class="note">تظهر الصور الفعلية لكل خيار، مع رقم واسم ومسار ودرجة تشابه. علّم كل الملفات التي تؤكد أنها أصل صحيح؛ يمكنك اختيار مرشح واحد لكل صورة، وتحديد صور متعددة ثم اعتمادها كلها دفعة واحدة.</p><div id="visualResultsScroll" class="visual-results-scroll">${html||'<div class="empty">لا توجد اقتراحات بصرية.</div>'}</div><div class="actions"><button class="btn primary" data-action="applyVisualLinks">✅ اعتماد المختارات المحددة</button><button class="btn" data-action="startVisualFallback" data-id="${esc(m.id)}">↻ إعادة البحث بمصادر أخرى</button><button class="btn" data-action="visualCancel">إغلاق</button></div>`);hydrate($('#modalBody'));$('#modalBody')?.querySelectorAll('.visual-link-check').forEach(cb=>cb.addEventListener('change',()=>{if(!cb.checked)return;document.querySelectorAll(`.visual-link-check[data-row="${cb.dataset.row}"]`).forEach(other=>{if(other!==cb)other.checked=false})}));hydrateVisualCandidatePreviews();
+}
+async function applyVisualLinks(){const s=visualLinkSession;if(!s)return;const accepted=[...document.querySelectorAll('.visual-link-check:checked')].map(x=>({row:Number(x.dataset.row),candidate:Number(x.dataset.candidate)}));if(!accepted.length){toast('لم تعتمد أي نتيجة.');return}const album=state.memories.find(x=>x.id===s.albumId);if(!album)return;let linked=0;const createdSources=[];for(const a of accepted){const r=s.results[a.row],c=r?.candidates?.[a.candidate];if(!r||!c)continue;let source=c.root?.source;if(!source){const root=s.roots.find(x=>x.id===c.root?.id);if(!root)continue;source=root.source;if(!source){source={id:id('src'),name:root.name||'مجلد بصري',handle:root.handle,asAlbum:false,directAlbumFolder:false,mergeIntoMemoryId:'',createdAt:Date.now()};root.source=source;sources.push(source);createdSources.push(source)}}if(!source?.handle)continue;const p=photos.get(r.photoId);if(!p)continue;let verifiedFile=null;try{verifiedFile=await c.entry?.getFile()}catch{verifiedFile=null}if(!verifiedFile||!isImageFile(verifiedFile)){console.warn('Visual candidate changed or is no longer readable',c.relPath);continue}if(c.sig){const latestSig=await imageSignatureFromThumb(verifiedFile);if(!latestSig||visualCandidateScore(c.sig,latestSig)<.94){console.warn('Visual candidate changed since preview',c.relPath);continue}}const had=photoLocations(p).some(l=>String(l.sourceId)===String(source.id)&&String(l.relPath)===String(c.relPath));markPhotoLinkVerified(p,source.id,c.relPath);const linkedRow=photoLocations(p).find(l=>String(l.sourceId)===String(source.id)&&String(l.relPath)===String(c.relPath));if(linkedRow){linkedRow.name=verifiedFile.name||c.name||p.name;linkedRow.size=Number(verifiedFile.size)||0;linkedRow.lastModified=Number(verifiedFile.lastModified)||0;linkedRow.mimeType=verifiedFile.type||linkedRow.mimeType||'';linkedRow.verified=true;linkedRow.verifiedAt=Date.now()}await savePhoto(p);photos.set(p.id,p);if(!had)linked++;/* Visual roots are temporary search scopes; persist the exact photo source link only. */}
+ normalizeState();if(linked||createdSources.length){await persistSources();await save()}refreshLinkReportAfterManual();const remain=remainingPhotoIdsForAlbum(album).length;clearVisualPreviewUrls();visualLinkSession=null;closeModal();toast(`تم اعتماد ${linked} ربط بصري.${remain?` يتبقى ${remain} صورة.`:' اكتمل الألبوم.'}`);renderNoAnim();if(remain){if(s.origin==='manual-exhausted')showAlbumLinkFinalReport(album.id);else showManualLinkNext(album.id)}else showAlbumLinkFinalReport(album.id)}
 
 function duplicateFolderModal(existing){pendingFolderMatch=existing;modal(`<h2>📁 يوجد مجلد بالاسم نفسه</h2><p>المجلد الجديد اسمه «${esc(pendingFolderName)}»، ويوجد مصدر مرتبط بالفعل بالاسم نفسه: «${esc(sourceLabel(existing))}».</p><p class="note">اختر بنفسك: دمج الصور في ألبوم واحد، أو إبقاء المجلدين منفصلين. الاختيار لا يحذف أي صورة أصلية.</p><div class="actions"><button class="btn primary" data-action="mergeFolder">🔗 دمج الألبومين</button><button class="btn" data-action="separateFolder">📁 إبقاؤهما منفصلين</button><button class="btn" data-action="cancelFolderChoice">إلغاء</button></div>`)}
 async function addPendingFolder(mode){const root=pendingFolderRoot,existing=pendingFolderMatch,name=pendingFolderName;if(!root)return closeModal();try{let targetMemory=null;if(mode==='merge'&&existing){targetMemory=state.memories.find(m=>m.id===existing.mergeIntoMemoryId)||state.memories.find(m=>m.sourceId===existing.id&&m.album===existing.name)||state.memories.find(m=>m.sourceId===existing.id&&m.autoAlbum!==false)||state.memories.find(m=>(m.title===existing.name||m.album===existing.name)&&!m.hidden);if(!targetMemory){targetMemory={id:id('mem'),title:name,date:'',endDate:'',place:'',description:'',album:name,photoIds:[],autoAlbum:true,sourceId:existing.id};state.memories.push(targetMemory);await save()}}const source={id:id('src'),name,handle:root,asAlbum:true,mergeIntoMemoryId:targetMemory?.id||'',createdAt:Date.now()};if(!(await ensureSourcePermission(source,true))){toast('لم يُمنح إذن قراءة المجلد.');return}sources.push(source);await persistSources();await setActiveSource(source);scanProgresses[source.id]=null;await put('library',{key:'scanProgresses',value:structuredClone(scanProgresses)});closeModal();toast(mode==='merge'?`تم اختيار الدمج. سيُفحص «${name}» وحده ويضاف للألبوم المدموج.`:`تمت إضافة «${name}» كمجلد مستقل؛ سيُفحص وحده.`);await scan(root,true,{source,fresh:true});}catch(e){if(e?.name==='AbortError')toast('تم إلغاء العملية.');else{console.error(e);toast('تعذر إضافة المجلد الجديد.')}}finally{pendingFolderRoot=null;pendingFolderMatch=null;pendingFolderName=''}}
@@ -1229,10 +1368,37 @@ async function fingerprint(file){
 function exclusionKey(relPath,size,lastModified,fingerprint=''){return `${fingerprint||''}|${relPath}|${size}|${lastModified}`}
 function isExcluded(relPath,size,lastModified,fingerprint='',contentKey='',sourceId=''){return state.excludedPhotos.some(x=>(contentKey&&x.contentKey&&x.contentKey===contentKey)||(fingerprint&&x.fingerprint&&x.fingerprint===fingerprint)||(x.key===exclusionKey(relPath,size,lastModified,fingerprint))||(sourceId&&x.sourceId&&x.sourceId===sourceId&&x.relPath===relPath&&x.size===size&&x.lastModified===lastModified))}
 function removeFromAutoAlbum(pid,album,sourceId=''){if(!album)return;const m=state.memories.find(x=>x.album===album&&x.autoAlbum!==false&&(!sourceId||x.sourceId===sourceId||(!x.sourceId&&sourceId===sources[0]?.id)));if(m)m.photoIds=(m.photoIds||[]).filter(x=>x!==pid)}
+function ensurePhotoMemory(p,source){
+ if(!isPhotoRecord(p))return;
+ const album=String(p.album||'').trim();
+ if(!album)return;
+ const sourceId=String(source?.id||p.sourceId||'');
+ ensureMemory(album,p.id,sourceId);
+ const key=normalizeAlbumKey(album);
+ const m=state.memories.find(x=>!x.hidden&&normalizeAlbumKey(x.album||x.title)===key&&Array.isArray(x.photoIds)&&x.photoIds.includes(p.id));
+ if(m&&sourceId){if(!m.sourceId)m.sourceId=sourceId;if(!m.linkSourceId)m.linkSourceId=sourceId}
+}
 function ensureMemory(album,pid,sourceId=''){if(!album)return;const key=normalizeAlbumKey(album);let m=state.memories.find(x=>!x.hidden&&x.autoAlbum!==false&&normalizeAlbumKey(x.album||x.title)===key)||state.memories.find(x=>!x.hidden&&normalizeAlbumKey(x.album||x.title)===key);if(!m){m={id:id('mem'),title:album,date:'',endDate:'',place:'',description:'',album,autoAlbum:true,photoIds:[],sourceId:sourceId||'',linkSourceId:sourceId||''};state.memories.push(m)}else{if(sourceId&&!m.sourceId)m.sourceId=sourceId;if(sourceId&&!m.linkSourceId)m.linkSourceId=sourceId}if(!Array.isArray(m.photoIds))m.photoIds=[];if(!m.photoIds.includes(pid))m.photoIds.push(pid)}
 
-async function stopScan(){if(!scanLock||!scanCheckpoint?.sourceId)return;scanStopRequested=true;await save();await persistScanProgress({status:'paused'});toast('جاري إيقاف الفحص بأمان… سيتم حفظ آخر نقطة.')}
-function takeReindexMatch(ck,fp){const matches=reindexRestorePool.filter(x=>(ck&&x.contentKey&&x.contentKey===ck)||(fp&&x.fingerprint&&x.fingerprint===fp));if(!matches.length)return null;const ids=new Set(matches.map(x=>x.id));reindexRestorePool=reindexRestorePool.filter(x=>!ids.has(x.id));const base=structuredClone(matches[0]);for(const x of matches.slice(1)){base.sourceLinks=[...(base.sourceLinks||[]),...(x.sourceLinks||[])];base.memoryRefs=[...(base.memoryRefs||[]),...(x.memoryRefs||[])];base.manualAlbum=!!(base.manualAlbum||x.manualAlbum);base.layoutLocked=!!(base.layoutLocked||x.layoutLocked);base.autoAlbum=base.autoAlbum!==false&&x.autoAlbum!==false;base.album=base.album||x.album||'';base.name=base.name||x.name||'';base.capturedAt=base.capturedAt||x.capturedAt||'';base.addedAt=Math.min(base.addedAt||Date.now(),x.addedAt||Date.now())}base.sourceLinks=(base.sourceLinks||[]).filter((l,i,a)=>l?.sourceId&&l?.relPath&&a.findIndex(z=>z.sourceId===l.sourceId&&z.relPath===l.relPath)===i);base.memoryRefs=(base.memoryRefs||[]).filter((r,i,a)=>r?.memoryId&&a.findIndex(z=>z.memoryId===r.memoryId&&z.index===r.index)===i);return base}
+function requestScanInterrupt(kind){for(const resolve of [...scanInterruptWaiters])try{resolve(kind)}catch{}scanInterruptWaiters.clear()}
+async function scanAwait(promise,timeoutMs=12000,label='معالجة الملف'){
+ if(scanCancelRequested)throw Object.assign(new Error('SCAN_CANCELLED'),{name:'ScanCancelled'});
+ if(scanStopRequested)throw Object.assign(new Error('SCAN_STOPPED'),{name:'ScanStopped'});
+ let timer=0,interruptResolve=null;
+ const interrupt=new Promise(resolve=>{interruptResolve=resolve;scanInterruptWaiters.add(resolve)});
+ const operation=Promise.resolve(promise).then(value=>({kind:'value',value}),error=>({kind:'fileError',error}));
+ const timeout=new Promise(resolve=>{timer=setTimeout(()=>resolve({kind:'timeout'}),Math.max(1000,timeoutMs))});
+ try{
+  const result=await Promise.race([operation,timeout,interrupt.then(kind=>({kind:'interrupt',interrupt:kind}))]);
+  if(result.kind==='interrupt'){if(result.interrupt==='cancel')throw Object.assign(new Error('SCAN_CANCELLED'),{name:'ScanCancelled'});throw Object.assign(new Error('SCAN_STOPPED'),{name:'ScanStopped'})}
+  if(result.kind==='timeout')throw Object.assign(new Error(`${label} تجاوز المهلة`),{name:'ScanFileTimeout',fileLabel:label});
+  if(result.kind==='fileError')throw Object.assign(new Error(`${label}: ${result.error?.message||'تعذر الوصول إلى الملف'}`),{name:'ScanFileError',cause:result.error,fileLabel:label});
+  return result.value;
+ }finally{clearTimeout(timer);if(interruptResolve)scanInterruptWaiters.delete(interruptResolve)}
+}
+async function stopScan(){if(!scanLock||!scanCheckpoint?.sourceId)return;scanStopRequested=true;requestScanInterrupt('pause');await save();await persistScanProgress({status:'paused'});toast('جاري إيقاف الفحص بأمان… سيتم حفظ آخر نقطة.')}
+async function cancelScan(){if(!scanCheckpoint?.sourceId||!['running','paused'].includes(scanCheckpoint.status)){toast('لا يوجد فحص غير مكتمل لإلغائه.');return}if(!scanLock){const sid=scanCheckpoint.sourceId;await clearScanProgress(sid);scanCheckpoint={status:'cancelled',sourceId:sid,finishedAt:Date.now()};renderNoAnim(true);toast('تم إلغاء نقطة استكمال الفحص المحفوظة. الصور والنتائج السابقة لم تُحذف.');return}scanCancelRequested=true;scanStopRequested=false;requestScanInterrupt('cancel');toast('جاري إلغاء الفحص فعليًا… سيحتفظ OsRa بالنتائج التي اكتملت قبل الإلغاء.')}
+function takeReindexMatch(ck,fp,onBeforeMutate=null){const matches=reindexRestorePool.filter(x=>(ck&&x.contentKey&&x.contentKey===ck)||(fp&&x.fingerprint&&x.fingerprint===fp));if(!matches.length)return null;if(onBeforeMutate)onBeforeMutate(reindexRestorePool);const ids=new Set(matches.map(x=>x.id));reindexRestorePool=reindexRestorePool.filter(x=>!ids.has(x.id));const base=structuredClone(matches[0]);for(const x of matches.slice(1)){base.sourceLinks=[...(base.sourceLinks||[]),...(x.sourceLinks||[])];base.memoryRefs=[...(base.memoryRefs||[]),...(x.memoryRefs||[])];base.manualAlbum=!!(base.manualAlbum||x.manualAlbum);base.layoutLocked=!!(base.layoutLocked||x.layoutLocked);base.autoAlbum=base.autoAlbum!==false&&x.autoAlbum!==false;base.album=base.album||x.album||'';base.name=base.name||x.name||'';base.capturedAt=base.capturedAt||x.capturedAt||'';base.addedAt=Math.min(base.addedAt||Date.now(),x.addedAt||Date.now())}base.sourceLinks=(base.sourceLinks||[]).filter((l,i,a)=>l?.sourceId&&l?.relPath&&a.findIndex(z=>z.sourceId===l.sourceId&&z.relPath===l.relPath)===i);base.memoryRefs=(base.memoryRefs||[]).filter((r,i,a)=>r?.memoryId&&a.findIndex(z=>z.memoryId===r.memoryId&&z.index===r.index)===i);return base}
 async function scan(root=libraryHandle,fromPicker=false,options={}){
  if(!root)return chooseFolder();
  if(scanLock){toast('الفحص جارٍ بالفعل.');return}
@@ -1240,13 +1406,13 @@ async function scan(root=libraryHandle,fromPicker=false,options={}){
  if(!source){toast('هذا المجلد غير مسجل في OsRa.');return}
  await setActiveSource(source);
  if(!fromPicker&&!await ensureSourcePermission(source,true)){toast('إذن الوصول غير متاح لهذا المجلد. استخدم «منح الإذن» لهذا المجلد.');return}
- scanStopRequested=false;scanLock=true;
+ scanStopRequested=false;scanCancelRequested=false;scanInterruptWaiters.clear();scanLock=true;
  const matchOnly=!!options.matchOnly,reindexMode=!!options.reindex;
  const saved=!fromPicker&&!options.fresh?scanProgresses[source.id]:null;
  const canResume=!!saved&&['running','paused'].includes(saved.status)&&saved.sourceId===source.id&&!!(saved.lastCompletedRelPath||saved.lastRelPath);
  const resumeAfter=canResume?(saved.lastCompletedRelPath||saved.lastRelPath):'';
  let resumePending=!!resumeAfter,resumeFound=!resumePending;
- let count=canResume?(saved.processed||saved.count||0):0,added=canResume?(saved.added||0):0,updated=canResume?(saved.updated||0):0,moved=canResume?(saved.moved||0):0,excluded=canResume?(saved.excluded||0):0;
+ let count=canResume?(saved.processed||saved.count||0):0,added=canResume?(saved.added||0):0,updated=canResume?(saved.updated||0):0,moved=canResume?(saved.moved||0):0,excluded=canResume?(saved.excluded||0):0,skipped=canResume?(saved.skipped||0):0;const skippedFiles=canResume?[...(saved.skippedFiles||[])]:[];
  const byPath=new Map(),byFingerprint=new Map(),byContentKey=new Map();
  for(const p of photos.values()){
   if(p.excluded)continue;
@@ -1256,14 +1422,15 @@ async function scan(root=libraryHandle,fromPicker=false,options={}){
  }
  const startedAt=canResume?(saved.startedAt||Date.now()):Date.now();
  let lastCheckpointWrite=Date.now();
- scanCheckpoint={status:'running',sourceId:source.id,libraryName:sourceLabel(source),lastRelPath:canResume?(saved.lastCompletedRelPath||saved.lastRelPath):'',lastCompletedRelPath:canResume?(saved.lastCompletedRelPath||saved.lastRelPath):'',processed:count,count,added,updated,moved,excluded,startedAt};
+ scanCheckpoint={status:'running',sourceId:source.id,libraryName:sourceLabel(source),lastRelPath:canResume?(saved.lastCompletedRelPath||saved.lastRelPath):'',lastCompletedRelPath:canResume?(saved.lastCompletedRelPath||saved.lastRelPath):'',processed:count,count,added,updated,moved,excluded,skipped,skippedFiles,startedAt};
  await persistScanProgress(scanCheckpoint);renderNoAnim(true);
  toast(canResume?`استكمال «${sourceLabel(source)}» بعد: ${resumeAfter}`:`جارٍ فحص «${sourceLabel(source)}»…`);
  const checkpoint=async(force=false)=>{
-  scanCheckpoint={...scanCheckpoint,status:'running',sourceId:source.id,libraryName:sourceLabel(source),lastRelPath:scanCheckpoint.lastCompletedRelPath||'',lastCompletedRelPath:scanCheckpoint.lastCompletedRelPath||'',processed:count,count,added,updated,moved,excluded,startedAt};
+  scanCheckpoint={...scanCheckpoint,status:'running',sourceId:source.id,libraryName:sourceLabel(source),lastRelPath:scanCheckpoint.lastCompletedRelPath||'',lastCompletedRelPath:scanCheckpoint.lastCompletedRelPath||'',processed:count,count,added,updated,moved,excluded,skipped,skippedFiles,startedAt};
   if(force||count===0||count%5===0||Date.now()-lastCheckpointWrite>1500){lastCheckpointWrite=Date.now();await save();await persistScanProgress(scanCheckpoint);if(reindexMode)await persistReindexPool()}
  };
  const markCompleted=async(rel,force=false)=>{scanCheckpoint.lastCompletedRelPath=rel;scanCheckpoint.lastRelPath=rel;await checkpoint(force)};
+ const recordSkipped=async(rel,name,reason='تعذر قراءة الملف')=>{skipped++;const item={relPath:String(rel||''),name:String(name||rel||'ملف'),reason:String(reason||'تعذر قراءة الملف'),at:Date.now()};skippedFiles.push(item);if(skippedFiles.length>100)skippedFiles.splice(0,skippedFiles.length-100);scanCheckpoint.skipped=skipped;scanCheckpoint.skippedFiles=skippedFiles;await markCompleted(rel,true)};
  function mergeRestoredPlacement(target,restored){
   if(!target||!restored)return;
   const links=[...photoLocations(target),...(Array.isArray(restored.sourceLinks)?restored.sourceLinks:[])],seenLinks=new Set();
@@ -1275,41 +1442,52 @@ async function scan(root=libraryHandle,fromPicker=false,options={}){
   }
  }
  async function walk(dir,path=''){
-  const entries=[];for await(const entry of dir.entries())entries.push(entry);entries.sort((a,b)=>a[0].localeCompare(b[0],undefined,{numeric:true,sensitivity:'base'}));
+  const entries=[],iterator=dir.entries()[Symbol.asyncIterator]();while(true){if(scanStopRequested)throw Object.assign(new Error('SCAN_STOPPED'),{name:'ScanStopped'});if(scanCancelRequested)throw Object.assign(new Error('SCAN_CANCELLED'),{name:'ScanCancelled'});const next=await scanAwait(iterator.next(),15000,`قراءة محتويات ${path||sourceLabel(source)}`);if(next.done)break;entries.push(next.value)}entries.sort((a,b)=>a[0].localeCompare(b[0],undefined,{numeric:true,sensitivity:'base'}));
   for(const [name,e] of entries){
-   if(scanStopRequested)throw Object.assign(new Error('SCAN_STOPPED'),{name:'ScanStopped'});
+   if(scanStopRequested)throw Object.assign(new Error('SCAN_STOPPED'),{name:'ScanStopped'});if(scanCancelRequested)throw Object.assign(new Error('SCAN_CANCELLED'),{name:'ScanCancelled'});
    const rel=path?path+'/'+name:name;
    if(e.kind==='directory'){await walk(e,rel);continue}
    if(resumePending){if(rel===resumeAfter){resumePending=false;resumeFound=true;continue}else continue}
-   let f;try{f=await e.getFile()}catch{continue}
+   let f;try{f=await scanAwait(e.getFile(),12000,`قراءة ${name}`)}catch(readError){if(readError?.name==='ScanStopped'||readError?.name==='ScanCancelled')throw readError;if(readError?.name==='ScanFileTimeout'||readError?.name==='ScanFileError'){if(isImage(name)){count++;scanCheckpoint.currentRelPath=rel;await recordSkipped(rel,name,readError.message);}continue}throw readError}
    if(!isImageFile(f))continue;
    count++;scanCheckpoint.currentRelPath=rel;
    const mimeType=f.type||'',key=photoPathKey(source.id,rel);
-   let p=byPath.get(key),fp='',ck='';
-   fp=await fingerprint(f);ck=await contentKey(f);
-   const excludedHere=!reindexMode&&isExcluded(rel,f.size,f.lastModified,fp,ck,source.id);
-   if(excludedHere){excluded++;await markCompleted(rel);if(count%12===0)await new Promise(r=>setTimeout(r,0));continue}
-   if(p&&p.contentKey&&ck&&p.contentKey!==ck){removePhotoLocation(p,source.id,rel);await savePhoto(p);photos.set(p.id,p);byPath.delete(key);p=null}
-   let restored=null;
-   if(!p){
-    const contentCand=(byContentKey.get(ck)||[]).filter(x=>!x.excluded),fpCand=(byFingerprint.get(fp)||[]).filter(x=>!x.excluded);
-    const same=contentCand.length?contentCand:(fpCand.length===1?fpCand:[]);
-    if(same.length){p=pickCanonicalPhoto(same);if(reindexMode)restored=takeReindexMatch(ck,fp);if(restored)mergeRestoredPlacement(p,restored);const oldLinked=hasOriginalLink(p),addedLink=addPhotoLink(p,source,f,rel,fp,ck);p.name=p.name||name;p.fingerprint=p.fingerprint||fp;p.contentKey=p.contentKey||ck;p.lastModified=p.lastModified||f.lastModified;p.size=p.size||f.size;p.mediaType='image';p.mimeType=mimeType;if(!p.thumbBlob||p.thumbVersion!==THUMB_VERSION){p.thumbVersion=THUMB_VERSION;p.thumbBlob=await thumb(f)}p.capturedAt=p.capturedAt||await exifCaptureDate(f);if(source.mergeIntoMemoryId){for(const mem of state.memories){if(mem.id!==source.mergeIntoMemoryId&&mem.autoAlbum!==false&&mem.photoIds?.includes(p.id))mem.photoIds=(mem.photoIds||[]).filter(x=>x!==p.id)}}if(!p.manualAlbum&&!p.layoutLocked){if(source.mergeIntoMemoryId)ensurePhotoMemory(p,source);else ensureMemory(scanAlbumName(source,rel),p.id,source.id)}await savePhoto(p);photos.set(p.id,p);byPath.set(key,p);moved+=addedLink?1:0;if(!oldLinked&&hasOriginalLink(p))updated++;if(reindexMode){removeExcludedMatch(ck,fp,rel,source.id);await persistReindexPool()}}
+   let p=byPath.get(key),fp='',ck='';const snapshots=new Map();let reindexBefore=null;const snapshotReindexBefore=pool=>{if(reindexMode&&reindexBefore===null)reindexBefore=[...pool]};
+   const keepSnapshot=q=>{if(q&&!snapshots.has(q.id))snapshots.set(q.id,{...q,sourceLinks:photoLocations(q).map(l=>({...l}))})};keepSnapshot(p);
+   try{
+    fp=await scanAwait(fingerprint(f),15000,`بصمة ${name}`);ck=await scanAwait(contentKey(f),15000,`تحقق ${name}`);
+    const excludedHere=!reindexMode&&isExcluded(rel,f.size,f.lastModified,fp,ck,source.id);
+    if(excludedHere){excluded++;await markCompleted(rel);if(count%12===0)await new Promise(r=>setTimeout(r,0));continue}
+    if(p&&p.contentKey&&ck&&p.contentKey!==ck){keepSnapshot(p);removePhotoLocation(p,source.id,rel);await savePhoto(p);photos.set(p.id,p);byPath.delete(key);p=null}
+    let restored=null;
+    if(!p){
+     const contentCand=(byContentKey.get(ck)||[]).filter(x=>!x.excluded),fpCand=(byFingerprint.get(fp)||[]).filter(x=>!x.excluded);
+     const same=contentCand.length?contentCand:(fpCand.length===1?fpCand:[]);
+     if(same.length){p=pickCanonicalPhoto(same);keepSnapshot(p);if(reindexMode)restored=takeReindexMatch(ck,fp,snapshotReindexBefore);const thumbBlob=(!p.thumbBlob||p.thumbVersion!==THUMB_VERSION)?await scanAwait(thumb(f),18000,`الصورة المصغرة ${name}`):p.thumbBlob;const captured=p.capturedAt||await scanAwait(exifCaptureDate(f),10000,`تاريخ ${name}`);if(restored)mergeRestoredPlacement(p,restored);const oldLinked=hasOriginalLink(p),addedLink=addPhotoLink(p,source,f,rel,fp,ck);p.name=p.name||name;p.fingerprint=p.fingerprint||fp;p.contentKey=p.contentKey||ck;p.lastModified=p.lastModified||f.lastModified;p.size=p.size||f.size;p.mediaType='image';p.mimeType=mimeType;p.thumbVersion=THUMB_VERSION;if(thumbBlob)p.thumbBlob=thumbBlob;p.capturedAt=captured;if(source.mergeIntoMemoryId){for(const mem of state.memories){if(mem.id!==source.mergeIntoMemoryId&&mem.autoAlbum!==false&&mem.photoIds?.includes(p.id))mem.photoIds=(mem.photoIds||[]).filter(x=>x!==p.id)}}if(!p.manualAlbum&&!p.layoutLocked){if(source.mergeIntoMemoryId)ensurePhotoMemory(p,source);else ensureMemory(scanAlbumName(source,rel),p.id,source.id)}await savePhoto(p);photos.set(p.id,p);byPath.set(key,p);moved+=addedLink?1:0;if(!oldLinked&&hasOriginalLink(p))updated++;if(reindexMode){removeExcludedMatch(ck,fp,rel,source.id);await persistReindexPool()}}
+    }
+    if(!p&&matchOnly){await markCompleted(rel);if(count%12===0)await new Promise(r=>setTimeout(r,0));continue}
+    if(!p){restored=reindexMode?(restored||takeReindexMatch(ck,fp,snapshotReindexBefore)):null;const album=restored?.album||scanAlbumName(source,rel);const thumbBlob=await scanAwait(thumb(f),18000,`الصورة المصغرة ${name}`);const captured=restored?.capturedAt||await scanAwait(exifCaptureDate(f),10000,`تاريخ ${name}`);p={id:restored?.id||id('ph'),sourceId:source.id,relPath:rel,sourceLinks:Array.isArray(restored?.sourceLinks)&&restored.sourceLinks.length?[...restored.sourceLinks,{sourceId:source.id,relPath:rel,name,size:f.size,lastModified:f.lastModified,fingerprint:fp,contentKey:ck,mimeType}]:[{sourceId:source.id,relPath:rel,name,size:f.size,lastModified:f.lastModified,fingerprint:fp,contentKey:ck,mimeType}],name:restored?.name||name,album,size:f.size,lastModified:f.lastModified,fingerprint:fp,contentKey:ck,addedAt:restored?.addedAt||Date.now(),thumbVersion:THUMB_VERSION,thumbBlob,capturedAt:captured,manualAlbum:!!restored?.manualAlbum,autoAlbum:restored?.autoAlbum!==false,layoutLocked:!!restored?.layoutLocked,excluded:false,mediaType:'image',mimeType};photos.set(p.id,p);byPath.set(key,p);normalizePhotoLinks(p);if(Array.isArray(restored?.memoryRefs)&&restored.memoryRefs.length){for(const ref of restored.memoryRefs){const mem=state.memories.find(m=>m.id===ref.memoryId);if(!mem)continue;if(!Array.isArray(mem.photoIds))mem.photoIds=[];if(mem.photoIds.includes(p.id))continue;const at=Math.max(0,Math.min(Number(ref.index)||0,mem.photoIds.length));mem.photoIds.splice(at,0,p.id)}}else ensurePhotoMemory(p,source);added++;await savePhoto(p);byContentKey.set(ck,[...(byContentKey.get(ck)||[]),p]);byFingerprint.set(fp,[...(byFingerprint.get(fp)||[]),p]);if(reindexMode){removeExcludedMatch(ck,fp,rel,source.id);await persistReindexPool()}}
+    else {keepSnapshot(p);const currentLink=photoLocations(p).some(l=>l.sourceId===source.id&&l.relPath===rel);const verified=!!(p.contentKey&&ck&&p.contentKey===ck);if(matchOnly&&!verified){await markCompleted(rel);if(count%12===0)await new Promise(r=>setTimeout(r,0));continue}const wouldAddLink=!currentLink;const changed=wouldAddLink||p.size!==f.size||p.lastModified!==f.lastModified||p.contentKey!==ck||p.thumbVersion!==THUMB_VERSION||!hasOriginalLink(p);let newThumb=null;if(changed&&(!p.thumbBlob||(!matchOnly&&p.thumbVersion!==THUMB_VERSION)))newThumb=await scanAwait(thumb(f),18000,`الصورة المصغرة ${name}`);const captured=!p.capturedAt?await scanAwait(exifCaptureDate(f),10000,`تاريخ ${name}`):p.capturedAt;const addedLink=currentLink?false:addPhotoLink(p,source,f,rel,fp,ck);const didChange=addedLink||p.size!==f.size||p.lastModified!==f.lastModified||p.contentKey!==ck||p.thumbVersion!==THUMB_VERSION||!hasOriginalLink(p);if(didChange){p.name=p.name||name;p.fingerprint=p.fingerprint||fp;p.contentKey=p.contentKey||ck;p.size=f.size;p.lastModified=f.lastModified;p.mediaType='image';p.mimeType=mimeType;if(newThumb){p.thumbBlob=newThumb;p.thumbVersion=THUMB_VERSION}p.capturedAt=captured;await savePhoto(p);photos.set(p.id,p);byPath.set(key,p);updated++}if(reindexMode){const r=restored||takeReindexMatch(ck,fp,snapshotReindexBefore);if(r){mergeRestoredPlacement(p,r);await savePhoto(p);removeExcludedMatch(ck,fp,rel,source.id);await persistReindexPool()}}if(p&&!p.manualAlbum&&!p.layoutLocked&&!matchOnly){if(source.mergeIntoMemoryId)ensurePhotoMemory(p,source);else ensureMemory(scanAlbumName(source,rel),p.id,source.id)}}
+    await markCompleted(rel);if(count%12===0)await new Promise(r=>setTimeout(r,0));
+   }catch(fileError){
+    if(fileError?.name==='ScanStopped'||fileError?.name==='ScanCancelled')throw fileError;
+    if(fileError?.name!=='ScanFileTimeout'&&fileError?.name!=='ScanFileError')throw fileError;
+    for(const [pid,snap] of snapshots){photos.set(pid,snap);try{await savePhoto(snap)}catch(saveError){console.error('failed to restore photo after skipped-file error',saveError)}}
+    if(reindexBefore)reindexRestorePool=reindexBefore;
+    byPath.delete(key);for(const snap of snapshots.values())for(const l of photoLocations(snap))byPath.set(photoPathKey(l.sourceId,l.relPath),snap);
+    console.warn('OsRa skipped one unreadable image and continued',rel,fileError);await recordSkipped(rel,name,fileError.message||'تعذر معالجة الصورة');
    }
-   if(!p&&matchOnly){await markCompleted(rel);if(count%12===0)await new Promise(r=>setTimeout(r,0));continue}
-   if(!p){restored=reindexMode?(restored||takeReindexMatch(ck,fp)):null;const album=restored?.album||scanAlbumName(source,rel);p={id:restored?.id||id('ph'),sourceId:source.id,relPath:rel,sourceLinks:Array.isArray(restored?.sourceLinks)&&restored.sourceLinks.length?[...restored.sourceLinks,{sourceId:source.id,relPath:rel,name,size:f.size,lastModified:f.lastModified,fingerprint:fp,contentKey:ck,mimeType}]:[{sourceId:source.id,relPath:rel,name,size:f.size,lastModified:f.lastModified,fingerprint:fp,contentKey:ck,mimeType}],name:restored?.name||name,album,size:f.size,lastModified:f.lastModified,fingerprint:fp,contentKey:ck,addedAt:restored?.addedAt||Date.now(),thumbVersion:THUMB_VERSION,thumbBlob:await thumb(f),capturedAt:restored?.capturedAt||await exifCaptureDate(f),manualAlbum:!!restored?.manualAlbum,autoAlbum:restored?.autoAlbum!==false,layoutLocked:!!restored?.layoutLocked,excluded:false,mediaType:'image',mimeType};photos.set(p.id,p);byPath.set(key,p);normalizePhotoLinks(p);if(Array.isArray(restored?.memoryRefs)&&restored.memoryRefs.length){for(const ref of restored.memoryRefs){const mem=state.memories.find(m=>m.id===ref.memoryId);if(!mem)continue;if(!Array.isArray(mem.photoIds))mem.photoIds=[];if(mem.photoIds.includes(p.id))continue;const at=Math.max(0,Math.min(Number(ref.index)||0,mem.photoIds.length));mem.photoIds.splice(at,0,p.id)}}else ensurePhotoMemory(p,source);added++;await savePhoto(p);byContentKey.set(ck,[...(byContentKey.get(ck)||[]),p]);byFingerprint.set(fp,[...(byFingerprint.get(fp)||[]),p]);if(reindexMode){removeExcludedMatch(ck,fp,rel,source.id);await persistReindexPool()}}
-   else {const currentLink=photoLocations(p).some(l=>l.sourceId===source.id&&l.relPath===rel);const verified=!!(p.contentKey&&ck&&p.contentKey===ck);if(matchOnly&&!verified){await markCompleted(rel);if(count%12===0)await new Promise(r=>setTimeout(r,0));continue}const addedLink=currentLink?false:addPhotoLink(p,source,f,rel,fp,ck);const changed=addedLink||p.size!==f.size||p.lastModified!==f.lastModified||p.contentKey!==ck||p.thumbVersion!==THUMB_VERSION||!hasOriginalLink(p);if(changed){p.name=p.name||name;p.fingerprint=p.fingerprint||fp;p.contentKey=p.contentKey||ck;p.size=f.size;p.lastModified=f.lastModified;p.mediaType='image';p.mimeType=mimeType;if(!matchOnly||!p.thumbBlob){p.thumbVersion=THUMB_VERSION;p.thumbBlob=p.thumbBlob||await thumb(f)}p.capturedAt=p.capturedAt||await exifCaptureDate(f);await savePhoto(p);photos.set(p.id,p);byPath.set(key,p);updated++}if(reindexMode){const r=restored||takeReindexMatch(ck,fp);if(r){mergeRestoredPlacement(p,r);await savePhoto(p);removeExcludedMatch(ck,fp,rel,source.id);await persistReindexPool()}}if(p&&!p.manualAlbum&&!p.layoutLocked&&!matchOnly){if(source.mergeIntoMemoryId)ensurePhotoMemory(p,source);else ensureMemory(scanAlbumName(source,rel),p.id,source.id)}}
-   await markCompleted(rel);if(count%12===0)await new Promise(r=>setTimeout(r,0));
+   if(count%12===0)await new Promise(r=>setTimeout(r,0));
   }
  }
  try{
-  await walk(root);
+  await walk(root);if(scanCancelRequested)throw Object.assign(new Error('SCAN_CANCELLED'),{name:'ScanCancelled'});
   if(!resumeFound){await persistScanProgress({status:'paused',sourceId:source.id,libraryName:sourceLabel(source),lastRelPath:'',lastCompletedRelPath:'',processed:0,count:0,added:0,updated:0,moved:0,excluded:0,startedAt:Date.now()});toast('نقطة التوقف القديمة لم تعد موجودة؛ بدأ فحص كامل لهذا المجلد فقط.');scanLock=false;await clearScanProgress(source.id);return await scan(root,false,{source,fresh:true,reindex:reindexMode,matchOnly})}
-  if(reindexMode)await persistReindexPool();let linked=0;for(const p of photos.values()){if(!isPhotoRecord(p)||!p.album)continue;const has=state.memories.some(m=>(m.photoIds||[]).includes(p.id));if(!has){ensurePhotoMemory(p,source);linked++}}const removed=cleanupEmptyAutoAlbums();await save();await persistScanProgress({status:'done',sourceId:source.id,libraryName:sourceLabel(source),lastRelPath:scanCheckpoint.lastCompletedRelPath||'',lastCompletedRelPath:scanCheckpoint.lastCompletedRelPath||'',processed:count,count,added,updated,moved,excluded,linked,removed,startedAt,finishedAt:Date.now()});toast(`تم فحص «${sourceLabel(source)}»: ${count} صورة، ${added} جديدة، ${updated} محدثة${moved?'، '+moved+' أصول إضافية رُبطت':''}${linked?'، وربط '+linked+' صور بألبوماتها':''}${removed?'، وتنظيف '+removed+' ألبوم آلي':''}.`);renderNoAnim(true);
+  if(reindexMode)await persistReindexPool();let linked=0;for(const p of photos.values()){if(!isPhotoRecord(p)||!p.album)continue;const has=state.memories.some(m=>(m.photoIds||[]).includes(p.id));if(!has){ensurePhotoMemory(p,source);linked++}}const removed=cleanupEmptyAutoAlbums();await save();await persistScanProgress({status:'done',sourceId:source.id,libraryName:sourceLabel(source),lastRelPath:scanCheckpoint.lastCompletedRelPath||'',lastCompletedRelPath:scanCheckpoint.lastCompletedRelPath||'',processed:count,count,added,updated,moved,excluded,skipped,skippedFiles,linked,removed,startedAt,finishedAt:Date.now()});toast(`تم فحص «${sourceLabel(source)}»: ${count} صورة، ${added} جديدة، ${updated} محدثة${moved?'، '+moved+' أصول إضافية رُبطت':''}${linked?'، وربط '+linked+' صور بألبوماتها':''}${removed?'، وتنظيف '+removed+' ألبوم آلي':''}${skipped?'، وتخطي '+skipped+' ملف متعذر':''}.`);renderNoAnim(true);
  }catch(e){
-  if(e?.name==='ScanStopped'){await persistScanProgress({status:'paused',sourceId:source.id,libraryName:sourceLabel(source),lastRelPath:scanCheckpoint?.lastCompletedRelPath||'',lastCompletedRelPath:scanCheckpoint?.lastCompletedRelPath||'',processed:count,count,added,updated,moved,excluded,startedAt});await save();if(reindexMode)await persistReindexPool();toast(`تم إيقاف فحص «${sourceLabel(source)}» بأمان عند: ${scanCheckpoint?.lastCompletedRelPath||'بداية الفحص'}. لم تضِع النتائج.`);renderNoAnim(true)}
-  else{console.error(e);await save();if(reindexMode)await persistReindexPool();await persistScanProgress({status:'paused',sourceId:source.id,libraryName:sourceLabel(source),lastRelPath:scanCheckpoint?.lastCompletedRelPath||'',lastCompletedRelPath:scanCheckpoint?.lastCompletedRelPath||'',processed:count,count,added,updated,moved,excluded,startedAt,error:String(e?.message||e)});toast(`توقف فحص «${sourceLabel(source)}» عند: ${scanCheckpoint?.lastCompletedRelPath||'بداية الفحص'}. يمكنك استكماله لاحقًا.`)}
- }finally{scanStopRequested=false;scanLock=false}
+  if(e?.name==='ScanStopped'){await persistScanProgress({status:'paused',sourceId:source.id,libraryName:sourceLabel(source),lastRelPath:scanCheckpoint?.lastCompletedRelPath||'',lastCompletedRelPath:scanCheckpoint?.lastCompletedRelPath||'',processed:count,count,added,updated,moved,excluded,skipped,skippedFiles,startedAt});await save();if(reindexMode)await persistReindexPool();toast(`تم إيقاف فحص «${sourceLabel(source)}» بأمان عند: ${scanCheckpoint?.lastCompletedRelPath||'بداية الفحص'}. لم تضِع النتائج.`);renderNoAnim(true)}
+  else if(e?.name==='ScanCancelled'){await save();if(reindexMode)await persistReindexPool();await clearScanProgress(source.id);scanCheckpoint={status:'cancelled',sourceId:source.id,libraryName:sourceLabel(source),processed:count,count,added,updated,moved,excluded,skipped,skippedFiles,finishedAt:Date.now()};renderNoAnim(true);toast(`تم إلغاء فحص «${sourceLabel(source)}» فعليًا. احتفظ OsRa بـ ${count} صورة تم فحصها${skipped?` وتخطى ${skipped} ملف متعذر`:''}، ولم يترك نقطة استكمال عالقة.`)}else{console.error(e);await save();if(reindexMode)await persistReindexPool();await persistScanProgress({status:'paused',sourceId:source.id,libraryName:sourceLabel(source),lastRelPath:scanCheckpoint?.lastCompletedRelPath||'',lastCompletedRelPath:scanCheckpoint?.lastCompletedRelPath||'',processed:count,count,added,updated,moved,excluded,skipped,skippedFiles,startedAt,error:String(e?.message||e)});toast(`توقف فحص «${sourceLabel(source)}» عند: ${scanCheckpoint?.lastCompletedRelPath||'بداية الفحص'}. يمكنك استكماله لاحقًا.`)}
+ }finally{scanStopRequested=false;scanCancelRequested=false;scanInterruptWaiters.clear();scanLock=false}
 }
 async function openPhoto(pid){const p=photos.get(pid);if(!isPhotoRecord(p))return;const hit=await getBestPhotoFile(p,true);if(!hit){toast('الأصل غير متاح حاليًا، ومصدر HQ غير مرتبط بهذه الصورة.');return}const m=state.memories.find(x=>x.photoIds?.includes(pid));lb.ids=m?photoFor(m).map(x=>x.id):[pid];lb.i=Math.max(0,lb.ids.indexOf(pid));lb.slideIds=null;stopSlideshow();resetLbZoom();romanticHeartTransition('open');$('#lightbox').showModal();await showPhoto()}
 function cleanupLbFlip(){const el=$('#lbFlip');if(el){el.classList.remove('play-next','play-prev');el.hidden=true}for(const u of lb.flipUrls.splice(0)){try{URL.revokeObjectURL(u)}catch{}}lb.flipBusy=false;if(lb.flipTimer){clearTimeout(lb.flipTimer);lb.flipTimer=null}}
@@ -1330,6 +1508,23 @@ function dreamForm(d){modal(`<h2>${d?'تعديل الحلم':'حلم جديد'}<
 function verseForm(){modal(`<h2>آية مفضلة</h2>${field('vRef','المرجع','','text')}<div class="field"><label>نص الآية</label><textarea id="vText"></textarea></div><button class="btn primary" data-action="saveVerse">حفظ</button>`)}
 function prayerForm(p=null){modal(`<h2>${p?'تعديل':'إضافة'} صلاة / أمنية</h2>${field('pTitle','العنوان',p?.title||'','text')}<div class="field"><label>التفاصيل</label><textarea id="pText">${esc(p?.text||'')}</textarea></div><div class="actions"><button class="btn primary" data-action="savePrayer" data-id="${p?.id||''}">حفظ</button><button class="btn" data-action="closeModal">إلغاء</button></div>`)}
 function editPrayer(i){const p=state.prayers.find(x=>x.id===i);if(p)prayerForm(p)}
+async function saveVerse(){
+ const ref=$('#vRef')?.value.trim()||'';
+ const textValue=$('#vText')?.value.trim()||'';
+ if(!textValue){toast('اكتب نص الآية أولًا.');return}
+ state.verses.unshift({id:id('verse'),ref,text:textValue,favorite:false,addedAt:Date.now()});
+ await save();closeModal();toast('تم حفظ الآية.');renderNoAnim();
+}
+async function savePrayer(i){
+ const existing=i?state.prayers.find(x=>x.id===i):null;
+ const title=$('#pTitle')?.value.trim()||'صلاة / أمنية';
+ const textValue=$('#pText')?.value.trim()||'';
+ if(!textValue){toast('اكتب تفاصيل الصلاة أو الأمنية.');return}
+ const p=existing||{id:id('prayer'),done:false,addedAt:Date.now()};
+ p.title=title;p.text=textValue;p.done=!!p.done;
+ if(!existing)state.prayers.unshift(p);
+ await save();closeModal();toast(existing?'تم تحديث الصلاة / الأمنية.':'تم حفظ الصلاة / الأمنية.');renderNoAnim();
+}
 async function deletePrayer(i){const p=state.prayers.find(x=>x.id===i);if(!p)return;if(!confirm(`حذف «${p.title||'هذه الأمنية'}»؟`))return;state.prayers=state.prayers.filter(x=>x.id!==i);await save();toast('تم حذف الصلاة / الأمنية.');renderNoAnim()}
 function msgForm(m=null){modal(`<h2>${m?'تعديل الرسالة':'رسالة مميزة ⭐'}</h2>${field('msgDate','التاريخ',m?.date||today(),'date')}${field('msgSender','من',m?.sender||'رانيا','text')}<div class="field"><label>نص الرسالة</label><textarea id="msgText">${esc(m?.text||'')}</textarea></div><button class="btn primary" data-action="saveMessage" data-id="${m?.id||''}">حفظ</button>`)}
 async function saveMessage(i){
@@ -1340,7 +1535,7 @@ async function saveMessage(i){
 }
 function surpriseMessagePool(){
  const custom=Array.isArray(state.settings.customSurpriseMessages)?state.settings.customSurpriseMessages:[];
- return [...ROMANTIC_TICKER_MESSAGES,...ROMANTIC_EXTRA_MESSAGES,...APP_FLIRT_MESSAGES,...custom]
+ return [...ROMANTIC_TICKER_MESSAGES,...ROMANTIC_EXTRA_MESSAGES,...ROMANTIC_KISS_MESSAGES,...custom]
    .map(x=>String(x||'').trim()).filter(Boolean);
 }
 function surpriseMessageForm(existingIndex=-1){
@@ -1360,10 +1555,7 @@ async function deleteSurpriseMessage(i){
  const n=Number(i);if(!Number.isInteger(n)||n<0||n>=state.settings.customSurpriseMessages.length)return;
  state.settings.customSurpriseMessages.splice(n,1);await save();toast('تم حذف الرسالة من المفاجآت العشوائية.');renderNoAnim();
 }
-function shuffleArray(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
-function nextSurpriseMessage(){const pool=surpriseMessagePool();const sig=pool.join('\u001f');if(!pool.length)return ROMANTIC_TICKER_MESSAGES[0];if(sig!==romanticMessageDeckSignature||!romanticMessageDeck.length){romanticMessageDeck=shuffleArray([...pool]);romanticMessageDeckSignature=sig;if(romanticMessageDeck.length>1&&romanticMessageDeck[romanticMessageDeck.length-1]===lastRomanticSceneMessage)[romanticMessageDeck.unshift(romanticMessageDeck.pop())]}
- const message=romanticMessageDeck.pop()||pool[Math.floor(Math.random()*pool.length)];lastRomanticSceneMessage=message;return message}
-function randomSurpriseMessage(){return nextSurpriseMessage()}
+function randomSurpriseMessage(){const pool=surpriseMessagePool();let message=pool[Math.floor(Math.random()*pool.length)]||ROMANTIC_TICKER_MESSAGES[0];let guard=0;while(pool.length>1&&message===lastRomanticSceneMessage&&guard++<12)message=pool[Math.floor(Math.random()*pool.length)];return message}
 function eventForm(){modal(`<h2>محطة في قصتنا</h2>${field('eTitle','العنوان','','text')}${field('eDate','التاريخ',today(),'date')}<div class="field"><label>ماذا حدث؟</label><textarea id="eDesc"></textarea></div><button class="btn primary" data-action="saveEvent">حفظ</button>`)}
 async function saveEvent(){const title=$('#eTitle')?.value.trim(),date=$('#eDate')?.value,description=$('#eDesc')?.value.trim()||'';if(!title||!date){toast('اكتب عنوان المحطة والتاريخ.');return}state.events.unshift({id:id('evt'),title,date,description});await save();closeModal();toast('تم حفظ المحطة.');renderNoAnim()}
 async function saveMemory(i){const m=state.memories.find(x=>x.id===i);if(!m)return;const start=$('#mDate').value,end=$('#mEndDate').value||start;if(start&&end&&end<start){toast('تاريخ النهاية لا يمكن أن يكون قبل البداية.');return}m.title=$('#mTitle').value.trim()||'ذكرى بدون اسم';m.date=start;m.endDate=start?end:'';m.place=$('#mPlace').value.trim();m.description=$('#mDesc').value.trim();const nextSource=$('#mLinkSource')?.value||'',oldSource=m.linkSourceId||'';if(nextSource){const links=normalizeAlbumLinkFolders(m),same=links.find(x=>String(x.sourceId)===String(nextSource));if(same){m.linkSourceId=same.sourceId;m.linkFolderPath=same.folderPath}else{m.linkSourceId=String(nextSource);m.linkFolderPath='';m.linkFolders=links}}else if(oldSource&&normalizeAlbumLinkFolders(m).length===0){m.linkSourceId='';m.linkFolderPath=''}m.userEdited=true;normalizeState();await save();closeModal();toast('تم حفظ الذكرى.');if(section==='memories'||section==='home'||section==='calendar')renderNoAnim()}
@@ -1398,11 +1590,18 @@ function photoAlbumTitles(photoId){
  }
  return [...seen];
 }
+function quickLinkMissingPhoto(photoId){
+ const candidates=visibleMemories().filter(m=>(m.photoIds||[]).some(pid=>String(pid)===String(photoId))&&isPhotoRecord(photos.get(photoId))&&!hasOriginalLink(photos.get(photoId)));
+ if(!candidates.length){toast('هذه الصورة لم تعد ضمن الصور الناقصة. حدّث التقرير.');refreshLinkReportAfterManual();if(lastLinkReport)linkReportModal(lastLinkReport);return}
+ if(candidates.length===1){openQuickLinkSourceChooser(candidates[0].id,photoId,'report');return}
+ modal(`<h2>⚡ اختر الألبوم الثابت للصورة</h2><p class="meta">الصورة لها أكثر من ألبوم. اختر الألبوم المستهدف أولًا؛ ستظل الوجهة ثابتة أثناء تجربة المصادر.</p><div class="quick-source-list">${candidates.map(m=>`<div class="quick-source-option"><b>${esc(m.title||m.album||'ألبوم')}</b><button class="btn small primary" data-action="quickLinkMissingPhotoAlbum" data-id="${esc(m.id)}" data-photo-id="${esc(photoId)}">اختيار هذا الألبوم</button></div>`).join('')}</div><div class="actions"><button class="btn" data-action="closeModal">إلغاء</button></div>`)
+}
+function quickVisualMissingPhoto(photoId){const candidates=visibleMemories().filter(m=>(m.photoIds||[]).some(pid=>String(pid)===String(photoId))&&isPhotoRecord(photos.get(photoId))&&!hasOriginalLink(photos.get(photoId)));if(!candidates.length){toast('هذه الصورة لم تعد ضمن الصور الناقصة.');return}const m=candidates[0];openVisualFallbackForAlbum(m.id,'report',photoId)}
 function linkReportModal(report){
  const total=Number(report?.totalPhotos||0),linked=Number(report?.linkedPhotos||0),missing=Number(report?.missing?.length||0),shown=Math.min(missing,300),pct=total?Math.round(linked*100/total):0;
- const shownRows=(report?.missing||[]).slice(0,shown).map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.name||'—')}</td><td>${esc(x.source||'—')}</td><td>${esc((x.albums||[]).join('، ')||'—')}</td><td dir="ltr" style="text-align:left;word-break:break-all">${esc(x.relPath||'—')}</td></tr>`).join('');
+ const shownRows=(report?.missing||[]).slice(0,shown).map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.name||'—')}</td><td>${esc(x.source||'—')}</td><td>${esc((x.albums||[]).join('، ')||'—')}</td><td dir="ltr" style="text-align:left;word-break:break-all">${esc(x.relPath||'—')}</td><td><button class="btn small primary" data-action="quickLinkMissingPhoto" data-id="${esc(x.id)}">⚡ ربط سريع</button><button class="btn small" data-action="quickVisualMissingPhoto" data-id="${esc(x.id)}">🔍 بصري</button></td></tr>`).join('');
  const sourceRows=(report?.sourceSummaries||[]).map(x=>`<tr><td>${esc(x.name||'مصدر')}</td><td>${x.filesScanned||0}</td><td>${x.targets||0}</td><td>${x.linked||0}</td><td>${x.alreadyLinked||0}</td><td>${x.failed||0}</td></tr>`).join('');
- modal(`<h2>♥ تقرير ربط الأصول</h2><div class="card"><b>النتيجة النهائية</b><p>تم ربط أصل حقيقي لـ <b>${linked}</b> من <b>${total}</b> صورة (${pct}%).</p><p>${missing?`لم يُعثر على الأصل لـ <b>${missing}</b> صورة.`:'✅ تم العثور على الأصل لكل الصور.'}</p>${(report?.sourceErrors||[]).length?`<p>⚠️ تعذر الوصول إلى <b>${report.sourceErrors.length}</b> مصدر، وتم تخطيه ومواصلة بقية المصادر.</p>`:''}<p class="meta">لا تُنشأ صور أو ألبومات ولا تُنسخ الصور أثناء الربط.</p></div>${sourceRows?`<div class="card" style="overflow:auto"><h3>📁 ملخص المصادر</h3><table class="data-table"><thead><tr><th>المصدر</th><th>صور فُحصت</th><th>صور مطلوبة</th><th>ربط جديد</th><th>أصل موجود مسبقًا</th><th>تعذر</th></tr></thead><tbody>${sourceRows}</tbody></table></div>`:''}${missing?`<div class="card" style="overflow:auto;max-height:58vh"><h3>الصور غير المرتبطة</h3>${missing>shown?`<p class="meta">يعرض الجدول أول ${shown} فقط من ${missing}. التقرير الكامل محفوظ داخل OsRa.</p>`:''}<table class="data-table"><thead><tr><th>#</th><th>الصورة</th><th>المصدر/المحاولة</th><th>الألبوم</th><th>المسار</th></tr></thead><tbody>${shownRows}</tbody></table></div>`:''}<div class="actions"><button class="btn primary" data-action="closeModal">تم</button></div>`);
+ modal(`<h2>♥ تقرير ربط الأصول</h2><div class="card"><b>النتيجة النهائية</b><p>تم ربط أصل حقيقي لـ <b>${linked}</b> من <b>${total}</b> صورة (${pct}%).</p><p>${missing?`لم يُعثر على الأصل لـ <b>${missing}</b> صورة.`:'✅ تم العثور على الأصل لكل الصور.'}</p>${(report?.sourceErrors||[]).length?`<p>⚠️ تعذر الوصول إلى <b>${report.sourceErrors.length}</b> مصدر، وتم تخطيه ومواصلة بقية المصادر.</p>`:''}<p class="meta">لا تُنشأ صور أو ألبومات ولا تُنسخ الصور أثناء الربط.</p></div>${sourceRows?`<div class="card" style="overflow:auto"><h3>📁 ملخص المصادر</h3><table class="data-table"><thead><tr><th>المصدر</th><th>صور فُحصت</th><th>صور مطلوبة</th><th>ربط جديد</th><th>أصل موجود مسبقًا</th><th>تعذر</th></tr></thead><tbody>${sourceRows}</tbody></table></div>`:''}${missing?`<div class="card" style="overflow:auto;max-height:58vh"><h3>الصور غير المرتبطة</h3>${missing>shown?`<p class="meta">يعرض الجدول أول ${shown} فقط من ${missing}. التقرير الكامل محفوظ داخل OsRa.</p>`:''}<table class="data-table"><thead><tr><th>#</th><th>الصورة</th><th>المصدر/المحاولة</th><th>الألبوم</th><th>المسار</th><th>إجراء</th></tr></thead><tbody>${shownRows}</tbody></table></div>`:''}<div class="actions"><button class="btn primary" data-action="closeModal">تم</button></div>`);
 }
 function albumReviewModal(review){
  albumReviewState=review||null;const groups=review?.groups||[];const albums=visibleMemories();
@@ -1539,6 +1738,7 @@ async function buildRecursiveNameIndex(dir,pathBase,wanted,onProgress){
  const wantedNames=new Set(),wantedStems=new Set(),byName=new Map(),byStem=new Map();for(const t of wanted){const n=normalizeFileName(t.photo?.name),s=normalizeFileStem(t.photo?.name);if(n)wantedNames.add(n);if(s)wantedStems.add(s)}let filesSeen=0;
  async function walk(cur,base=''){
   for await(const [name,entry] of cur.entries()){
+   if(manualLinkSession?.running&&manualLinkSession.cancelled)throw Object.assign(new Error('MANUAL_LINK_CANCELLED'),{name:'ManualLinkCancelled'});
    const rel=base?base+'/'+name:name;
    if(entry.kind==='directory'){await walk(entry,rel);continue}
    if(!isImage(name))continue;filesSeen++;const nk=normalizeFileName(name),sk=normalizeFileStem(name);if(!wantedNames.has(nk)&&!wantedStems.has(sk))continue;const row={entry,relPath:pathBase?`${pathBase}/${rel}`:rel,name:String(name)};
@@ -1549,6 +1749,7 @@ async function buildRecursiveNameIndex(dir,pathBase,wanted,onProgress){
  await walk(dir,'');return {byName,byStem,filesSeen};
 }
 function folderCandidate(target,index){const p=target?.photo;if(!p)return null;const exact=index.byName.get(normalizeFileName(p.name));if(exact)return exact;return index.byStem.get(normalizeFileStem(p.name))||null}
+async function verifyExactPhotoCandidate(photo,file){if(!photo||!isImageFile(file))return {matched:false};try{const [key,fp]=await Promise.all([contentKey(file),fingerprint(file)]);let matched=false;if(photo.contentKey||photo.fingerprint)matched=!!((photo.contentKey&&key===photo.contentKey)||(photo.fingerprint&&fp===photo.fingerprint));else matched=!!(Number(photo.size)>0&&Number(photo.size)===Number(file.size)&&Number(photo.lastModified)>0&&Number(photo.lastModified)===Number(file.lastModified));return {matched,key,fingerprint:fp}}catch{return {matched:false}}}
 async function resolveDirectory(root,relPath){let dir=root;for(const part of normalizeFolderRelPath(relPath).split('/').filter(Boolean))dir=await dir.getDirectoryHandle(part,{create:false});return dir}
 function targetRelVariants(target){const p=target?.photo,out=[],seen=new Set();const add=v=>{v=String(v||'').replace(/^\/+/, '');if(v&&!seen.has(v)){seen.add(v);out.push(v)}};for(const l of photoLocations(p))add(l.relPath);add(p?.relPath);add(p?.name);return out}
 async function trySavedPathMatch(target,source){for(const rel of targetRelVariants(target)){try{await resolve(source.handle,rel);return {relPath:normalizeFolderRelPath(rel)}}catch{}}return null}
@@ -1664,6 +1865,40 @@ async function linkAllSources(skipMatch=false){
  finally{if(linkWakeLockVisibilityHandler){document.removeEventListener('visibilitychange',linkWakeLockVisibilityHandler);linkWakeLockVisibilityHandler=null}try{await linkWakeLock?.release?.()}catch{}linkWakeLock=null;scanLock=false;busy=false;linkRunStartedAt=0;setTimeout(removeLinkLiveBar,700)}
 }
 
+async function commitMemoryOrder(){
+ const visible=visibleMemories();
+ const selectedIds=[...selectedMemories].map(String);
+ const selected=selectedIds.map(idv=>visible.find(m=>String(m.id)===idv)).filter(Boolean);
+ if(!selected.length){toast('حدد ألبومًا واحدًا على الأقل لتثبيت الترتيب.');return}
+ const selectedSet=new Set(selected.map(m=>m.id));
+ const current=visible.slice().sort((a,b)=>(a.order??0)-(b.order??0));
+ const arranged=[...selected,...current.filter(m=>!selectedSet.has(m.id))];
+ arranged.forEach((m,i)=>m.order=i);
+ state.settings.albumOrderMode='manual';
+ albumBookIndex=Math.max(0,Math.min(albumBookIndex,Math.max(0,arranged.length-1)));
+ await save();selectedMemories.clear();renderNoAnim();toast(`تم تثبيت ترتيب ${selected.length} ألبوم حسب أرقام التحديد.`);
+}
+async function orderManual(){
+ const ms=visibleMemories().slice().sort((a,b)=>(a.order??0)-(b.order??0));
+ ms.forEach((m,i)=>m.order=i);
+ state.settings.albumOrderMode='manual';albumBookIndex=0;
+ await save();renderNoAnim();toast('تم تفعيل الترتيب اليدوي.');
+}
+async function orderDetails(){
+ const ms=visibleMemories().slice().sort((a,b)=>detailScore(b)-detailScore(a));
+ ms.forEach((m,i)=>m.order=i);
+ state.settings.albumOrderMode='details';albumBookIndex=0;
+ await save();renderNoAnim();toast('تم ترتيب الألبومات حسب التفاصيل.');
+}
+async function moveMemory(i,dir){
+ const ms=visibleMemories().slice().sort((a,b)=>(a.order??0)-(b.order??0));
+ const at=ms.findIndex(m=>String(m.id)===String(i));if(at<0)return;
+ const to=at+(Number(dir)||0);if(to<0||to>=ms.length)return;
+ [ms[at].order,ms[to].order]=[ms[to].order,ms[at].order];
+ ms.forEach((m,idx)=>{if(m.order==null)m.order=idx});
+ state.settings.albumOrderMode='manual';albumBookIndex=Math.max(0,Math.min(to,Math.max(0,ms.length-1)));
+ await save();renderNoAnim();
+}
 async function orderLinked(){const ms=[...visibleMemories()].sort((a,b)=>originalCoverage(b)-originalCoverage(a));ms.forEach((m,i)=>m.order=i);state.settings.albumOrderMode='linked';albumBookIndex=0;await save();renderNoAnim();toast('تم ترتيب الألبومات حسب نسبة الأصول الأصلية المكتشفة.')}
 function hasUserWrittenContent(m){return !!(m?.date||m?.endDate||m?.place||m?.description||m?.userEdited||(m?.title&&m?.album&&m.title!==m.album))}
 function cleanupEmptyAutoAlbums(){const before=state.memories.length;state.memories=state.memories.filter(m=>{const hasPhoto=(m.photoIds||[]).some(pid=>isPhotoRecord(photos.get(pid))); if(m.autoAlbum===true&&!hasPhoto&&!hasUserWrittenContent(m))return false;return true});return before-state.memories.length}
@@ -1775,7 +2010,7 @@ document.addEventListener('pointercancel',e=>{if(e.pointerId!==dragPointerId)ret
 document.addEventListener('change',e=>{const t=e.target;if(t?.matches?.('.hq-album-select')){const r=document.querySelector('input[name="hqScope"][value="selected"]');if(r)r.checked=true}});
 document.addEventListener('click',async e=>{if(dragSelectMode&&quickTapHandledUntil>Date.now()&&e.target.closest('.photo-item')&&!e.target.closest('.photo-check')){e.preventDefault();e.stopPropagation();return}const b=e.target.closest('[data-action]');if(!b)return;const a=b.dataset.action,i=b.dataset.id;try{
  if(a==='searchResult'){const type=b.dataset.type,rid=b.dataset.id,q=b.dataset.query||searchState.query||'';closeModal();searchState={query:q,messageId:type==='message'?rid:'',fromSection:'home'};if(type==='memory'){searchState.messageId='';section='memories';renderNoAnim();setTimeout(()=>{const mm=state.memories.find(x=>x.id===rid);if(mm){currentMemoryId=mm.id;$('#currentPage').innerHTML=pageMemory(mm);hydrate()}},20)}else if(type==='message'){section='messages';renderNoAnim();setTimeout(()=>{const el=document.getElementById('message-card-'+rid);if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.remove('search-focus-pulse');void el.offsetWidth;el.classList.add('search-focus-pulse')}},40)}else go(type==='dream'?'dreams':'spiritual');return}
- if(a==='go')go(b.dataset.section);else if(a==='addSurpriseMessage')surpriseMessageForm();else if(a==='editSurpriseMessage')surpriseMessageForm(Number(i));else if(a==='saveSurpriseMessage')await saveSurpriseMessage(i);else if(a==='deleteSurpriseMessage')await deleteSurpriseMessage(i);else if(a==='folder')await chooseFolder();else if(a==='pickAlbumLinkSource')await pickAlbumLinkSource(i);else if(a==='chooseManualLinkSource')await pickAlbumLinkSource(i);else if(a==='retryManualLink')await pickAlbumLinkSource(i);else if(a==='cancelManualLink'){if(manualLinkSession)manualLinkSession.cancelled=true;closeModal();toast('تم إلغاء فحص المصدر دون حفظه.')}else if(a==='finishManualSources')await finishManualSources();else if(a==='albumLinkFinalReport')showAlbumLinkFinalReport(i);else if(a==='startVisualFallback'){if(visualLinkSession?.albumId===i)await openVisualFallbackChooser();else await openVisualFallbackForAlbum(i,b.dataset.exhausted==='1'?'manual-exhausted':'album')}else if(a==='visualAddRoot')await visualAddRoot();else if(a==='visualCancelRoot')visualCancelRoot(i);else if(a==='visualRun')await runVisualFallback();else if(a==='applyVisualLinks')await applyVisualLinks();else if(a==='visualCancel')visualCancelFallback();else if(a==='activateSource'){const x=sources.find(x=>x.id===b.dataset.id);if(x){await setActiveSource(x);renderNoAnim();toast(`تم تحديد «${sourceLabel(x)}».`)}}else if(a==='scanSource'){const x=sources.find(x=>x.id===b.dataset.id);if(x){await setActiveSource(x);await scan(x.handle,false,{source:x})}}else if(a==='resumeSource'){const x=sources.find(x=>x.id===b.dataset.id);if(x){await setActiveSource(x);await scan(x.handle,false,{source:x,resume:true})}}else if(a==='grantSourcePermission'){const x=sources.find(x=>x.id===b.dataset.id);if(x){permissionDeniedCache.delete(x.id);const ok=await ensureSourcePermission(x,true);toast(ok?'تم منح إذن هذا المجلد.':'لم يتم منح الإذن.')}}else if(a==='grantPermission'){const ok=await permission();toast(ok?'تم منح إذن قراءة المجلد المحدد.':'لم يتم منح الإذن.');await diagnostic()}else if(a==='mergeFolder')await addPendingFolder('merge');else if(a==='separateFolder')await addPendingFolder('separate');else if(a==='cancelFolderChoice'){pendingFolderRoot=null;pendingFolderMatch=null;pendingFolderName='';closeModal()}else if(a==='birthdayRania'){if(isBirthdayRaniaToday())birthdayRaniaGreeting();else toast('رسالة عيد الميلاد تظهر في يوم عيد ميلاد رانيا فقط.')}else if(a==='countdown')countdownForm();else if(a==='editCountdown')editCountdown(i);else if(a==='saveCountdown')await saveCountdown(i);else if(a==='deleteCountdown')await deleteCountdown(i);else if(a==='toggleCountdownCelebrate')await toggleCountdownCelebrate(i);else if(a==='scan')await scan();else if(a==='linkAllSources')await linkAllSources();else if(a==='matchAlbumsByName')await matchAlbumsByName(true,true);else if(a==='confirmAlbumReviews')await confirmAlbumReviews();else if(a==='hideScanProgressCard'){state.settings.hideScanProgressCard=true;await save();renderNoAnim();toast('تم إخفاء قائمة استمرار الفحص دون حذف التقدم المحفوظ.')}else if(a==='showScanProgressCard'){state.settings.hideScanProgressCard=false;await save();renderNoAnim();toast('تم إظهار قائمة متابعة الفحص.')}else if(a==='linkReport'){if(lastLinkReport)linkReportModal(lastLinkReport);else toast('لا يوجد تقرير ربط محفوظ بعد.');}else if(a==='stopScan')await stopScan();else if(a==='resumeScan')await scan(libraryHandle,false,{resume:true,source:activeSource()});else if(a==='scanFresh')await scan(libraryHandle,false,{fresh:true,source:activeSource()});else if(a==='albumPrev'){turnAlbumPage(-1)}else if(a==='albumNext'){turnAlbumPage(1)}else if(a==='toggleAlbumMiniView'){toggleAlbumMiniView()}else if(a==='search'){pageMemories.q=$('#searchMem').value;albumBookIndex=0;renderNoAnim()}else if(a==='addMemory')addMemory();else if(a==='newAlbum')newAlbum();else if(a==='saveAlbum')await saveAlbum();else if(a==='memory'){const m=state.memories.find(x=>x.id===i);if(m){currentMemoryId=m.id;section='memories';romanticHeartTransition('open');$('#currentPage').innerHTML=pageMemory(m);hydrate();setNav()}}else if(a==='shareMemory')await shareMemory(i);else if(a==='hideMemory')await hideMemory(i);else if(a==='unhideMemory')await unhideMemory(i);else if(a==='hiddenMemories')hiddenMemories();else if(a==='dailyAlbums')dailyAlbumsManager();else if(a==='dailySelectAll')dailySelectAll();else if(a==='dailyClearAll')dailyClearAll();else if(a==='saveDailyAlbums')await saveDailyAlbums();else if(a==='selectAllMemories')selectAllMemories();else if(a==='clearMemorySelection')clearMemorySelection();else if(a==='commitMemoryOrder')await commitMemoryOrder();else if(a==='orderManual')await orderManual();else if(a==='orderDetails')await orderDetails();else if(a==='orderLinked')await orderLinked();else if(a==='moveMemoryUp')await moveMemory(i,-1);else if(a==='moveMemoryDown')await moveMemory(i,1);else if(a==='hideSelectedMemories')await hideSelectedMemories();else if(a==='mergeSelectedMemories')await mergeSelectedMemories();else if(a==='backMemories'){currentMemoryId=null;selectedPhotos.clear();dragSelectMode=false;dragSelecting=false;clearDragAutoScroll();clearDragLongPress();dragVisited.clear();romanticHeartTransition('close');renderNoAnim()}else if(a==='editMemory')editMemory(i);else if(a==='saveMemory')await saveMemory(i);else if(a==='photo')await openPhoto(i);else if(a==='selectAllPhotos')selectAllPhotos();else if(a==='toggleDragSelect')toggleDragSelect();else if(a==='commitPhotoOrder')await commitPhotoOrder();else if(a==='clearPhotoSelection')clearPhotoSelection();else if(a==='removeFromAlbum')await removeFromAlbum();else if(a==='moveSelected')moveSelected();else if(a==='moveToAlbum')await moveToAlbum(i);else if(a==='createAlbumAndMove')createAlbumAndMove();else if(a==='saveAlbumMove')await saveAlbumMove(b.dataset.from,JSON.parse(b.dataset.ids||'[]'));else if(a==='excludeSelected')await excludeSelected();else if(a==='movePhotoUp')await reorderPhoto(i,-1);else if(a==='movePhotoDown')await reorderPhoto(i,1);else if(a==='restoreExcluded')await restoreExcluded();else if(a==='calendarDay'){calendarDate=b.dataset.date;calendarCursor=new Date(calendarDate+'T00:00:00');calendarCursor.setDate(1);renderNoAnim()}else if(a==='calendarPrev'){calendarCursor=new Date(calendarCursor.getFullYear(),calendarCursor.getMonth()-1,1);renderNoAnim()}else if(a==='calendarNext'){calendarCursor=new Date(calendarCursor.getFullYear(),calendarCursor.getMonth()+1,1);renderNoAnim()}else if(a==='dream')dreamForm();else if(a==='editDream')dreamForm(state.dreams.find(x=>x.id===i));else if(a==='saveDream')await saveDream(i);else if(a==='verse')verseForm();else if(a==='saveVerse')await saveVerse();else if(a==='favVerse'){const x=state.verses.find(v=>v.id===i);if(x){x.favorite=!x.favorite;await save();renderNoAnim()}}else if(a==='delVerse'){state.verses=state.verses.filter(v=>v.id!==i);await save();renderNoAnim()}else if(a==='prayer')prayerForm();else if(a==='editPrayer')editPrayer(i);else if(a==='deletePrayer')await deletePrayer(i);else if(a==='savePrayer')await savePrayer(i);else if(a==='togglePrayer'){const x=state.prayers.find(v=>v.id===i);if(x){x.done=!x.done;await save();renderNoAnim()}}else if(a==='message')msgForm();else if(a==='editMessage'){const mm=state.messages.find(v=>v.id===i);if(mm)msgForm(mm)}else if(a==='saveMessage')await saveMessage(i);else if(a==='messagesSortDesc'){state.settings.messagesOrder='desc';await save();renderNoAnim()}else if(a==='messagesSortAsc'){state.settings.messagesOrder='asc';await save();renderNoAnim()}else if(a==='toggleMessage'){const x=state.messages.find(v=>v.id===i);if(x){x.starred=!x.starred;await save();renderNoAnim()}}else if(a==='delMessage'){state.messages=state.messages.filter(v=>v.id!==i);await save();renderNoAnim()}else if(a==='event')eventForm();else if(a==='saveEvent')await saveEvent();else if(a==='settingsSave')await saveSettings();else if(a==='chooseBackup')await chooseBackup();else if(a==='backup')await backup();else if(a==='buildHQSource'){hqSelectionModal(false)}else if(a==='hqZip'){hqBackupZip()}else if(a==='hqStartBuild'){await startHQBuildFromModal()}else if(a==='hqSelectAllAlbums'){document.querySelectorAll('.hq-album-select').forEach(x=>x.checked=true);const r=document.querySelector('input[name="hqScope"][value="selected"]');if(r)r.checked=true}else if(a==='hqClearAlbums'){document.querySelectorAll('.hq-album-select').forEach(x=>x.checked=false);const r=document.querySelector('input[name="hqScope"][value="selected"]');if(r)r.checked=true}else if(a==='resumeHQBuild'){await resumeHQBuild()}else if(a==='retryHQSkipped'){await retryHQSkipped()}else if(a==='stopHQBuild'){await stopHQBuild()}else if(a==='discardHQBuild'){await discardHQBuild()}else if(a==='linkHQSource'){await linkHQSource()}else if(a==='clearHQSource'){clearHQSource()}else if(a==='closeHQProgress'){closeHQProgress()}else if(a==='restore')restore();else if(a==='restoreMerge')restoreMerge();else if(a==='restoreLocalRecovery')await restoreLocalRecovery();else if(a==='hideRecoveryNotice'){recoveryNoticeHidden=true;recoveryCandidate=null;await put('library',{key:'recoveryNoticeHidden',value:true});renderNoAnim();toast('تم إخفاء تنبيه نسخة الأمان. يمكنك الاستعادة يدويًا من الإعدادات.')} else if(a==='restoreSafety')await restoreSafety();else if(a==='diag')await diagnostic();else if(a==='duplicateManager')duplicateManager();else if(a==='visualRecoveryChooser')visualRecoveryChooser();else if(a==='cancelDuplicateScan')cancelDuplicateScan();else if(a==='chooseDuplicateKeeper')duplicateChoiceModal(Number(b.dataset.group),b.dataset.keeper);else if(a==='applyDuplicateChoice')await applyDuplicateChoice();else if(a==='mergeDuplicate')await mergeDuplicate(b.dataset.id,b.dataset.keeper);else if(a==='closeModal')closeModal();
+ if(a==='go')go(b.dataset.section);else if(a==='addSurpriseMessage')surpriseMessageForm();else if(a==='editSurpriseMessage')surpriseMessageForm(Number(i));else if(a==='saveSurpriseMessage')await saveSurpriseMessage(i);else if(a==='deleteSurpriseMessage')await deleteSurpriseMessage(i);else if(a==='folder')await chooseFolder();else if(a==='pickAlbumLinkSource')await pickAlbumLinkSource(i);else if(a==='chooseManualLinkSource')await pickAlbumLinkSource(i);else if(a==='retryManualLink')openQuickLinkSourceChooser(i,b.dataset.photoId||null,b.dataset.origin||'album');else if(a==='quickLinkMissingPhoto')quickLinkMissingPhoto(i);else if(a==='quickLinkMissingPhotoFromAlbum')openQuickLinkSourceChooser(b.dataset.memoryId,i,'album');else if(a==='quickVisualMissingPhoto')quickVisualMissingPhoto(i);else if(a==='quickLinkMissingPhotoAlbum')openQuickLinkSourceChooser(i,b.dataset.photoId||null,'report');else if(a==='quickLinkFromSource')await quickLinkFromSource(i,b.dataset.sourceId,b.dataset.photoId||null,b.dataset.origin||'album');else if(a==='pickNewQuickLinkSource')await manualLinkAlbumFromFolder(i,b.dataset.photoId||null,b.dataset.origin||'album');else if(a==='cancelManualLink'){if(manualLinkSession)manualLinkSession.cancelled=true;closeModal();toast('تم إلغاء فحص المصدر دون حفظه.')}else if(a==='finishManualSources')await finishManualSources();else if(a==='albumLinkFinalReport')showAlbumLinkFinalReport(i);else if(a==='startVisualFallback'){if(visualLinkSession?.albumId===i)await openVisualFallbackChooser();else await openVisualFallbackForAlbum(i,b.dataset.exhausted==='1'?'manual-exhausted':'album')}else if(a==='visualAddRoot')await visualAddRoot();else if(a==='visualCancelRoot')visualCancelRoot(i);else if(a==='visualRun')await runVisualFallback();else if(a==='applyVisualLinks')await applyVisualLinks();else if(a==='visualCancel')visualCancelFallback();else if(a==='activateSource'){const x=sources.find(x=>x.id===b.dataset.id);if(x){await setActiveSource(x);renderNoAnim();toast(`تم تحديد «${sourceLabel(x)}».`)}}else if(a==='scanSource'){const x=sources.find(x=>x.id===b.dataset.id);if(x){await setActiveSource(x);await scan(x.handle,false,{source:x})}}else if(a==='resumeSource'){const x=sources.find(x=>x.id===b.dataset.id);if(x){await setActiveSource(x);await scan(x.handle,false,{source:x,resume:true})}}else if(a==='grantSourcePermission'){const x=sources.find(x=>x.id===b.dataset.id);if(x){permissionDeniedCache.delete(x.id);const ok=await ensureSourcePermission(x,true);toast(ok?'تم منح إذن هذا المجلد.':'لم يتم منح الإذن.')}}else if(a==='grantPermission'){const ok=await permission();toast(ok?'تم منح إذن قراءة المجلد المحدد.':'لم يتم منح الإذن.');await diagnostic()}else if(a==='mergeFolder')await addPendingFolder('merge');else if(a==='separateFolder')await addPendingFolder('separate');else if(a==='cancelFolderChoice'){pendingFolderRoot=null;pendingFolderMatch=null;pendingFolderName='';closeModal()}else if(a==='birthdayRania'){if(isBirthdayRaniaToday())birthdayRaniaGreeting();else toast('رسالة عيد الميلاد تظهر في يوم عيد ميلاد رانيا فقط.')}else if(a==='countdown')countdownForm();else if(a==='editCountdown')editCountdown(i);else if(a==='saveCountdown')await saveCountdown(i);else if(a==='deleteCountdown')await deleteCountdown(i);else if(a==='toggleCountdownCelebrate')await toggleCountdownCelebrate(i);else if(a==='scan')await scan();else if(a==='linkAllSources')await linkAllSources();else if(a==='matchAlbumsByName')await matchAlbumsByName(true,true);else if(a==='confirmAlbumReviews')await confirmAlbumReviews();else if(a==='hideScanProgressCard'){state.settings.hideScanProgressCard=true;await save();renderNoAnim();toast('تم إخفاء قائمة استمرار الفحص دون حذف التقدم المحفوظ.')}else if(a==='showScanProgressCard'){state.settings.hideScanProgressCard=false;await save();renderNoAnim();toast('تم إظهار قائمة متابعة الفحص.')}else if(a==='linkReport'){if(lastLinkReport)linkReportModal(lastLinkReport);else toast('لا يوجد تقرير ربط محفوظ بعد.');}else if(a==='stopScan')await stopScan();else if(a==='cancelScan')await cancelScan();else if(a==='resumeScan')await scan(libraryHandle,false,{resume:true,source:activeSource()});else if(a==='scanFresh')await scan(libraryHandle,false,{fresh:true,source:activeSource()});else if(a==='albumPrev'){turnAlbumPage(-1)}else if(a==='albumNext'){turnAlbumPage(1)}else if(a==='toggleAlbumMiniView'){toggleAlbumMiniView()}else if(a==='search'){pageMemories.q=$('#searchMem').value;albumBookIndex=0;renderNoAnim()}else if(a==='addMemory')addMemory();else if(a==='newAlbum')newAlbum();else if(a==='saveAlbum')await saveAlbum();else if(a==='memory'){const m=state.memories.find(x=>x.id===i);if(m){currentMemoryId=m.id;section='memories';romanticHeartTransition('open');$('#currentPage').innerHTML=pageMemory(m);hydrate();setNav()}}else if(a==='shareMemory')await shareMemory(i);else if(a==='hideMemory')await hideMemory(i);else if(a==='unhideMemory')await unhideMemory(i);else if(a==='hiddenMemories')hiddenMemories();else if(a==='dailyAlbums')dailyAlbumsManager();else if(a==='dailySelectAll')dailySelectAll();else if(a==='dailyClearAll')dailyClearAll();else if(a==='saveDailyAlbums')await saveDailyAlbums();else if(a==='selectAllMemories')selectAllMemories();else if(a==='clearMemorySelection')clearMemorySelection();else if(a==='commitMemoryOrder')await commitMemoryOrder();else if(a==='orderManual')await orderManual();else if(a==='orderDetails')await orderDetails();else if(a==='orderLinked')await orderLinked();else if(a==='moveMemoryUp')await moveMemory(i,-1);else if(a==='moveMemoryDown')await moveMemory(i,1);else if(a==='hideSelectedMemories')await hideSelectedMemories();else if(a==='mergeSelectedMemories')await mergeSelectedMemories();else if(a==='backMemories'){currentMemoryId=null;selectedPhotos.clear();dragSelectMode=false;dragSelecting=false;clearDragAutoScroll();clearDragLongPress();dragVisited.clear();romanticHeartTransition('close');renderNoAnim()}else if(a==='editMemory')editMemory(i);else if(a==='saveMemory')await saveMemory(i);else if(a==='photo')await openPhoto(i);else if(a==='selectAllPhotos')selectAllPhotos();else if(a==='toggleDragSelect')toggleDragSelect();else if(a==='commitPhotoOrder')await commitPhotoOrder();else if(a==='clearPhotoSelection')clearPhotoSelection();else if(a==='removeFromAlbum')await removeFromAlbum();else if(a==='moveSelected')moveSelected();else if(a==='moveToAlbum')await moveToAlbum(i);else if(a==='createAlbumAndMove')createAlbumAndMove();else if(a==='saveAlbumMove')await saveAlbumMove(b.dataset.from,JSON.parse(b.dataset.ids||'[]'));else if(a==='excludeSelected')await excludeSelected();else if(a==='movePhotoUp')await reorderPhoto(i,-1);else if(a==='movePhotoDown')await reorderPhoto(i,1);else if(a==='restoreExcluded')await restoreExcluded();else if(a==='calendarDay'){calendarDate=b.dataset.date;calendarCursor=new Date(calendarDate+'T00:00:00');calendarCursor.setDate(1);renderNoAnim()}else if(a==='calendarPrev'){calendarCursor=new Date(calendarCursor.getFullYear(),calendarCursor.getMonth()-1,1);renderNoAnim()}else if(a==='calendarNext'){calendarCursor=new Date(calendarCursor.getFullYear(),calendarCursor.getMonth()+1,1);renderNoAnim()}else if(a==='dream')dreamForm();else if(a==='editDream')dreamForm(state.dreams.find(x=>x.id===i));else if(a==='saveDream')await saveDream(i);else if(a==='verse')verseForm();else if(a==='saveVerse')await saveVerse();else if(a==='favVerse'){const x=state.verses.find(v=>v.id===i);if(x){x.favorite=!x.favorite;await save();renderNoAnim()}}else if(a==='delVerse'){state.verses=state.verses.filter(v=>v.id!==i);await save();renderNoAnim()}else if(a==='prayer')prayerForm();else if(a==='editPrayer')editPrayer(i);else if(a==='deletePrayer')await deletePrayer(i);else if(a==='savePrayer')await savePrayer(i);else if(a==='togglePrayer'){const x=state.prayers.find(v=>v.id===i);if(x){x.done=!x.done;await save();renderNoAnim()}}else if(a==='message')msgForm();else if(a==='editMessage'){const mm=state.messages.find(v=>v.id===i);if(mm)msgForm(mm)}else if(a==='saveMessage')await saveMessage(i);else if(a==='messagesSortDesc'){state.settings.messagesOrder='desc';await save();renderNoAnim()}else if(a==='messagesSortAsc'){state.settings.messagesOrder='asc';await save();renderNoAnim()}else if(a==='toggleMessage'){const x=state.messages.find(v=>v.id===i);if(x){x.starred=!x.starred;await save();renderNoAnim()}}else if(a==='delMessage'){state.messages=state.messages.filter(v=>v.id!==i);await save();renderNoAnim()}else if(a==='event')eventForm();else if(a==='saveEvent')await saveEvent();else if(a==='settingsSave')await saveSettings();else if(a==='chooseBackup')await chooseBackup();else if(a==='backup')await backup();else if(a==='buildHQSource'){hqSelectionModal(false)}else if(a==='hqZip'){hqBackupZip()}else if(a==='hqStartBuild'){await startHQBuildFromModal()}else if(a==='hqSelectAllAlbums'){document.querySelectorAll('.hq-album-select').forEach(x=>x.checked=true);const r=document.querySelector('input[name="hqScope"][value="selected"]');if(r)r.checked=true}else if(a==='hqClearAlbums'){document.querySelectorAll('.hq-album-select').forEach(x=>x.checked=false);const r=document.querySelector('input[name="hqScope"][value="selected"]');if(r)r.checked=true}else if(a==='resumeHQBuild'){await resumeHQBuild()}else if(a==='retryHQSkipped'){await retryHQSkipped()}else if(a==='stopHQBuild'){await stopHQBuild()}else if(a==='discardHQBuild'){await discardHQBuild()}else if(a==='linkHQSource'){await linkHQSource()}else if(a==='clearHQSource'){clearHQSource()}else if(a==='closeHQProgress'){closeHQProgress()}else if(a==='restore')restore();else if(a==='restoreMerge')restoreMerge();else if(a==='restoreLocalRecovery')await restoreLocalRecovery();else if(a==='hideRecoveryNotice'){recoveryNoticeHidden=true;recoveryCandidate=null;await put('library',{key:'recoveryNoticeHidden',value:true});renderNoAnim();toast('تم إخفاء تنبيه نسخة الأمان. يمكنك الاستعادة يدويًا من الإعدادات.')} else if(a==='restoreSafety')await restoreSafety();else if(a==='diag')await diagnostic();else if(a==='duplicateManager')duplicateManager();else if(a==='cancelDuplicateScan')cancelDuplicateScan();else if(a==='chooseDuplicateKeeper')duplicateChoiceModal(Number(b.dataset.group),b.dataset.keeper);else if(a==='applyDuplicateChoice')await applyDuplicateChoice();else if(a==='mergeDuplicate')await mergeDuplicate(b.dataset.id,b.dataset.keeper);else if(a==='closeModal')closeModal();
  }catch(err){console.error(err);toast('حدث خطأ. استخدم التشخيص إذا استمر.')}});
 $('#modalClose')?.addEventListener('click',closeModal);$('#lbClose')?.addEventListener('click',closeLB);$('#lbPrev')?.addEventListener('click',async()=>{if(lb.i>0)await playLbFlip(lb.i-1,-1)});$('#lbNext')?.addEventListener('click',async()=>{if(lb.i<lb.ids.length-1)await playLbFlip(lb.i+1,1)});$('#lbPlay')?.addEventListener('click',toggleSlideshow);document.addEventListener('click',async e=>{const b=e.target.closest('[data-lb-index]');if(!b)return;const n=Number(b.dataset.lbIndex);if(!Number.isInteger(n)||n<0||n>=lb.ids.length)return;lb.i=n;await showPhoto()});
 const lbImage=$('#lbImage');
@@ -1837,7 +2072,7 @@ async function ensureLatestOsRa(){
     location.reload();
   },{once:true});
   try{
-    const reg=await navigator.serviceWorker.register('./sw.js?build=osra122-20261008-r47-stable-full-surprises',{updateViaCache:'none'});
+    const reg=await navigator.serviceWorker.register('./sw.js?build=osra122-r49-readable-stable',{updateViaCache:'none'});
     await reg.update().catch(()=>{});
     if(reg.waiting) reg.waiting.postMessage({type:'SKIP_WAITING'});
   }catch(e){console.warn('OsRa service worker update skipped',e)}
