@@ -1,6 +1,37 @@
-const BUILD='osra122-20261011-r51-choreography-custom-surprises';
+const BUILD='osra122-20261011-r53-current-sprites';
 const CACHE=`OsRa-v122-${BUILD}`;
-const APP=['./','./index.html','./style.css?v=osra122-r51-choreography-custom-surprises','./app.js?v=osra122-r51-choreography-custom-surprises','./manifest.json','./icon.svg','./icon-192.png','./icon-512.png'];
+const APP=['./','./index.html','./style.css?v=osra122-r53-current-sprites','./app.js?v=osra122-r53-current-sprites','./manifest.json','./icon.svg','./icon-192.png','./icon-512.png',
+ './assets/osama-3d.png',
+ './assets/rania-3d.png',
+ './assets/osama-page-push.png',
+ './assets/rania-page-push.png',
+ './assets/osama-dance-slow-a.png',
+ './assets/rania-dance-slow-a.png',
+ './assets/osama-dance-slow-b.png',
+ './assets/rania-dance-slow-b.png',
+ './assets/osama-dance-joy-up.png',
+ './assets/rania-dance-joy-up.png',
+ './assets/osama-dance-joy-down.png',
+ './assets/rania-dance-joy-down.png',
+ './assets/osama-dance-shuffle-left.png',
+ './assets/rania-dance-shuffle-left.png',
+ './assets/osama-dance-shuffle-right.png',
+ './assets/rania-dance-shuffle-right.png',
+ './assets/pose-library/osama-01.png',
+ './assets/pose-library/osama-02.png',
+ './assets/pose-library/osama-03.png',
+ './assets/pose-library/osama-04.png',
+ './assets/pose-library/osama-05.png',
+ './assets/pose-library/osama-06.png',
+ './assets/pose-library/osama-07.png',
+ './assets/pose-library/osama-08.png',
+ './assets/pose-library/rania-01.png',
+ './assets/pose-library/rania-02.png',
+ './assets/pose-library/rania-03.png',
+ './assets/pose-library/rania-04.png',
+ './assets/pose-library/rania-05.png',
+ './assets/pose-library/rania-06.png',
+ './assets/pose-library/rania-07.png'];
 const SHELL=new Set(APP.map(x=>new URL(x,self.location.href).href));
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(APP)).then(()=>self.skipWaiting())));
 self.addEventListener('message',event=>{if(event.data?.type==='SKIP_WAITING')self.skipWaiting()});

@@ -1,0 +1,18 @@
+OsRa v122 — R53 CURRENT SPRITES
+Date: 2026-10-11
+Base: OsRa_v122_R52_MOTION_REFINED.zip
+
+Implemented:
+1. Added the current extracted transparent character assets into assets/.
+2. Set the boot scene and page-turn scene to use the available Osama/Rania character art.
+3. Connected available full-body pose images to slow dance, joyful bounce/pose changes, and shuffle choreography.
+4. Added a full-body rotating flip-style fallback to the acrobatic dance phase while the purpose-made flip sprites are not available.
+5. Added 8 consistent full-body Osama poses and 7 usable same-design full-body Rania poses in assets/pose-library/ for the next iteration.
+6. Excluded the final bottom-right Rania reference cell because it uses a different alternate cartoon design and does not match the other character poses.
+7. Updated the cache/build identifier to R53 and precached all currently used transparent pose files plus the pose library for offline use after install.
+8. Kept the existing R52 app behavior and all non-motion features; IndexedDB remains VER=100.
+
+Important current limits:
+- The provided sheets do not contain a real connected two-person carry pose. R53 does not claim to perform a physically connected lift-spin-lower sequence yet; its lift fallback remains a joyful movement until the paired carry poses are supplied.
+- The flip effect rotates the full-body cutout as a 2.5D animation. For convincing articulated acrobatics and anatomically connected interaction, add dedicated start/mid/land frames later.
+- No end-to-end visual acceptance test on the user's Android phone was possible in this build environment.

@@ -1,0 +1,14 @@
+OsRa R52 — motion choreography correction
+Base: OsRa_v122_R51_CHOREOGRAPHY_MESSAGES_CAMERA.zip
+Backup: OsRa_v122_R51_CHOREOGRAPHY_MESSAGES_CAMERA_BACKUP_BEFORE_R52.zip
+
+1. Removed separate hand emoji nodes from page turns; this was the direct cause of visually disconnected/crossing hands.
+2. Pinned Osama and Rania to opposite edges during all page-turn states, resolving old broad CSS selectors that temporarily positioned both characters on one side.
+3. Added a monotonic token and separate tracked hide/cleanup timers so a quick second page turn cancels the first turn's pending cleanup.
+4. Replaced a single 32–45 second loop of a randomly selected whole-body transform with a choreographed sequence that transitions through slow dance, shuffle, joyful bounce, hug approach/hold/release, and optional acrobatics/carry phases.
+5. Acrobatic and lift phases require all the corresponding paired pose files to load; otherwise a joyful bounce is used instead of falsely presenting a real lift.
+6. Added 17 paired pose slots in `OSRA_POSE_ASSETS`: pagePush; danceSlowA/B; danceJoyUp/Down; danceShuffleLeft/Right; danceHugOpen/Hold/Release; danceAcroStart/Flip/Land; liftStart/Raised/Spin/Land.
+7. Dance timers stop when the celebration mode is disabled or its scene exits.
+8. Cache/build version bumped to R52; IndexedDB remains version 100.
+
+The R51 functions and all non-motion files/features remain included. Personalized character art and pose images remain deferred until generation is available.

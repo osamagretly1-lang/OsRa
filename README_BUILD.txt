@@ -1,6 +1,9 @@
-OsRa v110 — 2026-10-08 — R34: boot hearts + custom surprise messages + 1m/3m timing
+OsRa v122 — 2026-10-11 — R53 CURRENT SPRITES — connected asset pack + energetic pose sequence
 
-Base preserved: OsRa v100 R24 family; IndexedDB version remains 100 to protect existing data.
+Base preserved: R52 motion-refined build / OsRa v100 R24 family; IndexedDB version remains 100 to protect existing data.
+
+R53 CURRENT SPRITES (2026-10-11): Integrated the supplied current pose sheets into real transparent PNG assets. Eight usable full-body Osama poses and seven consistent full-body Rania poses are stored under assets/pose-library. The final mismatched alternate-style Rania cell was excluded. Base images, page-turn poses, slow-dance poses, joy/bounce poses and shuffle poses are now mapped and cached by the service worker. The acrobatic mode gets a full-body rotating flip effect using the current cutouts as an interim fallback; genuine connected carry/lift/lower and articulated hug poses remain reserved for the additional pose images the user plans to send. IndexedDB stays VER=100.
+
 
 R25 changes:
 - Safe album/source linking validates a manually selected folder before saving it; zero matches are rejected.

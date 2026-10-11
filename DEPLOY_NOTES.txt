@@ -1,11 +1,14 @@
-OsRa v122 — R51 CHOREOGRAPHY / CUSTOM SURPRISES TEST BUILD
+OsRa v122 — R52 MOTION REFINED (test candidate)
 
-This candidate is based on the supplied R50_LINK_SCAN_PHOTO_FESTIVE build. The pre-change R50 snapshot is available separately as OsRa_v122_R50_BACKUP_BEFORE_R51.zip.
+Based directly on OsRa R51; no change to IndexedDB schema version 100.
 
-R51 prepares two separate character movements: (1) opening celebration where Osama and Rania enter from opposite sides, approach “احتفال”, pause as if reading it, step back, and dance; (2) page-turn movement where both appear at opposite edges and lean/push toward the page with opposing hands. The base character images and optional action-pose images are not yet included; those transparent images will be added after the user's personalized character art is generated.
+R52 motion corrections:
+- Removed detached hand emoji overlays from page turns. The correct full-body pose art must supply connected arms; when pose art is absent, only the character-body lean is shown rather than a fake floating hand.
+- Locked Osama to the left edge and Rania to the right edge throughout page turning, and added a token plus tracked cleanup timers so rapid flips cannot let an old timer erase a newer scene.
+- Page-turn characters still appear together on each actual flip, as requested earlier, but only for the page-turn interval and from opposite edges.
+- Replaced one repeated dance transform for the entire celebration with a multi-phase sequencer: slow dance, shuffle, joyful bounce, hug sequence, and optional acrobatic/lift phases. Lift/acrobatic phases require all paired pose assets; if absent the choreography safely falls back to synchronized bounce.
+- Added named pose slots for the later approved personalized sprite art.
 
-R51 also improves daily photo selection, per-message presentation and motion settings, the saved-message manager, two-stage excluded-photo restoration confirmation, camera album membership cleanup, and celebration-ribbon behavior. IndexedDB remains at version 100.
+Other R51 features are preserved: quick/visual linking, thumbnail recovery, scan skip/pause/cancel, interactive linking reports, source list collapse, daily-photo selection, per-message presentation/motion settings, two-step excluded-image restore, camera membership cleanup, existing celebration effects and ribbon toggle.
 
-Testing completed on this candidate: JavaScript syntax checks, HTML parsing/duplicate-ID checks, CSS parser checks, static feature checks, ZIP integrity checks, and isolated unit tests for daily-photo consistency and camera membership cleanup.
-
-The available environment blocked Chromium navigation with ERR_BLOCKED_BY_ADMINISTRATOR. Therefore browser/device end-to-end behavior, camera-folder edge cases, live filesystem permissions, IndexedDB on the user's phone, and visual likeness/motion must still be checked on the phone before replacing the current installation. Do not treat static validation as proof of full device acceptance.
+Important: the real personalized base characters and pose frames are not included yet, so connected hand/arm articulation and a convincing carry-spin-lower cannot look complete until those image assets are produced and installed. Use as a separate test build; the old copy and its data should be preserved.

@@ -1,0 +1,13 @@
+R52 motion audit against R51
+
+Directly identified defects:
+- The page-turn function attached two floating emoji hands to the overall host instead of to either figure. They could look detached or cross the other figure. R52 removes them completely; the eventual pagePush pose images themselves must contain the arms.
+- Earlier CSS assigned both figures the same edge position before the animation based on .forward/.backward; R52 forces Osama to the left and Rania to the right with stronger selectors.
+- The page-turn effect tracked only its outer timeout; an old nested cleanup could clear a freshly started scene after rapid clicks. R52 cancels both timers and uses a token check.
+
+Dance audit:
+- R51 modes 1–5 primarily moved the whole character image (sway, rotate, bounce, move together), not articulated limbs.
+- R51 mode 6 applied independent transforms and was not a real carry. R52 no longer pretends that this is a true lift unless paired lift-start/raised/spin/land poses all load.
+- R52 cycles among several phases while the celebration lasts. Pose slots are reserved for generated full-body sprites with consistent scale and matching stance. After the sprite sheets exist, they must be cropped into the named files in OSRA_POSE_ASSETS.
+
+The couple still appears on each actual page flip because the requested design is for both to push the page from opposite sides. The appearance is limited to the transition interval; it should not leave them visible after the flip finishes.

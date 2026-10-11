@@ -1,0 +1,23 @@
+OsRa R53 — Static QA Report
+
+Passed:
+- app.js syntax check with Node.js.
+- sw.js syntax check with Node.js.
+- All mapped base and pose assets exist on disk.
+- All service-worker precache paths exist, including current character art and pose-library sprites.
+- HTML IDs are unique and local HTML CSS/JS references resolve.
+- CSS parser found no syntax/declaration parse errors.
+- Every generated pose-library PNG is RGBA with a non-empty transparent background.
+- Build/cache markers use R53; IndexedDB stays VER=100.
+- ZIP integrity check succeeds after packaging.
+
+Visual scope:
+- Integrated current source images into the boot, page-turn, slow dance, joyful/bounce and shuffle pose slots.
+- Added a rotating full-body fallback for acrobatic choreography when no dedicated acrobatic frames exist.
+- The Rania alternative-style cell was excluded from the pose library.
+
+Not verified:
+- The app was not run end-to-end on the user's Android device in this environment.
+- The current art cannot represent a convincing connected lift/carry/lower sequence by itself. Dedicated paired poses are still needed.
+- The flip fallback is a 2.5D rotation of full-body sprites, not articulated 3D animation.
+- Existing large photo-library workflows and camera folder permissions were not retested because this patch changes motion assets only.

@@ -1118,3 +1118,49 @@ body.surprises-muted #bootJoyRibbon{display:none!important}
 .surprise-custom-message-item .meta{margin-top:6px}
 @media(max-width:600px){.osra-page-turn-couple{height:132px}.osra-page-turn-couple .osra-couple-person{width:clamp(48px,15vw,76px);height:clamp(90px,17vh,130px)}.osra-page-push-hand.hand-osama{left:clamp(48px,15vw,70px)}.osra-page-push-hand.hand-rania{right:clamp(48px,15vw,70px)}}
 @media(prefers-reduced-motion:reduce){.osra-couple-approach .osra-couple-osama,.osra-couple-approach .osra-couple-rania,.osra-couple-reading .osra-couple-osama,.osra-couple-reading .osra-couple-rania,.osra-couple-step-back .osra-couple-osama,.osra-couple-step-back .osra-couple-rania,.osra-page-turn-couple.show .osra-couple-osama,.osra-page-turn-couple.show .osra-couple-rania,.osra-page-push-hand{animation:none!important}}
+
+
+/* R52 — page-turn actors stay on opposite edges; no detached hands, overlapping selectors, or stale cleanup timers. */
+.osra-page-turn-couple:not(.show) .osra-couple-osama,
+.osra-page-turn-couple.show .osra-couple-osama{left:4px!important;right:auto!important;transform-origin:bottom left!important}
+.osra-page-turn-couple:not(.show) .osra-couple-rania,
+.osra-page-turn-couple.show .osra-couple-rania{right:4px!important;left:auto!important;transform-origin:bottom right!important}
+.osra-page-turn-couple.forward .osra-couple-person,
+.osra-page-turn-couple.backward .osra-couple-person{right:auto;left:auto}
+.osra-page-turn-couple .osra-couple-person::before,
+.osra-page-turn-couple .osra-couple-person::after{content:none!important;display:none!important}
+.osra-page-turn-couple.show .osra-couple-osama{animation:osraPagePushOsamaR52 .82s cubic-bezier(.16,.75,.2,1) both!important}
+.osra-page-turn-couple.show .osra-couple-rania{animation:osraPagePushRaniaR52 .82s cubic-bezier(.16,.75,.2,1) both!important}
+@keyframes osraPagePushOsamaR52{0%{transform:translate3d(-44vw,10px,0) rotateZ(-12deg) scale(.78)}25%{transform:translate3d(4vw,-6px,35px) rotateZ(7deg) scale(1)}50%{transform:translate3d(10vw,-2px,55px) rotateZ(11deg) scale(1.03)}70%{transform:translate3d(5vw,0,20px) rotateZ(4deg) scale(1.01)}100%{transform:translate3d(0,0,0) rotateZ(0) scale(.98)}}
+@keyframes osraPagePushRaniaR52{0%{transform:translate3d(44vw,10px,0) rotateZ(12deg) scale(.78)}25%{transform:translate3d(-4vw,-6px,35px) rotateZ(-7deg) scale(1)}50%{transform:translate3d(-10vw,-2px,55px) rotateZ(-11deg) scale(1.03)}70%{transform:translate3d(-5vw,0,20px) rotateZ(-4deg) scale(1.01)}100%{transform:translate3d(0,0,0) rotateZ(0) scale(.98)}}
+/* Authored sprite poses provide the arms/legs. Until the real art exists, the safe fallback moves only the whole figure. */
+.osra-lift-raise .osra-couple-osama{animation:osraCarryBraceA .65s ease-out both!important}
+.osra-lift-raise .osra-couple-rania{animation:osraCarryRaiseB .75s cubic-bezier(.2,.75,.15,1) both!important}
+@keyframes osraCarryBraceA{0%{transform:translate3d(-5vw,0,90px) rotateZ(0)}55%{transform:translate3d(-2vw,8px,115px) rotateZ(-7deg) scale(.96)}100%{transform:translate3d(-2vw,0,125px) rotateZ(-5deg) scale(1)}}
+@keyframes osraCarryRaiseB{0%{transform:translate3d(4vw,0,90px) rotateZ(0)}45%{transform:translate3d(1vw,-28px,145px) rotateZ(-15deg) scale(1.02)}100%{transform:translate3d(-1vw,-43px,165px) rotateZ(-28deg) scale(.99)}}
+.osra-lift-spin .osra-couple-osama{animation:osraCarrySpinA 1.25s ease-in-out both!important}
+.osra-lift-spin .osra-couple-rania{animation:osraCarrySpinB 1.25s ease-in-out both!important}
+@keyframes osraCarrySpinA{0%{transform:translate3d(-2vw,0,125px) rotateZ(-5deg)}25%{transform:translate3d(-1vw,-3px,138px) rotateY(22deg) rotateZ(6deg)}50%{transform:translate3d(0,0,144px) rotateY(0deg) rotateZ(0deg)}75%{transform:translate3d(1vw,-2px,136px) rotateY(-22deg) rotateZ(-6deg)}100%{transform:translate3d(-2vw,0,125px) rotateZ(-5deg)}}
+@keyframes osraCarrySpinB{0%{transform:translate3d(-1vw,-43px,165px) rotateZ(-28deg)}25%{transform:translate3d(-2vw,-46px,172px) rotateY(28deg) rotateZ(-18deg)}50%{transform:translate3d(-3vw,-43px,175px) rotateZ(-8deg)}75%{transform:translate3d(-2vw,-46px,172px) rotateY(-28deg) rotateZ(-18deg)}100%{transform:translate3d(-1vw,-43px,165px) rotateZ(-28deg)}}
+.osra-lift-lower .osra-couple-osama{animation:osraCarryLowerA .72s ease-in both!important}
+.osra-lift-lower .osra-couple-rania{animation:osraCarryLowerB .72s ease-in both!important}
+@keyframes osraCarryLowerA{from{transform:translate3d(-2vw,0,125px) rotateZ(-5deg)}to{transform:translate3d(-4vw,0,90px) rotateZ(0) scale(1)}}
+@keyframes osraCarryLowerB{from{transform:translate3d(-1vw,-43px,165px) rotateZ(-28deg)}to{transform:translate3d(4vw,0,90px) rotateZ(0) scale(1)}}
+.osra-acro-turn .osra-couple-osama{animation:osraAcroSpotA .82s ease-in-out both!important}
+.osra-acro-turn .osra-couple-rania{animation:osraAcroSpotB .82s ease-in-out both!important}
+@keyframes osraAcroSpotA{0%,100%{transform:translate3d(-4vw,0,90px) rotateZ(0)}50%{transform:translate3d(-2vw,-26px,138px) rotateZ(9deg) scale(1.03)}}
+@keyframes osraAcroSpotB{0%,100%{transform:translate3d(4vw,0,90px) rotateZ(0)}50%{transform:translate3d(2vw,-26px,138px) rotateZ(-9deg) scale(1.03)}}
+.osra-dance-settle .osra-couple-osama{animation:osraDanceSettleA .45s ease-out both!important}
+.osra-dance-settle .osra-couple-rania{animation:osraDanceSettleB .45s ease-out both!important}
+@keyframes osraDanceSettleA{from{transform:translate3d(-5vw,-10px,110px) rotateZ(-4deg)}to{transform:translate3d(-4vw,0,90px) rotateZ(0)}}
+@keyframes osraDanceSettleB{from{transform:translate3d(5vw,-10px,110px) rotateZ(4deg)}to{transform:translate3d(4vw,0,90px) rotateZ(0)}}
+@media(max-width:600px){.osra-page-turn-couple.show .osra-couple-osama{animation-name:osraPagePushOsamaR52!important}.osra-page-turn-couple.show .osra-couple-rania{animation-name:osraPagePushRaniaR52!important}}
+@media(prefers-reduced-motion:reduce){.osra-page-turn-couple.show .osra-couple-osama,.osra-page-turn-couple.show .osra-couple-rania,.osra-lift-raise .osra-couple-osama,.osra-lift-raise .osra-couple-rania,.osra-lift-spin .osra-couple-osama,.osra-lift-spin .osra-couple-rania,.osra-lift-lower .osra-couple-osama,.osra-lift-lower .osra-couple-rania,.osra-acro-turn .osra-couple-osama,.osra-acro-turn .osra-couple-rania{animation:none!important;transition:none!important}}
+
+
+/* R53 — energetic full-body flip fallback while custom flip-pose artwork is pending. */
+.osra-dance-2 .osra-couple-osama{animation:osraR53FlipOsama 1.55s cubic-bezier(.18,.85,.22,1) infinite!important;transform-origin:50% 54%!important}
+.osra-dance-2 .osra-couple-rania{animation:osraR53FlipRania 1.55s cubic-bezier(.18,.85,.22,1) infinite!important;transform-origin:50% 54%!important}
+@keyframes osraR53FlipOsama{0%,100%{transform:translate3d(-10vw,0,80px) rotateZ(0deg) rotateY(0deg) scale(1)}18%{transform:translate3d(-8vw,-24px,120px) rotateZ(-35deg) rotateY(28deg) scale(1.04)}42%{transform:translate3d(-5vw,-42px,145px) rotateZ(-150deg) rotateY(75deg) scale(.96)}62%{transform:translate3d(-7vw,-28px,132px) rotateZ(-265deg) rotateY(140deg) scale(1.03)}82%{transform:translate3d(-9vw,-10px,105px) rotateZ(-330deg) rotateY(300deg) scale(1.02)}}
+@keyframes osraR53FlipRania{0%,100%{transform:translate3d(10vw,0,80px) rotateZ(0deg) rotateY(0deg) scale(1)}18%{transform:translate3d(8vw,-24px,120px) rotateZ(35deg) rotateY(-28deg) scale(1.04)}42%{transform:translate3d(5vw,-42px,145px) rotateZ(150deg) rotateY(-75deg) scale(.96)}62%{transform:translate3d(7vw,-28px,132px) rotateZ(265deg) rotateY(-140deg) scale(1.03)}82%{transform:translate3d(9vw,-10px,105px) rotateZ(330deg) rotateY(-300deg) scale(1.02)}}
+@media(prefers-reduced-motion:reduce){.osra-dance-2 .osra-couple-osama,.osra-dance-2 .osra-couple-rania{animation:none!important;transition:none!important}}

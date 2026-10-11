@@ -1,0 +1,20 @@
+OsRa R52 QA report
+
+Automated checks completed:
+- PASS — node --check app.js
+- PASS — node --check sw.js
+- PASS — HTML parsed, 40 IDs, zero duplicate IDs; all local references resolve
+- PASS — CSS parsed with tinycss2: 1,237 top-level rules/at-rules, zero syntax/declaration parse errors
+- PASS — build/cache markers synchronized in app.js, index.html, and sw.js; IndexedDB remains VER=100
+- PASS — isolated page-turn behavior test: both characters present, detached hand nodes absent, opposite flip direction creates a fresh scene, and stale timeouts cannot erase the newer scene
+- PASS — pose manifest test: paired slots present for each of 17 animation poses; lift/acrobatic phases gated on all required assets
+- PASS — static guard ensures dance sequence clears when celebration layers are cleared
+- PASS — R52 ZIP integrity checked after packaging
+
+What is NOT verified:
+- No end-to-end visual acceptance run on the user's Android phone was performed in this turn.
+- The character base images and all pose sprites are still absent; therefore connected body mechanics, hands/arms, real jumping, acrobatic flips, and the lift-spin-lower sequence cannot be approved visually yet. The code will use safe fallback motion until those images exist.
+- Real rapid page-turn behavior must still be checked on-device with the images installed; CSS and isolated tests cannot prove final visual alignment.
+- Full offline source permission, camira folder scan, and thousands-photo performance were not retested as part of this motion-only correction.
+
+Assessment: R52 fixes the hand overlay and page-turn timer/positioning defects in code and upgrades dance sequencing. It is a test candidate, not a fully visually approved release until the final sprite set is installed and checked on-device.

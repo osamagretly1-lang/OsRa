@@ -1,9 +1,19 @@
 window.__osraBootAt=performance.now();
-const OSRA_BUILD='OsRa v122 — 2026-10-11 — R51 CHOREOGRAPHY & CUSTOM SURPRISES';
+const OSRA_BUILD='OsRa v122 — 2026-10-11 — R53 CURRENT SPRITES';
 const OSRA_3D_ASSETS={osama:'assets/osama-3d.png',rania:'assets/rania-3d.png'};
 // Optional 2.5D action-pose files can be added later without changing the choreography.
-const OSRA_POSE_ASSETS={pagePush:{osama:'assets/osama-page-push.png',rania:'assets/rania-page-push.png'},lift:{osama:'assets/osama-lift.png',rania:'assets/rania-lift.png'}};
-let osraPageTurnCoupleTimer=null,showSurpriseMessagesList=false,lastRomanticMessageConfig=null,dailyPhotoClockTimer=0,lastPhotoDayRendered='';
+const OSRA_POSE_ASSETS={
+ // Poses available from the current sheets. Missing lift/hug/acro slots are deliberately omitted until their real pose art arrives.
+ pagePush:{osama:'assets/osama-page-push.png',rania:'assets/rania-page-push.png'},
+ danceSlowA:{osama:'assets/osama-dance-slow-a.png',rania:'assets/rania-dance-slow-a.png'},
+ danceSlowB:{osama:'assets/osama-dance-slow-b.png',rania:'assets/rania-dance-slow-b.png'},
+ danceJoyUp:{osama:'assets/osama-dance-joy-up.png',rania:'assets/rania-dance-joy-up.png'},
+ danceJoyDown:{osama:'assets/osama-dance-joy-down.png',rania:'assets/rania-dance-joy-down.png'},
+ danceShuffleLeft:{osama:'assets/osama-dance-shuffle-left.png',rania:'assets/rania-dance-shuffle-left.png'},
+ danceShuffleRight:{osama:'assets/osama-dance-shuffle-right.png',rania:'assets/rania-dance-shuffle-right.png'}
+};
+const osraPosePairCache=new Map();
+let osraPageTurnCoupleTimer=null,osraPageTurnCoupleCleanupTimer=null,osraPageTurnCoupleToken=0,osraDanceSequenceState=null,showSurpriseMessagesList=false,lastRomanticMessageConfig=null,dailyPhotoClockTimer=0,lastPhotoDayRendered='';
 const DB='OsRaDB', VER=100, THUMB_VERSION=6, THUMB_MAX_BYTES=160*1024;
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 lastPhotoDayRendered=today();
@@ -256,16 +266,70 @@ function createOsraCoupleScene(root,extra=''){
  scene.innerHTML=`${coupleFigureMarkup('osama')}${coupleFigureMarkup('rania')}<span class="osra-couple-heart" aria-hidden="true">♥</span><span class="osra-couple-handhold" aria-hidden="true">🤝</span><span class="osra-couple-highfive" aria-hidden="true">🖐️</span>`;
  root.appendChild(scene);bindOsra3DFallback(scene);return scene;
 }
+function clearPageTurnCoupleTimers(){clearTimeout(osraPageTurnCoupleTimer);clearTimeout(osraPageTurnCoupleCleanupTimer);osraPageTurnCoupleTimer=null;osraPageTurnCoupleCleanupTimer=null}
 function showPageTurnCouple(dir=1){
  const host=document.getElementById('pageTurnCouple');if(!host)return;
- clearTimeout(osraPageTurnCoupleTimer);
- host.className=`osra-page-turn-couple ${dir>0?'forward':'backward'}`;
- host.style.setProperty('--page-push','18px');host.style.setProperty('--page-push-rania','-18px');host.style.setProperty('--page-push-return','10px');host.style.setProperty('--page-push-rania-return','-10px');
- // The page-turn sequence deliberately shows both characters; each enters from its own edge and leans into the page.
- host.innerHTML=`${coupleFigureMarkup('osama','pagePush')}${coupleFigureMarkup('rania','pagePush')}<span class="osra-page-push-hand hand-osama" aria-hidden="true">🫸</span><span class="osra-page-push-hand hand-rania" aria-hidden="true">🫷</span>`;
+ clearPageTurnCoupleTimers();const token=++osraPageTurnCoupleToken;
+ host.className=`osra-page-turn-couple ${dir>0?'forward':'backward'}`;host.replaceChildren();
+ // Keep all gesture artwork inside each character pose. Separate hand emoji overlays caused the hands to float or cross bodies.
+ host.style.setProperty('--page-push-direction',dir>0?'1':'-1');
+ host.innerHTML=`${coupleFigureMarkup('osama','pagePush')}${coupleFigureMarkup('rania','pagePush')}`;
  bindOsra3DFallback(host);
- requestAnimationFrame(()=>host.classList.add('show'));
- osraPageTurnCoupleTimer=setTimeout(()=>{host.classList.remove('show');setTimeout(()=>{if(!host.classList.contains('show')){host.className='osra-page-turn-couple';host.replaceChildren();host.style.removeProperty('--page-push');host.style.removeProperty('--page-push-rania');host.style.removeProperty('--page-push-return');host.style.removeProperty('--page-push-rania-return')}},220)},860);
+ requestAnimationFrame(()=>{if(token!==osraPageTurnCoupleToken||!host.isConnected)return;host.classList.add('show')});
+ osraPageTurnCoupleTimer=setTimeout(()=>{
+  if(token!==osraPageTurnCoupleToken)return;
+  host.classList.remove('show');
+  osraPageTurnCoupleCleanupTimer=setTimeout(()=>{
+   if(token!==osraPageTurnCoupleToken)return;
+   host.className='osra-page-turn-couple';host.replaceChildren();
+   ['--page-push-direction'].forEach(k=>host.style.removeProperty(k));
+  },160);
+ },880);
+}
+function osraPosePairExists(pose){
+ const pair=OSRA_POSE_ASSETS[pose];if(!pair?.osama||!pair?.rania)return Promise.resolve(false);
+ if(!osraPosePairCache.has(pose))osraPosePairCache.set(pose,Promise.all([pair.osama,pair.rania].map(src=>new Promise(resolve=>{const img=new Image();img.onload=()=>resolve(img.naturalWidth>0);img.onerror=()=>resolve(false);img.src=src}))).then(v=>v.every(Boolean)).catch(()=>false));
+ return osraPosePairCache.get(pose);
+}
+function clearOsraDanceSequence(couple){
+ const st=couple?.__osraDanceState;if(!st)return;st.cancelled=true;for(const t of st.timers)clearTimeout(t);st.timers=[];
+ couple.classList.remove('osra-lift-raise','osra-lift-spin','osra-lift-lower','osra-acro-turn','osra-dance-settle');
+ for(let i=1;i<=6;i++)couple.classList.remove(`osra-dance-${i}`);
+ couple.__osraDanceState=null;if(osraDanceSequenceState===st)osraDanceSequenceState=null;
+}
+function scheduleOsraDance(couple,st,fn,delay){const timer=setTimeout(()=>{st.timers=st.timers.filter(t=>t!==timer);if(!st.cancelled&&couple?.isConnected&&surprisesAreEnabled())fn()},delay);st.timers.push(timer);return timer}
+function setDanceMode(couple,st,mode,pose){if(st.cancelled||!couple?.isConnected)return;for(let i=1;i<=6;i++)couple.classList.remove(`osra-dance-${i}`);couple.classList.remove('osra-lift-raise','osra-lift-spin','osra-lift-lower','osra-acro-turn');couple.classList.add(`osra-dance-${mode}`);if(pose)setOsraCouplePose(couple,pose);else setOsraCouplePose(couple,'base');couple.dataset.dance=String(mode)}
+function startOsraDanceChoreography(couple,totalDuration){
+ clearOsraDanceSequence(couple);if(!couple)return null;
+ const st={cancelled:false,timers:[],startedAt:performance.now(),endAt:performance.now()+totalDuration};couple.__osraDanceState=st;osraDanceSequenceState=st;
+ const after=(fn,ms)=>scheduleOsraDance(couple,st,fn,ms);
+ const modes=[1,5,3,4,3,5,1,2,6,3,5,4];let cursor=Math.floor(Math.random()*modes.length);
+ const next=()=>{
+  if(st.cancelled||!couple.isConnected||!surprisesAreEnabled()||performance.now()>=st.endAt){clearOsraDanceSequence(couple);couple?.classList.add('osra-dance-settle');setOsraCouplePose(couple,'base');return}
+  let mode=modes[cursor++%modes.length];
+  if(mode===2){
+   Promise.all(['danceAcroStart','danceAcroFlip','danceAcroLand'].map(osraPosePairExists)).then(([startOK,flipOK,landOK])=>{
+    if(st.cancelled)return;
+    if(!(startOK&&flipOK&&landOK)){setDanceMode(couple,st,2,'danceJoyUp');after(()=>{setOsraCouplePose(couple,'danceJoyDown');after(()=>{for(let i=1;i<=6;i++)couple.classList.remove(`osra-dance-${i}`);setOsraCouplePose(couple,'base');after(next,380)},880)},650);return}
+    setDanceMode(couple,st,2,'danceAcroStart');after(()=>{couple.classList.add('osra-acro-turn');setOsraCouplePose(couple,'danceAcroFlip');after(()=>{couple.classList.remove('osra-acro-turn');setOsraCouplePose(couple,'danceAcroLand');after(next,620)},820)},620);
+   });return;
+  }
+  if(mode===6){
+   Promise.all(['liftStart','liftRaised','liftSpin','liftLand'].map(osraPosePairExists)).then(ready=>{
+    if(st.cancelled)return;if(!ready.every(Boolean)){setDanceMode(couple,st,3,'danceJoyUp');after(()=>{setOsraCouplePose(couple,'danceJoyDown');after(next,720)},720);return}
+    setDanceMode(couple,st,4,'liftStart');couple.classList.add('osra-lift-raise');after(()=>{setOsraCouplePose(couple,'liftRaised');after(()=>{couple.classList.remove('osra-lift-raise');couple.classList.add('osra-lift-spin');setOsraCouplePose(couple,'liftSpin');after(()=>{couple.classList.remove('osra-lift-spin');couple.classList.add('osra-lift-lower');setOsraCouplePose(couple,'liftLand');after(()=>{couple.classList.remove('osra-lift-lower');setOsraCouplePose(couple,'base');after(next,420)},720)},1250)},750)},650);
+   });return;
+  }
+  const poseSets={1:['danceSlowA','danceSlowB'],3:['danceJoyUp','danceJoyDown'],4:['danceHugOpen','danceHugHold','danceHugRelease'],5:['danceShuffleLeft','danceShuffleRight']};
+  const poses=poseSets[mode]||['base'];const applyPose=n=>{if(st.cancelled)return;const pose=poses[n%poses.length];if(pose==='base'){setOsraCouplePose(couple,'base')}else osraPosePairExists(pose).then(ok=>{if(!st.cancelled)setOsraCouplePose(couple,ok?pose:'base')});};
+  setDanceMode(couple,st,mode,poses[0]);
+  if(mode===4){after(()=>{applyPose(1);after(()=>{applyPose(2);after(next,520)},920)},700);return}
+  if(mode===5){after(()=>{applyPose(1);after(()=>{applyPose(0);after(next,570)},620)},620);return}
+  if(mode===3){after(()=>{applyPose(1);after(next,700)},720);return}
+  if(mode===1){after(()=>{applyPose(1);after(next,1350)},1450);return}
+  after(next,1800);
+ };
+ next();return st;
 }
 function osraDanceDuration(){return 32000+Math.floor(Math.random()*13001)}
 function osraDancePick(){return 1+Math.floor(Math.random()*6)}
@@ -358,12 +422,13 @@ function runPostOpenCelebration(){
     couple.classList.remove('osra-couple-step-back');couple.classList.add('osra-couple-highfive-phase');
     setTimeout(()=>{
      if(!document.body.contains(layer)||!surprisesAreEnabled())return;
-     const dance=osraDancePick();setOsraCouplePose(couple,dance===6?'lift':'base');couple.classList.remove('osra-couple-highfive-phase');couple.classList.add(`osra-dance-${dance}`);couple.dataset.dance=String(dance);
-     const duration=osraDanceDuration();
+     couple.classList.remove('osra-couple-highfive-phase');
+     const duration=osraDanceDuration();startOsraDanceChoreography(couple,duration);
      setTimeout(()=>{
+      clearOsraDanceSequence(couple);
       if(!document.body.contains(layer))return;
       couple?.classList.add('osra-couple-leaving');layer.classList.add('boot-open-fade');
-      setTimeout(()=>{layer.innerHTML='';layer.classList.remove('boot-open-fade');if(surprisesAreEnabled())startRomanticTicker()},700);
+      setTimeout(()=>{clearOsraDanceSequence(couple);layer.innerHTML='';layer.classList.remove('boot-open-fade');if(surprisesAreEnabled())startRomanticTicker()},700);
      },duration);
     },850);
    },650);
@@ -372,7 +437,7 @@ function runPostOpenCelebration(){
  setTimeout(beginCelebration,3000);
 }
 
-function clearSurpriseLayers(){clearClassicSurpriseScenes();['romanticSceneLayer','romanticMessageBubble','romanticLongLayer','romanticBalloonLayer','romanticEffectLayer','romanticFloatLayer','occasionCelebration','osraExtendedFallLayer'].forEach(id=>{const el=document.getElementById(id);if(el)el.remove()});document.querySelectorAll('[id^="romanticSceneLayer-"]').forEach(el=>el.remove());const ticker=document.getElementById('romanticTicker');if(ticker){ticker.classList.remove('show');const tx=document.getElementById('romanticTickerText');if(tx)tx.textContent=''}clearTimeout(romanticTickerCloseTimer);clearTimeout(romanticKissTimer);romanticKissTimer=null;clearTimeout(romanticDelightTimer);romanticDelightTimer=null;stopOsraExtendedCelebration();occasionCelebrationBusy=false;romanticLongBusy=false;romanticMessageCycle=0;romanticLongNextAt=4+Math.floor(Math.random()*3);lastRomanticSceneMessage=''}
+function clearSurpriseLayers(){document.querySelectorAll('#bootAfterOpenCelebration .osra-couple-stage').forEach(clearOsraDanceSequence);clearClassicSurpriseScenes();['romanticSceneLayer','romanticMessageBubble','romanticLongLayer','romanticBalloonLayer','romanticEffectLayer','romanticFloatLayer','occasionCelebration','osraExtendedFallLayer'].forEach(id=>{const el=document.getElementById(id);if(el)el.remove()});document.querySelectorAll('[id^="romanticSceneLayer-"]').forEach(el=>el.remove());const ticker=document.getElementById('romanticTicker');if(ticker){ticker.classList.remove('show');const tx=document.getElementById('romanticTickerText');if(tx)tx.textContent=''}clearTimeout(romanticTickerCloseTimer);clearTimeout(romanticKissTimer);romanticKissTimer=null;clearTimeout(romanticDelightTimer);romanticDelightTimer=null;stopOsraExtendedCelebration();occasionCelebrationBusy=false;romanticLongBusy=false;romanticMessageCycle=0;romanticLongNextAt=4+Math.floor(Math.random()*3);lastRomanticSceneMessage=''}
 async function toggleSurprises(){state.settings.surprisesEnabled=!surprisesAreEnabled();await save();if(!surprisesAreEnabled()){clearSurpriseLayers();document.getElementById('bootAfterOpenCelebration')?.replaceChildren();}updateSurpriseButton();updateBirthdayUi();if(surprisesAreEnabled()){startRomanticTicker();maybeRunOccasionCelebrations();}renderNoAnim();}
 function dataRecoveryCard(){if(!recoveryCandidate)return '';const score=recoveryScore(recoveryCandidate);if(score<=recoveryScore(state))return '';return `<div class="card recovery-card"><h3>🛟 نسخة أمان أفضل متاحة</h3><p>OsRa وجد نسخة أمان تحتوي، بحسب المقارنة الداخلية، على بيانات أكثر من الحالة الحالية.</p><div class="meta">تاريخ النسخة: ${esc(recoveryLabel(recoveryCandidate))}</div><div class="actions"><button class="btn primary" data-action="restoreLocalRecovery">استعادة النسخة</button><button class="btn" data-action="hideRecoveryNotice">إخفاء هذا التنبيه</button></div><p class="meta">لن يتم الاستبدال تلقائيًا. الاستعادة لا تحذف الصور الأصلية من الهاتف، ولا تتم إلا بعد ضغطك على زر الاستعادة.</p></div>`}
 function scanProgressText(cp){if(!cp)return'';const n=cp.processed||cp.count||0,a=cp.added||0,u=cp.updated||0,m=cp.moved||0,e=cp.excluded||0,k=cp.skipped||0;return `تم فحص ${n} صورة${a?` — ${a} جديدة`:''}${u?` — ${u} محدثة`:''}${m?` — ${m} منقولة`:''}${e?` — ${e} مستبعدة`:''}${k?` — ${k} ملف متعذر تم تخطيه`:''}`}
