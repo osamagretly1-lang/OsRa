@@ -1,0 +1,26 @@
+OsRa R51 — QA REPORT
+Date: 2026-10-11
+Build candidate: OsRa_v122_R51_CHOREOGRAPHY_MESSAGES_CAMERA.zip
+Baseline kept: OsRa_v122_R50_BACKUP_BEFORE_R51.zip
+
+AUTOMATED TESTS RUN
+PASS — node --check app.js
+PASS — node --check sw.js
+PASS — HTML parsed; 40 IDs found, zero duplicate IDs
+PASS — referenced local HTML resources exist
+PASS — CSS parsed with tinycss2: 1,206 top-level rules/at-rules, zero parser/declaration errors
+PASS — build/cache marker versions agree between index.html, app.js and sw.js
+PASS — IndexedDB version remains 100
+PASS — static hooks exist for separate startup choreography and two-person page-turn motion; page-push body and hand gestures move inward from opposite sides
+PASS — static hooks exist for per-message presentation/motion, saved message list toggle, two-stage restore confirmation, cancel scan, startup/scan camera reconciliation, and celebration ribbon toggle
+PASS — isolated JavaScript unit test: photo-of-the-day selection was simulated for 500 consecutive dates; selection was stable within each date and did not repeat on consecutive dates for a pool of five; one-photo pool handled as expected
+PASS — isolated JavaScript unit test: camera reconciliation removed a duplicate ID membership and a record matching content key + normalized filename + size; distinct filenames/sizes were retained, and photo records remained present
+PASS — ZIP integrity check (see result at packaging)
+
+LIMITATIONS / NOT CLAIMED
+- Chromium navigation in the available test environment was blocked with ERR_BLOCKED_BY_ADMINISTRATOR, so no real browser visual/end-to-end check could be completed here.
+- Android installation, actual folder permissions, IndexedDB behavior on the user's device, visual animation fidelity, performance on thousands of actual photos, and the user's specific camira folder need device testing.
+- The personalized transparent couple art files are not included yet. Until generated and added, the motion system falls back to emojis; character likeness therefore is not complete in this build.
+- Camera dedup deliberately does not delete records/files; it removes only album memberships. Cross-file duplicates not represented by the same ID or a matching conservative signature may still need the existing duplicate-review flow.
+
+Release guidance: use as a separate test build first. Do not replace the production/phone copy until the device checks above pass.

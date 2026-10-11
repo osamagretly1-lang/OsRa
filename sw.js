@@ -1,6 +1,6 @@
-const BUILD='osra122-20261011-r50-link-scan-photo-festive';
+const BUILD='osra122-20261011-r51-choreography-custom-surprises';
 const CACHE=`OsRa-v122-${BUILD}`;
-const APP=['./','./index.html','./style.css?v=osra122-r50-link-scan-photo-festive','./app.js?v=osra122-r50-link-scan-photo-festive','./manifest.json','./icon.svg','./icon-192.png','./icon-512.png'];
+const APP=['./','./index.html','./style.css?v=osra122-r51-choreography-custom-surprises','./app.js?v=osra122-r51-choreography-custom-surprises','./manifest.json','./icon.svg','./icon-192.png','./icon-512.png'];
 const SHELL=new Set(APP.map(x=>new URL(x,self.location.href).href));
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(APP)).then(()=>self.skipWaiting())));
 self.addEventListener('message',event=>{if(event.data?.type==='SKIP_WAITING')self.skipWaiting()});

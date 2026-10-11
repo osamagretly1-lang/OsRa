@@ -1,0 +1,17 @@
+OsRa v122 — R51 CHOREOGRAPHY & CUSTOM SURPRISES
+Build date: 2026-10-11
+Base: OsRa_v122_R50_LINK_SCAN_PHOTO_FESTIVE.zip
+Backup: OsRa_v122_R50_BACKUP_BEFORE_R51.zip
+
+1) Motion is now explicitly separated into two sequences:
+   - Startup opening celebration: enter from opposing edges, meet, approach the viewer, reveal “احتفال 🎉”, pause in a reading pose, step back, high-five, and start the dance.
+   - Page-turn transition: both characters appear from opposite sides and lean/push toward the page using paired hand cues. The page turn does not reuse the startup countdown sequence.
+2) Previous five dance choices remain. A sixth soft 2.5D lift/spin illusion is added and the dance duration is extended. Optional page-push and lift pose image hooks are available for future transparent personalized assets.
+3) Loading ribbon now follows the persisted celebrations toggle; when celebrations are disabled it stays hidden on startup as well.
+4) Photo of the day remains stable during the same local date and actively avoids using the previously selected image as the new day's choice whenever there are at least two eligible photos. It refreshes on date change, foreground return, and minute check.
+5) Custom surprise messages save and apply per-message presentation style and movement options. Saved messages are behind a “عرض الرسائل المحفوظة” toggle and can be edited/deleted. Legacy custom message arrays remain readable.
+6) Restoring excluded images requires a warning/continue step and a second explicit final confirmation.
+7) Camera reconciliation removes duplicate membership from a Camera/Camira album when the photo ID is already assigned elsewhere, or a conservative sampled content signature, normalized filename, and size all match. It never deletes the underlying photo record or original file. Reconciliation runs on startup and after scanning.
+8) Cache/build version is bumped in app.js, index.html, and sw.js; IndexedDB remains at version 100 to avoid forced migrations.
+
+No personalized character images are bundled yet. Until transparent full-body images based on the user's references are generated and installed under assets/, the couple scene uses its existing safe emoji fallback. The choreography is coded for later asset replacement.

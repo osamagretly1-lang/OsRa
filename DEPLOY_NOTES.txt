@@ -1,11 +1,11 @@
-OsRa v122 — R49 FULL TEST BUILD
+OsRa v122 — R51 CHOREOGRAPHY / CUSTOM SURPRISES TEST BUILD
 
-This archive is a COMPLETE OsRa project test build based on the full R47 STABLE FULL SURPRISES RELIABLE LOOP archive. It is intended for a separate GitHub test repository/branch. Do not install over the production site until the live phone test passes.
+This candidate is based on the supplied R50_LINK_SCAN_PHOTO_FESTIVE build. The pre-change R50 snapshot is available separately as OsRa_v122_R50_BACKUP_BEFORE_R51.zip.
 
-Included files: full R47 project files plus the R49-modified application files. Existing PWA icons, manifest, README/build notes, and the R47 message-fix report are preserved.
+R51 prepares two separate character movements: (1) opening celebration where Osama and Rania enter from opposite sides, approach “احتفال”, pause as if reading it, step back, and dance; (2) page-turn movement where both appear at opposite edges and lean/push toward the page with opposing hands. The base character images and optional action-pose images are not yet included; those transparent images will be added after the user's personalized character art is generated.
 
-R49 changes are limited to the requested romantic surprise/message presentation, message cleanup, readability, stability helpers, white-dog replacement for Tom & Jerry, and service-worker cache revision. The existing app/data/linking/backup/restore/album/memory/birthday/scan features are retained.
+R51 also improves daily photo selection, per-message presentation and motion settings, the saved-message manager, two-stage excluded-photo restoration confirmation, camera album membership cleanup, and celebration-ribbon behavior. IndexedDB remains at version 100.
 
-The browser harness verified: JS syntax, service-worker syntax, CSS brace balance, required function presence, 16/16 motions, 29/29 scene styles, 24/24 long-message viewport checks, 20/20 message-cycle calls, 12/12 classic scenes, 100/100 message-pool calls, birthday greeting call, and zero Runtime.exceptionThrown events in that harness.
+Testing completed on this candidate: JavaScript syntax checks, HTML parsing/duplicate-ID checks, CSS parser checks, static feature checks, ZIP integrity checks, and isolated unit tests for daily-photo consistency and camera membership cleanup.
 
-Live Android/File System Access tests are still required for the user's real photo folders, source permission handles, scanning, original-file opening, and backup/restore behavior. Those cannot be simulated here with the user's actual device handles.
+The available environment blocked Chromium navigation with ERR_BLOCKED_BY_ADMINISTRATOR. Therefore browser/device end-to-end behavior, camera-folder edge cases, live filesystem permissions, IndexedDB on the user's phone, and visual likeness/motion must still be checked on the phone before replacing the current installation. Do not treat static validation as proof of full device acceptance.
