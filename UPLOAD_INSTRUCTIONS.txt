@@ -1,0 +1,14 @@
+OsRa R58 — Full site replacement
+
+This ZIP has the deployable website files at its root (index.html, app.js, style.css, sw.js, manifest, icons, and assets/).
+
+1. Before updating, make a backup of the current GitHub repository (Code -> Download ZIP).
+2. Download this ZIP and extract it on the phone/computer.
+3. In repository osamagretly1-lang/OsRa, open the ROOT folder — the level where the existing index.html currently sits.
+4. Choose Add file -> Upload files and upload the EXTRACTED CONTENTS into that root, keeping the assets/ folder structure. Do not upload the ZIP itself, and do not put the contents inside a new nested folder.
+5. Same-named root files will be replaced by R58. Review the file list carefully before Commit changes.
+6. After GitHub Pages finishes publishing, open the existing site URL and refresh. R58 updates its Service Worker cache marker.
+
+This is a full replacement bundle based on the latest complete saved source available to this build (R57), not a verified diff against the live GitHub source. Back up first: if your live repository has changes newer than R57, this upload may roll those back.
+
+Local data: this bundle keeps IndexedDB name OsRaDB and version 100. It does not contain your personal photos or browser database. Keep your data and original photo folders safe.

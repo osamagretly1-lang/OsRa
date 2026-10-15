@@ -1,6 +1,6 @@
-const BUILD='osra122-20261011-r53-current-sprites';
+const BUILD='osra122-20261015-r58-full-site-replacement';
 const CACHE=`OsRa-v122-${BUILD}`;
-const APP=['./','./index.html','./style.css?v=osra122-r53-current-sprites','./app.js?v=osra122-r53-current-sprites','./manifest.json','./icon.svg','./icon-192.png','./icon-512.png',
+const APP=['./','./index.html','./style.css?v=osra122-r58-full-site-replacement','./app.js?v=osra122-r58-full-site-replacement','./manifest.json','./icon.svg','./icon-192.png','./icon-512.png',
  './assets/osama-3d.png',
  './assets/rania-3d.png',
  './assets/osama-page-push.png',
@@ -31,7 +31,21 @@ const APP=['./','./index.html','./style.css?v=osra122-r53-current-sprites','./ap
  './assets/pose-library/rania-04.png',
  './assets/pose-library/rania-05.png',
  './assets/pose-library/rania-06.png',
- './assets/pose-library/rania-07.png'];
+ './assets/pose-library/rania-07.png',
+ './assets/couple-story/sheet-a-r1-c1.webp',
+ './assets/couple-story/sheet-a-r1-c2.webp',
+ './assets/couple-story/sheet-a-r2-c1.webp',
+ './assets/couple-story/sheet-a-r2-c2.webp',
+ './assets/couple-story/sheet-a-r3-c1.webp',
+ './assets/couple-story/sheet-a-r3-c2.webp',
+ './assets/couple-story/sheet-b-r1-c1.webp',
+ './assets/couple-story/sheet-b-r1-c2.webp',
+ './assets/couple-story/sheet-b-r2-c1.webp',
+ './assets/couple-story/sheet-b-r2-c2.webp',
+ './assets/couple-story/sheet-b-r3-c1.webp',
+ './assets/couple-story/sheet-b-r3-c2.webp',
+ './assets/couple-story/sheet-b-r4-c1.webp',
+ './assets/couple-story/sheet-b-r4-c2.webp',];
 const SHELL=new Set(APP.map(x=>new URL(x,self.location.href).href));
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(APP)).then(()=>self.skipWaiting())));
 self.addEventListener('message',event=>{if(event.data?.type==='SKIP_WAITING')self.skipWaiting()});

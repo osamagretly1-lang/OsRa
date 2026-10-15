@@ -1,0 +1,11 @@
+OsRa v122 — R58 FULL SITE REPLACEMENT + SINGLE ACTOR PAGE TURN
+Date: 2026-10-15
+Base: saved R57 reviewed candidate. This archive places the complete site bundle at ZIP root for direct replacement of the current website after backup.
+
+1. Fixed stale Service Worker registration URL: app.js now registers the same R58 build key used by sw.js; app.js, index.html, CSS URLs, and service-worker shell URLs use aligned R58 cache markers.
+2. Page-turn character: only one character is rendered per direction. Forward turn shows Osama using assets/osama-page-push.png; backward turn shows Rania using assets/rania-page-push.png. This is synchronized with the existing album-book leaf flip and uses the previously authored pose art; the opposite person is not inserted into the page-turn host.
+3. Added final CSS overrides for one-person placement, motion direction, portrait screens and reduced-motion preference.
+4. All other R57 application files and assets are preserved, including 14 paired-couple frames, source-first linking, visual report thumbnails, batch duplicate review, message pool changes, recurring 11 PM–1 AM kiss message, and choreography fallbacks.
+5. IndexedDB stays `OsRaDB`, version 100. No database reset or migration is introduced. No personal photo database/originals are included.
+
+LIMITATIONS: The R57 base was the newest complete saved archive available; it was not diffed against live GitHub source because the repository could not be fetched in this environment. This release uses existing authored page-push sprites and does not contain newly generated frames for every single-character page-turn phase or an exact palm-to-palm high-five. Do not treat the art as a fully regenerated final character sheet.

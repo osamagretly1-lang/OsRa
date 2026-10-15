@@ -1,0 +1,26 @@
+OsRa R58 — Static QA / Full-Site Replacement Report
+Date: 2026-10-15
+Artifact: OsRa_R58_FULL_SITE_REPLACEMENT.zip
+
+PASSED CHECKS
+- `node --check app.js` passed.
+- `node --check sw.js` passed.
+- HTML parsed: 40 IDs and no duplicate IDs; all 7 local HTML asset references resolve.
+- Recursive CSS parse: 2,103 rules and 4,881 declarations; zero parser/declaration errors.
+- Service Worker shell: 53 local precache references, all files exist in this package.
+- Cache/build markers are aligned: app.js and index.html R58 marker; index CSS/JS query strings, Service Worker registration and sw.js BUILD key all point to R58.
+- Isolated Node unit check passed: forward page turns emit only Osama's page-push sprite, reverse page turns emit only Rania's page-push sprite; the opposite character is not inserted into the host.
+- IndexedDB remains `OsRaDB`, version 100; no migration/reset code added.
+- All 14 existing transparent paired-couple WebP frames are present at 800x700 RGBA.
+- Verified static code contracts are present for the restored message content/night schedule, source-first quick-linking, thumbnail previews in the missing-photo report, and batch duplicate review.
+- ZIP integrity and extracted app.js/sw.js syntax will be checked after packaging.
+
+NOT VERIFIED
+- No real Android/browser end-to-end run was possible in this environment. Static validation is not proof of device acceptance.
+- The release is built from the newest complete source archive available in the saved project files (R57). It was not compared with current live GitHub files because the live repository could not be retrieved in this session. If live GitHub has newer changes, this replacement may roll those changes back.
+- The page-turn direction logic now shows one person per direction using existing page-push sprites. Fully new generated phase-by-phase art and a precise palm-to-palm high-five image have not been generated in this package.
+
+DATA SAFETY
+- Personal photo files and the browser's IndexedDB are not included in the ZIP.
+- The deployed app retains the existing IndexedDB database name/version (`OsRaDB`, 100) to avoid intentionally creating a new database or forcing migration.
+- Keep a ZIP backup of the current repository before replacement and test the deployed release immediately after publishing.
