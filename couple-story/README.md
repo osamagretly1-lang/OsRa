@@ -1,1 +1,0 @@
-OsRa Couple Story Assets
