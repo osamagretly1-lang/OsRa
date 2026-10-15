@@ -1,0 +1,17 @@
+OsRa v122 — R59 CROPPED PUSH + DYNAMIC PAIR MOTION
+Build date: 2026-10-15
+Base: the saved OsRa_R58_FULL_SITE_REPLACEMENT bundle. This was not diffed against a potentially newer live GitHub repository.
+
+Changes in R59
+1. Re-cropped the page-push characters directly from the two pose sheets supplied in chat. The new transparent 420x430 sprites retain the entire head, extended hand, body and both shoes; checkboard background and panel dividers are removed with a connected-background mask. No new image-generation request was used for this update.
+2. Page-turn choreography is directional and timed to the existing 760ms book-leaf flip: forward turn uses Osama at the left pushing right; backward turn uses Rania at the right, mirrored to push left. Only the relevant character appears during that transition.
+3. Reduced oversized/unsafe page-push framing and added contain-fit sizing with no intentional crop. The full-body character and hand stay within the page-turn overlay.
+4. Replaced the paired-couple single-image slot with two alternating image buffers. The next full-body pose is loaded first, then cross-fades against the previous one; an understated, continuous camera sway/depth drift runs through the sequence. The paired story uses a quicker ~320–400ms beat cadence rather than the old ~650–740ms holds.
+5. Added two-buffer cross-fades for the individual character pose changes used in dance modes, rather than replacing the visible image in one hard swap. Reduced the base character box slightly and use contain-fit sizing so transformations are less likely to clip heads or feet.
+6. Lowered the character in the random heart-transition scene a little so the face is better positioned in view.
+7. Refreshed the active automatic message pool to match the latest list supplied by the user: the 11 short messages, the 3 requested longer romantic messages, the 3 requested playful messages, and the separate “هات بوسه 🙈🙊” message scheduled within the 11 PM–1 AM window. Removed the unrequested older playful line and older extra messages. The prior unlisted long-message copy is no longer used; the long-message scene now selects from the three approved longer messages.
+8. Updated HTML/app/Service Worker cache markers to R59. IndexedDB remains `OsRaDB`, version 100; no schema migration or database reset was introduced.
+
+Known technical boundary
+- The dance is still a 2.5D composition from the available transparent pose art. Faster transitions, cross-fades and camera motion improve continuity, but this is not a fully articulated 3D rig or new motion-capture animation. Creating additional matching dance frames can be done later, as requested.
+- The two provided sheets are checkered-background JPEGs rather than original transparent art. The new push poses are carefully masked/cropped, but pixel-perfect hair/cloth mattes cannot be guaranteed from a JPEG source.

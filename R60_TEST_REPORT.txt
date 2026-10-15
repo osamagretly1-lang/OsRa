@@ -1,0 +1,21 @@
+OsRa R60 — STATIC VALIDATION REPORT
+Date: 2026-10-15
+
+PASS — JavaScript syntax: `node --check app.js`.
+PASS — Service-worker syntax: `node --check sw.js`.
+PASS — HTML parse: index.html parsed; 40 element IDs detected, no duplicate IDs.
+PASS — HTML local references: manifest.json, style.css and app.js exist at the ZIP root.
+PASS — CSS parse using tinycss2: 1,387 top-level rules parsed; zero parser errors.
+PASS — Service-worker precache references: 52 local references checked; no missing local assets found.
+PASS — Static feature checks: build marker, source-wide button, exact identity verification, actual match/extra previews, paginated multi-selection, saved duplicate draft, no single-choice rescan, opposing page-turn actors, paired lift/celebration frames, nighttime kiss, latest flirt wording and preserved IndexedDB version.
+PASS — Integrity boundary: build references OsRaDB version 100 and includes no personal photos or browser database.
+
+NOT VERIFIED — Real browser/device rendering. A headless Chromium startup/dump-dom attempt in this environment did not complete (zygote/DBus errors and timeout). Consequently, this report does not claim successful interactive browser testing or Android visual QA.
+NOT VERIFIED — Live GitHub Pages deployment or comparison with the current live repository. No deployment was performed.
+
+RECOMMENDED MANUAL CHECK BEFORE DEPLOYMENT
+1. Back up the current live repository and compare it with this bundle; R60 is derived from the saved R59 bundle and may not contain newer live-only edits.
+2. On the published HTTPS site in current Chrome/Android, verify startup greeting, both page-turn directions, the pair dance/cross-fades, and full-body framing.
+3. In Settings, select a test source tree. Confirm matches are shown with actual previews, only identity-verified matches are committed, and extras are reviewed without deleting source files.
+4. Review duplicates, select several groups, close/reopen the review, and confirm choices restore without a new scan when handling one group.
+5. Verify backup/restore and existing albums before replacing the live site.

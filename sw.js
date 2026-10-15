@@ -1,6 +1,6 @@
-const BUILD='osra122-20261015-r58-full-site-replacement';
+const BUILD='osra122-20261015-r60-source-batch-review';
 const CACHE=`OsRa-v122-${BUILD}`;
-const APP=['./','./index.html','./style.css?v=osra122-r58-full-site-replacement','./app.js?v=osra122-r58-full-site-replacement','./manifest.json','./icon.svg','./icon-192.png','./icon-512.png',
+const APP=['./','./index.html','./style.css?v=osra122-r60-source-batch-review','./app.js?v=osra122-r60-source-batch-review','./manifest.json','./icon.svg','./icon-192.png','./icon-512.png',
  './assets/osama-3d.png',
  './assets/rania-3d.png',
  './assets/osama-page-push.png',

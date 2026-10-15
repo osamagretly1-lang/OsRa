@@ -1,0 +1,26 @@
+OsRa R59 — Static QA Report
+Date: 2026-10-15
+Artifact: OsRa_R59_CROPPED_MOTION_RELEASE_CANDIDATE.zip
+Base: saved R58 full-site bundle; not diffed against live GitHub.
+
+PASSED
+- `node --check app.js`.
+- `node --check sw.js`.
+- HTML parsed: 40 IDs, no duplicates; all 7 local index.html src/href references resolve.
+- CSS parsed: 1,367 top-level rules/at-rules traversed; zero parser/declaration errors.
+- Service Worker precache list: 52 local path entries; every referenced local file exists in the bundle.
+- Build/cache markers align in index.html, app.js, sw.js, CSS/JS cache query strings and the app's Service Worker registration.
+- IndexedDB name/version remains `OsRaDB` / `100`.
+- Both page-push sprite files are 420x430 RGBA PNGs, have transparent corners and a non-empty silhouette alpha bounding box; full-body pose crops were reviewed over a checkerboard preview.
+- Static feature checks confirm two-frame paired cross-fade, two-buffer dance-pose cross-fade, opposite-direction Rania mirror, 760ms page-turn timing, and updated message pools.
+- Old unrequested composite playful message and old unlisted long-message copy are absent from active source.
+- ZIP archive integrity and file-entry list checked after packaging.
+
+NOT VERIFIED
+- A Chromium headless smoke run was attempted but stalled during browser startup with DBus/GPU process errors before producing DOM output. This is not reported as a successful browser end-to-end test.
+- No real Android handset visual test was performed in this build turn. Exact page-turn alignment, perceived dance smoothness, message face framing, source-folder permissions, photo libraries of thousands of items, and birthday/night timing still require device acceptance testing.
+- No visual guarantee of fully articulated 3D dance is claimed; motion is enhanced 2.5D using available authored poses.
+
+DATA SAFETY
+- The archive contains application code and bundled art only; it does not contain the user's private photo collection or browser IndexedDB data.
+- Do not replace the live repository before downloading a backup ZIP of its current contents. Because R59 is based on the saved R58/R57 chain and has not been compared against current live GitHub files, later live-only code may need to be merged first.

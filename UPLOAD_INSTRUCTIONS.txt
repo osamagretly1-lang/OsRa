@@ -1,14 +1,23 @@
-OsRa R58 — Full site replacement
+OsRa R60 — Full Site Replacement Candidate
+Build marker: osra122-r60-source-batch-review
 
-This ZIP has the deployable website files at its root (index.html, app.js, style.css, sw.js, manifest, icons, and assets/).
+SAFETY FIRST
+1. Download a ZIP of the CURRENT live GitHub repository `osamagretly1-lang/OsRa` and keep it untouched as a rollback copy.
+2. Compare the live files with this bundle before replacing anything. R60 is derived from the saved R59 bundle and was not diffed against the current live GitHub repository; do not overwrite newer live-only work blindly.
+3. Read `R60_CHANGELOG.txt` and `R60_TEST_REPORT.txt`. Static checks passed, but interactive browser/Android QA is still required.
 
-1. Before updating, make a backup of the current GitHub repository (Code -> Download ZIP).
-2. Download this ZIP and extract it on the phone/computer.
-3. In repository osamagretly1-lang/OsRa, open the ROOT folder — the level where the existing index.html currently sits.
-4. Choose Add file -> Upload files and upload the EXTRACTED CONTENTS into that root, keeping the assets/ folder structure. Do not upload the ZIP itself, and do not put the contents inside a new nested folder.
-5. Same-named root files will be replaced by R58. Review the file list carefully before Commit changes.
-6. After GitHub Pages finishes publishing, open the existing site URL and refresh. R58 updates its Service Worker cache marker.
+WHEN READY TO PUBLISH
+1. Extract this ZIP.
+2. Open the repository root (the same level as the current `index.html`).
+3. Upload the EXTRACTED CONTENTS into the root, preserving the `assets/` folder and its nested directories. Do not upload the ZIP as a single file.
+4. Confirm `index.html`, `app.js`, `style.css`, `sw.js`, `manifest.json`, icon files and every nested asset are present before committing.
+5. After GitHub Pages publishes, open the HTTPS site in current Chrome and allow the Service Worker to update (the cache marker is R60).
+6. Test page turns forward and backward, startup greeting, dance motion, messages, duplicate review, backup/restore, and the new source-wide matching flow with a small test folder before using the full photo source.
 
-This is a full replacement bundle based on the latest complete saved source available to this build (R57), not a verified diff against the live GitHub source. Back up first: if your live repository has changes newer than R57, this upload may roll those back.
+SOURCE-WIDE MATCH TEST
+- Pick one folder that contains samples from more than one album.
+- Review actual source/target thumbnail pairs and confirm only verified matches.
+- Check extras across pages. Ignore should not delete anything; album import should add only selected files. Test with backed-up data first.
 
-Local data: this bundle keeps IndexedDB name OsRaDB and version 100. It does not contain your personal photos or browser database. Keep your data and original photo folders safe.
+DATA SAFETY
+Do not delete the prior repository backup or personal originals folder. IndexedDB remains `OsRaDB` / version 100. This ZIP contains neither personal photos nor browser database contents. No live deployment has been performed by creating this ZIP.

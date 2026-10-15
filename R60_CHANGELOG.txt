@@ -1,0 +1,39 @@
+OsRa v122 — R60 SOURCE-WIDE MATCH + SAVED DUPLICATE REVIEW
+Build date: 2026-10-15
+Starting point: latest saved full-site bundle available in this workspace, OsRa R59. This bundle was not diffed against a potentially newer live GitHub Pages repository.
+
+CHANGES IN R60
+
+1. Source-wide, multi-album matching
+- New Settings action: “مصدر شامل — مطابقة كل الألبومات ومراجعة الصور الزائدة”.
+- Pick one folder tree containing images for multiple albums. OsRa indexes images in that tree, then considers photos missing original links in visible albums.
+- Candidate filenames are used to find candidates, but the program does not rely on order or album image counts. Each candidate is checked against stored content identity/fingerprint; only where the record has neither identity key does the existing conservative size + last-modified fallback apply.
+- Ambiguous candidates or failed identity checks are not auto-linked. The original files are read-only during the matching pass.
+- The review lists which albums will receive matched images and shows actual image previews for the stored target and source candidate before the user confirms linking.
+
+2. Remaining-image review
+- Files not used in a verified album match appear as actual thumbnail cards in a paginated view (36 per page), with multi-selection preserved across pages.
+- The user may ignore remaining files for this process, add selected files to a new album, or add selected files to an existing album.
+- Failed imports stay in the review list for another attempt. Original source files are never deleted automatically. No album is created unless the user requests it.
+
+3. Duplicate review continuity
+- The duplicate-results screen keeps actual thumbnail previews and allows choosing a keeper independently for each duplicate group, then applying multiple groups in one batch.
+- Decisions are saved locally by stable group identity so matching selections can be restored on a later review.
+- The single-group decision/merge path updates the current review and does not automatically restart a full duplicate scan.
+- Duplicate cleanup changes OsRa records and album memberships only; it does not delete original files from source folders.
+
+4. Character motion and framing
+- Uses the currently available 2.5D paired-couple pose artwork, double image buffers and cross-fades so each incoming frame loads before the previous one fades out.
+- Intro uses opposing left/right character entrances and the existing wave poses for the greeting. Dance choreography now starts with a slower motion, then moves to a quicker sequence of connected couple poses.
+- Forward page turns show Osama pushing from the left toward the right; backward turns show Rania from the right toward the left.
+- Character sprites and connected couple art use contain-fit sizing with smaller mobile framing to reduce head, hand and foot clipping.
+- This remains a 2.5D pose-frame animation, not a fully articulated 3D rig or motion-captured video.
+
+5. Messages
+- The latest short, longer romantic, and playful messages provided by the user remain the active pool.
+- Corrected the requested “أنا مجرد تطبيق على الموبايل...” wording.
+- “هات بوسه 🙈🙊” remains a separate nighttime message scheduled between 11 PM and 1 AM.
+
+DATA SAFETY
+- IndexedDB remains OsRaDB, version 100. No schema bump, database reset or user-photo payload is included.
+- The build does not modify the user's live repository or live website by itself.

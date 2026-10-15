@@ -1311,3 +1311,92 @@ body.surprises-muted #bootSplash .boot-loading{display:none!important}
 @media(prefers-reduced-motion:reduce){
  .osra-page-turn-couple.actor-osama.show .osra-couple-osama,.osra-page-turn-couple.actor-rania.show .osra-couple-rania{animation:none!important;transform:none!important}
 }
+
+/* R59 — fit whole poses, cross-fade the authored couple frames, and synchronize the page push to the 760ms leaf turn. */
+.osra-couple-stage{overflow:visible!important;}
+.osra-couple-stage:not(.osra-pair-art-active)>.osra-couple-person{width:clamp(68px,14vw,152px);height:clamp(165px,34vh,292px);}
+.osra-couple-stage:not(.osra-pair-art-active)>.osra-couple-person img{width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain;object-position:center bottom;}
+.osra-couple-stage.osra-pair-art-active>.osra-couple-paired-art{display:block;opacity:1;visibility:visible;overflow:visible;transform-origin:center bottom;transform-style:preserve-3d;animation:osraPairStoryCameraR59 1.36s cubic-bezier(.42,0,.58,1) infinite;will-change:transform;}
+.osra-couple-paired-art img.osra-pair-frame{position:absolute;left:50%;bottom:0;display:block;width:min(760px,calc(100vw - 12px));height:min(68vh,610px);max-width:calc(100vw - 12px)!important;max-height:68vh;object-fit:contain;object-position:center bottom;opacity:0;z-index:0;transform:translate3d(-50%,.7vh,-16px) scale(.965) rotateZ(-.45deg);transform-origin:center bottom;transition:opacity .16s ease-out,transform .32s cubic-bezier(.18,.72,.2,1);backface-visibility:hidden;will-change:opacity,transform;filter:drop-shadow(0 10px 16px rgba(25,15,30,.17));}
+.osra-couple-paired-art img.osra-pair-frame.is-visible{opacity:1;z-index:2;transform:translate3d(-50%,0,0) scale(1) rotateZ(0deg);}
+.osra-couple-paired-art img.osra-pair-frame.is-leaving{opacity:0;z-index:1;transform:translate3d(calc(-50% + 1.1vw),-1vh,-26px) scale(.982) rotateZ(.5deg);}
+@keyframes osraPairStoryCameraR59{
+  0%,100%{transform:translate3d(0,0,0) rotateZ(-.22deg) scale(1)}
+  24%{transform:translate3d(-.45vw,-.65vh,8px) rotateZ(.22deg) scale(1.012)}
+  51%{transform:translate3d(.35vw,-.15vh,15px) rotateZ(.05deg) scale(1.022)}
+  76%{transform:translate3d(.2vw,-.7vh,7px) rotateZ(-.28deg) scale(1.012)}
+}
+/* The page turns forward to the right: Osama pushes right from the left edge.
+   Backward turns use the mirrored Rania pose, pushing left from the right edge. */
+.osra-page-turn-couple{height:clamp(180px,30vh,250px)!important;overflow:visible!important;isolation:isolate;perspective:1000px;}
+.osra-page-turn-couple .osra-couple-person{bottom:0!important;width:clamp(145px,39vw,235px)!important;height:clamp(175px,28vh,225px)!important;display:grid!important;place-items:end center!important;overflow:visible!important;}
+.osra-page-turn-couple .osra-couple-person img{display:block;width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important;object-position:center bottom!important;transform-origin:center bottom;}
+.osra-page-turn-couple.actor-osama .osra-couple-osama{left:2px!important;right:auto!important;transform-origin:bottom left!important;}
+.osra-page-turn-couple.actor-rania .osra-couple-rania{right:2px!important;left:auto!important;transform-origin:bottom right!important;}
+.osra-page-turn-couple.actor-rania.backward .osra-couple-rania img{transform:scaleX(-1)!important;}
+.osra-page-turn-couple.actor-osama.forward.show .osra-couple-osama{animation:osraPagePushOsamaR59 .76s cubic-bezier(.16,.76,.22,1) both!important;}
+.osra-page-turn-couple.actor-rania.backward.show .osra-couple-rania{animation:osraPagePushRaniaR59 .76s cubic-bezier(.16,.76,.22,1) both!important;}
+.osra-page-turn-couple.actor-osama:not(.show) .osra-couple-osama{transform:translate3d(-44vw,8px,0) rotateZ(-10deg) scale(.78);}
+.osra-page-turn-couple.actor-rania:not(.show) .osra-couple-rania{transform:translate3d(44vw,8px,0) rotateZ(10deg) scale(.78);}
+@keyframes osraPagePushOsamaR59{
+  0%{transform:translate3d(-44vw,8px,0) rotateZ(-10deg) scale(.78)}
+  22%{transform:translate3d(1.5vw,-5px,26px) rotateZ(4deg) scale(1)}
+  47%{transform:translate3d(10vw,-2px,48px) rotateZ(8deg) scale(1.035)}
+  64%{transform:translate3d(6vw,0,24px) rotateZ(3deg) scale(1.015)}
+  83%{transform:translate3d(1.5vw,0,8px) rotateZ(1deg) scale(1)}
+  100%{transform:translate3d(0,0,0) rotateZ(0) scale(1)}
+}
+@keyframes osraPagePushRaniaR59{
+  0%{transform:translate3d(44vw,8px,0) rotateZ(10deg) scale(.78)}
+  22%{transform:translate3d(-1.5vw,-5px,26px) rotateZ(-4deg) scale(1)}
+  47%{transform:translate3d(-10vw,-2px,48px) rotateZ(-8deg) scale(1.035)}
+  64%{transform:translate3d(-6vw,0,24px) rotateZ(-3deg) scale(1.015)}
+  83%{transform:translate3d(-1.5vw,0,8px) rotateZ(-1deg) scale(1)}
+  100%{transform:translate3d(0,0,0) rotateZ(0) scale(1)}
+}
+.heart-transition-person{top:56%!important;max-height:45vh!important;}
+@media(max-width:600px){
+ .osra-couple-stage:not(.osra-pair-art-active)>.osra-couple-person{width:clamp(66px,17vw,112px);height:clamp(145px,30vh,228px);}
+ .osra-couple-paired-art img.osra-pair-frame{width:calc(100vw - 12px);height:min(66vh,510px);max-width:calc(100vw - 12px)!important;max-height:66vh;}
+ .osra-page-turn-couple{height:clamp(175px,29vh,225px)!important;}
+ .osra-page-turn-couple .osra-couple-person{width:clamp(138px,40vw,205px)!important;height:clamp(170px,27vh,210px)!important;}
+ .heart-transition-person{top:55%!important;max-height:40vh!important;width:min(42vw,180px)!important;}
+}
+@media(prefers-reduced-motion:reduce){
+ .osra-couple-stage.osra-pair-art-active>.osra-couple-paired-art{animation:none!important;}
+ .osra-couple-paired-art img.osra-pair-frame{transition:opacity .08s linear!important;}
+ .osra-page-turn-couple.actor-osama.forward.show .osra-couple-osama,.osra-page-turn-couple.actor-rania.backward.show .osra-couple-rania{animation:none!important;}
+}
+/* R59 — pose buffers cross-fade dance steps without flash frames; full-body assets stay contain-fitted. */
+.osra-couple-person{position:relative;isolation:isolate;}
+.osra-couple-person img.osra-pose-layer{position:absolute;inset:0;display:block;width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain;object-position:center bottom;opacity:0;z-index:0;transition:opacity .17s ease-out,filter .22s ease;will-change:opacity;backface-visibility:hidden;}
+.osra-couple-person img.osra-pose-layer.pose-visible{opacity:1;z-index:2;}
+.osra-couple-person img.osra-pose-layer.pose-leaving{opacity:0;z-index:1;}
+.osra-page-turn-couple.actor-rania.backward .osra-couple-rania img.osra-pose-layer{transform:scaleX(-1)!important;}
+@media(prefers-reduced-motion:reduce){.osra-couple-person img.osra-pose-layer{transition:opacity .01ms!important;}}
+/* Keep the connected-couple sequence near the scale of the small character scene, while preserving every head and shoe. */
+.osra-couple-paired-art img.osra-pair-frame{width:min(450px,calc(100vw - 20px));height:min(36vh,300px);max-width:calc(100vw - 20px)!important;max-height:36vh;}
+@media(max-width:600px){.osra-couple-paired-art img.osra-pair-frame{width:min(325px,calc(100vw - 14px));height:min(29vh,215px);max-width:calc(100vw - 14px)!important;max-height:29vh;}}
+
+
+/* R60 — source-wide visual review: real source thumbnails, compact compare, safe batch choices. */
+.source-batch-album-list{display:grid;gap:8px;margin:12px 0;max-height:24vh;overflow:auto}
+.source-batch-album-count{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 11px;border:1px solid var(--line,#e4d9e1);border-radius:11px;background:var(--surface,#fff);line-height:1.45}
+.source-batch-album-count span{font-size:.9em;opacity:.82;text-align:left}
+.source-batch-match-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;max-height:34vh;overflow:auto;margin:10px 0;padding:3px}
+.source-batch-match{display:grid;grid-template-columns:minmax(0,1fr) 24px minmax(0,1fr);align-items:center;gap:6px;min-width:0;padding:8px;border:1px solid var(--line,#e4d9e1);border-radius:13px;background:var(--surface,#fff)}
+.source-batch-match-photo{min-width:0;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center}
+.source-batch-match-photo img{display:block;width:100%;height:clamp(100px,18vh,180px);object-fit:contain;object-position:center;background:var(--surface-2,#f5f2f4);border-radius:8px}
+.source-batch-match-photo small{display:block;width:100%;overflow-wrap:anywhere;font-size:.78em;line-height:1.35}
+.source-batch-match-arrow{text-align:center;font-size:21px;font-weight:800;color:var(--accent,#a83262)}
+.source-batch-selection-bar{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin:10px 0;padding:8px;border:1px solid var(--line,#e4d9e1);border-radius:11px;background:var(--surface-2,#f8f4f7)}
+.source-batch-extra-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;max-height:43vh;overflow:auto;padding:3px;margin:8px 0}
+.source-batch-extra-card{display:flex;flex-direction:column;gap:5px;min-width:0;padding:7px;border:1px solid var(--line,#e4d9e1);border-radius:11px;background:var(--surface,#fff);cursor:pointer}
+.source-batch-extra-card input{align-self:flex-start;width:19px;height:19px;flex:0 0 19px;accent-color:var(--accent,#a83262)}
+.source-batch-extra-card img{width:100%;height:clamp(80px,13vh,132px);object-fit:contain;object-position:center;background:var(--surface-2,#f5f2f4);border-radius:7px}
+.source-batch-extra-card b,.source-batch-extra-card small{overflow-wrap:anywhere;word-break:break-word;line-height:1.35}
+.source-batch-extra-card b{font-size:.84em}
+.source-batch-extra-card small{font-size:.72em;opacity:.78}
+.source-batch-extra-card:has(input:checked){border-color:var(--accent,#a83262);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent,#a83262) 18%,transparent)}
+@media(max-width:650px){.source-batch-match-grid{grid-template-columns:1fr;max-height:32vh}.source-batch-match-photo img{height:clamp(105px,19vh,175px)}.source-batch-extra-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;max-height:42vh}.source-batch-extra-card{padding:5px;gap:4px}.source-batch-extra-card img{height:clamp(70px,12vh,112px)}.source-batch-selection-bar .btn{font-size:12px;padding:7px 9px}}
+@media(max-width:390px){.source-batch-extra-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.source-batch-match{gap:4px;padding:5px}.source-batch-match-arrow{font-size:17px}}
