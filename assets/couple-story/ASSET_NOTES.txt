@@ -1,0 +1,5 @@
+OsRa R56 paired-couple choreography assets
+
+These 14 transparent WebP frames were extracted and normalized from the two pose sheets supplied on 2026-10-14. Each frame is 800x700 RGBA WebP and is referenced by the R56 choreography in app.js and cached by sw.js. The full R56 ZIP includes the application code that uses these frames; this asset folder is not a separate application.
+
+The frames are shown as an occasional paired-art interlude during the existing couple celebration dance. Existing character sprites and other animation modes remain available.
