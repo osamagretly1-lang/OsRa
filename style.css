@@ -1400,3 +1400,151 @@ body.surprises-muted #bootSplash .boot-loading{display:none!important}
 .source-batch-extra-card:has(input:checked){border-color:var(--accent,#a83262);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent,#a83262) 18%,transparent)}
 @media(max-width:650px){.source-batch-match-grid{grid-template-columns:1fr;max-height:32vh}.source-batch-match-photo img{height:clamp(105px,19vh,175px)}.source-batch-extra-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;max-height:42vh}.source-batch-extra-card{padding:5px;gap:4px}.source-batch-extra-card img{height:clamp(70px,12vh,112px)}.source-batch-selection-bar .btn{font-size:12px;padding:7px 9px}}
 @media(max-width:390px){.source-batch-extra-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.source-batch-match{gap:4px;padding:5px}.source-batch-match-arrow{font-size:17px}}
+
+
+/* R61 — continuous paired-dance motion and safe full-character rendering on random message cards. */
+.osra-couple-stage.osra-pair-art-active>.osra-couple-paired-art{
+ animation:osraPairStoryCameraR61 5.2s cubic-bezier(.42,0,.58,1) infinite!important;
+}
+.osra-couple-paired-art img.osra-pair-frame{
+ transition:opacity .26s ease-in-out,transform .42s cubic-bezier(.22,.72,.18,1)!important;
+ transform:translate3d(-50%,.9vh,-12px) scale(.955) rotateZ(-.38deg);
+}
+.osra-couple-paired-art img.osra-pair-frame.is-visible{
+ transform:translate3d(-50%,0,0) scale(1) rotateZ(0deg);
+}
+.osra-couple-paired-art img.osra-pair-frame.is-leaving{
+ transform:translate3d(calc(-50% + 1.25vw),-1.1vh,-20px) scale(.986) rotateZ(.32deg);
+}
+@keyframes osraPairStoryCameraR61{
+ 0%,100%{transform:translate3d(0,0,0) rotateZ(-.18deg) scale(1)}
+  22%{transform:translate3d(-.75vw,-.5vh,8px) rotateZ(.24deg) scale(1.018)}
+  48%{transform:translate3d(.55vw,-.9vh,14px) rotateZ(.08deg) scale(1.028)}
+  74%{transform:translate3d(.9vw,-.25vh,7px) rotateZ(-.2deg) scale(1.016)}
+}
+
+/* The old sticker sat above an overflow:auto card, which could crop the top of Osama's head.
+   The R61 layout reserves a character lane inside the card and keeps message scrolling local to text. */
+.romantic-scene-layer .rs-card.has-osra-sticker{
+ overflow:visible!important;
+ padding-top:clamp(132px,15vw,184px)!important;
+}
+.romantic-scene-layer .rs-card.has-osra-sticker .rs-sticker{
+ top:10px!important;
+ right:12px!important;
+ width:clamp(72px,9vw,116px)!important;
+ height:clamp(105px,13vw,169px)!important;
+ overflow:visible!important;
+ z-index:20!important;
+ transform:rotate(3deg);
+}
+.romantic-scene-layer .rs-card.has-osra-sticker .rs-sticker img{
+ display:block!important;
+ width:100%!important;
+ height:100%!important;
+ object-fit:contain!important;
+ object-position:center top!important;
+}
+.romantic-scene-layer .rs-card.has-osra-sticker .rs-message{
+ max-height:min(46vh,390px);
+ overflow-y:auto;
+ overscroll-behavior:contain;
+ scrollbar-width:thin;
+}
+@media(max-width:600px){
+ .romantic-scene-layer .rs-card.has-osra-sticker{padding-top:132px!important;}
+ .romantic-scene-layer .rs-card.has-osra-sticker .rs-sticker{
+  top:8px!important;right:8px!important;
+  width:78px!important;height:114px!important;
+ }
+ .romantic-scene-layer .rs-card.has-osra-sticker .rs-message{max-height:min(44vh,320px);}
+}
+@media(prefers-reduced-motion:reduce){
+ .osra-couple-stage.osra-pair-art-active>.osra-couple-paired-art{animation:none!important;}
+ .osra-couple-paired-art img.osra-pair-frame{transition:opacity .14s linear!important;}
+}
+.osra-couple-person img.osra-pose-layer{transition:opacity .26s cubic-bezier(.22,.72,.18,1),filter .24s ease!important;}
+
+
+/* R62 — use added paired poses and prevent paint-containment from clipping the head/face sticker. */
+.osra-couple-stage.osra-pair-art-active>.osra-couple-paired-art{
+ animation:osraPairStoryCameraR62 8.8s cubic-bezier(.42,0,.58,1) infinite!important;
+}
+.osra-couple-paired-art img.osra-pair-frame{
+ transition:opacity .30s ease-in-out,transform .56s cubic-bezier(.22,.72,.18,1)!important;
+}
+@keyframes osraPairStoryCameraR62{
+ 0%,100%{transform:translate3d(0,0,0) rotateZ(-.12deg) scale(1)}
+  20%{transform:translate3d(-.48vw,-.35vh,5px) rotateZ(.12deg) scale(1.012)}
+  48%{transform:translate3d(.44vw,-.55vh,9px) rotateZ(.04deg) scale(1.02)}
+  76%{transform:translate3d(.55vw,-.12vh,4px) rotateZ(-.14deg) scale(1.012)}
+}
+/* contain:paint on the card clips the absolutely-positioned sticker even when overflow is visible.
+   Keep layout containment only; let the character's full head/hair silhouette render outside the card. */
+.romantic-scene-layer .rs-card.has-osra-sticker{
+ contain:layout!important;
+ overflow:visible!important;
+ clip-path:none!important;
+}
+.romantic-scene-layer .rs-card.has-osra-sticker .rs-sticker{
+ overflow:visible!important;
+ contain:none!important;
+ isolation:isolate;
+}
+.romantic-scene-layer .rs-card.has-osra-sticker .rs-sticker img{
+ width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;
+ object-fit:contain!important;object-position:center center!important;
+}
+
+
+/* R64 — large dance uses only the new white-hoodie/pink-dress 24-frame atlas. */
+.osra-couple-stage.osra-pair-art-active>.osra-couple-paired-art{
+ animation:osraPairStoryCameraR64 4.4s cubic-bezier(.42,0,.58,1) infinite!important;
+}
+.osra-couple-paired-art img.osra-pair-frame{
+ transition:opacity .09s linear,transform .17s cubic-bezier(.22,.7,.2,1)!important;
+}
+.osra-couple-paired-art img.osra-pair-frame.is-leaving{
+ transform:translate3d(calc(-50% + .35vw),-.22vh,-3px) scale(.999) rotateZ(.08deg)!important;
+}
+@keyframes osraPairStoryCameraR64{
+ 0%,100%{transform:translate3d(0,0,0) rotateZ(-.05deg) scale(1)}
+ 25%{transform:translate3d(-.22vw,-.12vh,2px) rotateZ(.05deg) scale(1.006)}
+ 50%{transform:translate3d(.20vw,-.20vh,3px) rotateZ(0deg) scale(1.009)}
+ 75%{transform:translate3d(.25vw,-.05vh,1px) rotateZ(-.06deg) scale(1.005)}
+}
+.osra-couple-stage.osra-pair-art-active .osra-couple-paired-art img.osra-pair-frame{
+ width:min(760px,calc(100vw - 12px));height:min(66vh,610px);max-width:calc(100vw - 12px)!important;max-height:66vh;object-fit:contain;object-position:center bottom;
+}
+@media(max-width:600px){
+ .osra-couple-stage.osra-pair-art-active .osra-couple-paired-art img.osra-pair-frame{width:min(98vw,650px);height:min(62vh,520px);max-width:98vw!important;max-height:62vh}
+}
+/* Reserve a lane inside the random-message card for the whole Osama image; never clip the head/hair. */
+.romantic-scene-layer .rs-card.has-osra-sticker{
+ contain:layout!important;overflow:visible!important;clip-path:none!important;
+ padding-top:clamp(166px,16vw,190px)!important;max-height:calc(100vh - 48px)!important;
+}
+.romantic-scene-layer .rs-card.has-osra-sticker .rs-sticker{
+ top:8px!important;right:12px!important;width:clamp(98px,12vw,132px)!important;height:clamp(148px,18vw,180px)!important;
+ max-width:calc(100% - 22px)!important;overflow:visible!important;contain:none!important;clip-path:none!important;isolation:isolate;z-index:30!important;
+}
+.romantic-scene-layer .rs-card.has-osra-sticker .rs-sticker img{
+ display:block!important;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;
+ object-fit:contain!important;object-position:center top!important;overflow:visible!important;
+}
+.romantic-scene-layer .rs-card.has-osra-sticker .rs-message{
+ max-height:min(42vh,330px)!important;overflow-y:auto!important;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+}
+@media(max-width:600px){
+ .romantic-scene-layer .rs-card.has-osra-sticker{padding-top:148px!important;max-height:calc(100vh - 36px)!important}
+ .romantic-scene-layer .rs-card.has-osra-sticker .rs-sticker{top:6px!important;right:8px!important;width:92px!important;height:136px!important}
+ .romantic-scene-layer .rs-card.has-osra-sticker .rs-message{max-height:min(39vh,270px)!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .osra-couple-stage.osra-pair-art-active>.osra-couple-paired-art{animation:none!important}
+ .osra-couple-paired-art img.osra-pair-frame{transition:none!important;transform:none!important}
+}
+
+/* R64 — small original models keep the same artwork; shorten only their pose crossfade to match the dance cadence. */
+.osra-couple-person img.osra-pose-layer{transition:opacity .11s ease-out,filter .11s ease-out!important;}
+@media(prefers-reduced-motion:reduce){.osra-couple-person img.osra-pose-layer{transition:none!important}}

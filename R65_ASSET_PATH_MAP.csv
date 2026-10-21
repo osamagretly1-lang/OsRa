@@ -1,0 +1,6 @@
+﻿purpose,path,count,behavior
+Old paired dance model,assets/couple-story/sheet-*.webp,14,Original old image names restored; available through legacy dance option
+New large dance model,assets/couple-dance-large/frame-*.webp,24,Authoritative frames used by the new large dance option
+Compatibility alias,assets/couple-story/large-frame-*.webp,24,Byte-identical copies of new frames; does not replace old sheet files
+Older reference poses,assets/couple-story-r62/pose-*.webp,12,Preserved reference files
+Original single-character images,assets/osama-*.png / assets/rania-*.png,8,Preserved source artwork and dance poses

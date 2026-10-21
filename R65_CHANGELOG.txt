@@ -1,0 +1,14 @@
+OsRa R65 CHANGELOG — 2026-10-21
+
+- Restored all 14 original paired images at `assets/couple-story/sheet-*.webp` from the saved R63 archive without changing their bytes.
+- Restored `assets/couple-story-r62/` including all 12 older pose reference images plus manifest and notes.
+- Retained all existing small-character PNG assets, pose-library files, and the 24 new dance frames under `assets/couple-dance-large/`.
+- Added 24 byte-identical path-compatibility aliases under the old `assets/couple-story/large-frame-*.webp` names; they do not overwrite the 14 historical `sheet-*` files.
+- Added selectable `legacy` dance mode using the restored 14 old paired frames. Selector options: new large model, original small models, old paired model, and per-run alternate among all three.
+- Updated normalization to retain the `legacy` setting; changed frame resolver to support both current and restored paired frame arrays.
+- Updated service worker cache/query markers to R65 and precached all required model images and compatibility aliases.
+- No IndexedDB schema change: `OsRaDB` stays at version 100.
+
+Validation performed: app.js and sw.js Node syntax checks; CSS parser; local HTML asset references; all app string asset refs; service-worker precache existence; all 24 large frames image/alpha checks; exact hash equality of compatibility aliases against authoritative frames; count of restored old model images; and preservation comparison against all assets from R63.
+
+Not performed: interactive Android visual QA and live GitHub deployment/comparison. Those need to be checked after uploading.
