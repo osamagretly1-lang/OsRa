@@ -1548,3 +1548,6 @@ body.surprises-muted #bootSplash .boot-loading{display:none!important}
 /* R64 — small original models keep the same artwork; shorten only their pose crossfade to match the dance cadence. */
 .osra-couple-person img.osra-pose-layer{transition:opacity .11s ease-out,filter .11s ease-out!important;}
 @media(prefers-reduced-motion:reduce){.osra-couple-person img.osra-pose-layer{transition:none!important}}
+
+/* R66: explicit hide-all character mode; festive symbols/effects remain independent. */
+body.dance-model-hidden .osra-couple-stage, body.dance-model-hidden #pageTurnCouple, body.dance-model-hidden .rs-sticker { display:none !important; }

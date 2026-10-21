@@ -1,6 +1,6 @@
-const BUILD='osra122-20261021-r65-legacy-asset-compat';
+const BUILD='osra122-20261021-r66-small-celebrations';
 const CACHE=`OsRa-v122-${BUILD}`;
-const APP=['./','./index.html','./style.css?v=osra122-r65-legacy-asset-compat','./app.js?v=osra122-r65-legacy-asset-compat','./manifest.json','./icon.svg','./icon-192.png','./icon-512.png',
+const APP=['./','./index.html','./style.css?v=osra122-r66-small-celebrations','./app.js?v=osra122-r66-small-celebrations','./manifest.json','./icon.svg','./icon-192.png','./icon-512.png',
  './assets/osama-3d.png',
  './assets/rania-3d.png',
  './assets/osama-page-push.png',

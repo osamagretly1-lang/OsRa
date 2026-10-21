@@ -1,0 +1,6 @@
+OsRa v122 R66 — RESTORED SMALL CELEBRATIONS + MODEL CHOICES
+
+Base: R65 library bundle; all existing R65 files/assets preserved.
+Changes: default dance model changed from large to original small; small, legacy paired dance, new large dance, small-only, hide-all, and alternate modes are offered. Hide-all hides character stages while leaving non-character celebration effects separate. Legacy assets in assets/couple-story and assets/couple-story-r62 are preserved. IndexedDB schema version was not changed.
+
+Important: this is a code/package-level repair. Verify appearance on the target Android device before replacing the live site. No personal photo library or IndexedDB contents are included in this ZIP.
