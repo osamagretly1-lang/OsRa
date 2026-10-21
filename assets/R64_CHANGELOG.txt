@@ -1,0 +1,30 @@
+OsRa v122 — R64 CHANGELOG
+Date: 2026-10-21
+Base: saved R63 full-site archive. No live GitHub deployment performed.
+
+Large dance model:
+- Added 24 transparent 800x700 WebP keyframes under `assets/couple-dance-large/frame-01.webp` to `frame-24.webp`.
+- Keyframes use the newly approved white-hoodie/pink-dress dance-only appearance. Full body, head, hands and shoes remain within consistent canvas bounds.
+- A dedicated `OSRA_LARGE_DANCE_FRAMES` sequence loops these 24 frames and uses 160–220ms frame holds with a short crossfade. Old large blue/purple paired imagery has been removed from the active build, so it cannot appear during the dance.
+- Dance mode selection is strictly separated: large, small original sprites, or alternate (one model chosen per celebration). It does not mix large and small models during a loop.
+- Intro of celebration uses original small model pose sprites, then the chosen dance model takes over.
+- Small model mode loops the existing separate original pose sprites only.
+
+Random-message character:
+- The card explicitly overrides paint containment and clipping for `has-osra-sticker`, keeps the full original Osama sprite fitted within a reserved upper lane, and confines scrolling to the message area.
+- Mobile and desktop sizing adjusted to reduce head/hair clipping.
+
+Offline/cache:
+- Service-worker cache/build marker updated to R64.
+- All 24 large dance WebP assets added to precache. Verified there are no missing precache paths.
+- `OsRaDB` schema version remains 100; no schema migration.
+
+Validation:
+- `node --check` passes for app.js and sw.js.
+- CSS parse validation passed with no parser errors.
+- HTML local reference, animation asset and service-worker preload checks passed.
+- All 24 WebP frames open as RGBA at 800x700 and have non-empty safe alpha bounds.
+- Automated Chromium visual test was blocked by the environment (`ERR_BLOCKED_BY_ADMINISTRATOR`) for both local HTTP and file URLs; no claim is made that the app was visually tested on Android. User-device QA is still required.
+
+Known limitation:
+- Large dance is a 24-keyframe sprite sequence, not a rigged skeletal 2.5D model. Transitions have been tuned for lower ghosting and the pose order is more varied, but truly continuous joint-level animation would require a separate rig or more authored in-between frames.
