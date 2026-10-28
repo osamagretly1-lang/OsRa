@@ -1,0 +1,7 @@
+OsRa R67 legacy-dance restoration assets
+
+These 26 transparent WebP frames are derived from existing R66 assets, not newly invented character art.
+The timeline includes all 14 distinct historical paired poses and 11 supplemental R62 poses. The twelfth supplemental file, pose-11.webp, remains untouched in the source folder but is not used in the active timeline because its original image visibly cuts off the top of both heads. Its raised-arm beat is represented by a head-safe original raised-arms pose instead. That safe pose appears twice in the sequence; this is preferable to showing clipped heads.
+Only transparent outer margins of each selected source were trimmed. Visible source pixels were preserved and uniformly scaled onto a common 420x660 transparent canvas, improving mobile display without cutting heads, hands, clothing, shoes, or the wide carrying/leaning poses.
+The frame order alternates original couple poses with supplemental turn, dip, lift/carry, embrace/lean and raised-arm poses. The app loops the full sequence until the configured dance duration ends.
+All historical source assets, including the excluded defective pose-11.webp, remain in their original directories and are not overwritten.
