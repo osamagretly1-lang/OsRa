@@ -1,0 +1,22 @@
+OsRa R67.2 — Static Verification Report
+Date: 2026-10-27
+Base: R67.1 full restored dance archive
+
+CHECKS
+- JavaScript syntax: app.js and sw.js checked with node --check.
+- HTML parsed; no duplicate IDs.
+- Relative script/style/manifest links resolve.
+- All service-worker local precache references resolve.
+- Build/cache labels aligned across app.js, index.html, sw.js and query strings.
+- Asset tree retained from R67.1; dance assets not regenerated or deleted.
+- IndexedDB remains OsRaDB version 100.
+- ZIP integrity tested after packaging.
+
+NOT VERIFIED
+- No real Android/browser end-to-end playback was available in this environment.
+- No live GitHub Pages deployment was performed.
+- The retry-skipped feature has static/code-path validation only; actual source folder permissions and real file edge-cases still require phone testing.
+
+DATA SAFETY
+- Archive does not include personal photos or IndexedDB records.
+- Scan retry only targets recorded skipped relative paths and does not delete original files or albums.

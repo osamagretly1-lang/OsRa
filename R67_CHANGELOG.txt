@@ -1,0 +1,24 @@
+OsRa v122 — R67 FULL LEGACY DANCE RESTORATION
+Build date: 2026-10-27
+Base: saved R66 full-site bundle. No live GitHub deployment was performed.
+
+RESTORED
+- Legacy paired dance now plays a 26-frame loop: all 14 distinct historical couple poses, 11 additional R62 movement poses, and one safe raised-arms replacement.
+- The old R62 file pose-11.webp is preserved byte-for-byte but intentionally excluded from the active animation because its source image cuts off the tops of both heads. Its raised-arm moment is represented using the full-head original raised-arms pose, which appears twice in the sequence.
+- Restored interleaved movement flow includes hand-holding, step/turn transitions, close embraces, dips/leans, lift/carry poses and the raised-arm beat. The 26-frame sequence loops until the existing dance duration ends.
+- All 14 original sheet assets and all 12 original R62 pose assets remain in their original paths byte-for-byte. New display-ready copies use assets/couple-story-r67/ and do not overwrite original files.
+- The old paired dance now uses a consistent portrait transparent canvas on mobile. Only transparent margins are trimmed; visible source pixels in selected frames are preserved. This reduces visual miniaturization caused by large transparent margins without clipping body parts.
+- Large 24-frame dance, original small-sprite celebration, model selector, surprise/celebration effects, and other modes remain separate.
+
+COMPATIBILITY / SAFETY
+- IndexedDB `OsRaDB` remains version 100. No database migration, reset, personal photo data or user database is included in this release.
+- Service-worker build/cache marker is R67, with all 26 new frames precached.
+- R66 is preserved separately in the library; this ZIP is a new release archive.
+
+TESTS
+- JavaScript syntax check: app.js and sw.js.
+- Local HTML references and service-worker precache paths checked.
+- All 26 new frames verified as 420x660 RGBA WebP files with visible content and consistent baseline.
+- Source coverage verified: all 14 distinct historical paired poses appear, 11 supplemental R62 poses appear, and the head-safe raised-arms replacement appears twice. All 12 original R62 pose files remain preserved; the sole excluded source pose is the one whose heads are cropped in the original art.
+- Existing R66 assets compared before/after patch; originals preserved.
+- No real Android/browser end-to-end visual run or live GitHub deployment is claimed; install/test as a candidate build first.

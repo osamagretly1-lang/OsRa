@@ -1,0 +1,26 @@
+OsRa R68 — BUILD/STATIC TEST REPORT
+Date: 2026-10-28
+Base: OsRa_v122_R67_2_LEGACY_DANCE_RETRY_SKIPPED_IMAGES.zip
+
+PASS
+- node --check app.js
+- node --check sw.js
+- IndexedDB schema constant remains DB='OsRaDB', VER=100
+- R67.2 dance and image retry code remains in app.js
+- Google Drive settings card/action hooks added
+- Selected originals use resumable upload and Cache Storage offline fallback
+- Drive file listing paginates through nextPageToken
+- Service worker build tag and app.js/style.css cache query strings aligned to R68
+- All pre-existing static assets retained byte-for-byte relative to R67.2
+- ZIP integrity verified after packaging
+
+NOT VERIFIED
+- Google OAuth consent/configuration (requires the owner's Google Cloud project/client ID)
+- Live Drive folder access/sharing across the two Google accounts
+- End-to-end cross-device conflict resolution under simultaneous edits
+- Real Android visual/offline test
+- Live GitHub Pages deployment
+
+CAUTION
+- Treat this as a test candidate until OAuth is configured and a small album is synced on both phones.
+- Keep R67.2 and the current published site untouched until test success.

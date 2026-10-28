@@ -1,0 +1,21 @@
+OsRa R67 — Verification Report
+Date: 2026-10-27
+Base: saved OsRa_v122_R66_RESTORED_SMALL_CELEBRATIONS_FULL.zip
+
+PASSED
+- `node --check app.js`
+- `node --check sw.js`
+- HTML parser: 40 IDs, zero duplicate IDs; all 7 local HTML references resolve.
+- Service-worker app precache: 139 local entries checked; no missing files after stripping cache query strings.
+- CSS parse: 1,425 top-level rules/at-rules, no syntax errors or declaration parse errors.
+- 26 new dance frames: all are 420x660 RGBA WebP files with visible alpha content.
+- All 113 existing asset entries in the R66 `assets/` tree were compared with the R67 tree; existing asset files remain byte-for-byte identical.
+- IndexedDB remains `OsRaDB`, version 100; no forced schema migration or database reset.
+- All 12 original R62 supplemental pose files remain in their original directory. One file, `pose-11.webp`, is visibly clipped at the top of both heads in the source artwork; it is preserved but not played. Its raised-arm beat is represented by a full-head original pose. The replacement raised-arm frame appears twice in the 26-frame sequence.
+
+NOT VERIFIED
+- Real Android/browser playback and visual acceptance were not performed in this environment.
+- No live GitHub Pages deployment was performed.
+
+RELEASE GUIDANCE
+- Use this as a candidate test archive. Preserve the current production copy and the R66 archive until R67 has been tested on the phone.

@@ -1,0 +1,23 @@
+OsRa R67.1 — TEST REPORT
+Date: 2026-10-27
+Base: OsRa_v122_R67_FULL_LEGACY_DANCE_RESTORED.zip
+
+PASS
+- node --check app.js
+- node --check sw.js
+- ZIP asset integrity verified after packaging
+- HTML local references and service-worker precache entries checked
+- App build label, HTML meta label, service-worker BUILD, and CSS/JS cache query strings aligned on R67.1
+- 26 active legacy dance frame references resolve to existing WebP assets
+- The 14 original paired pose images and 12 original R62 supplemental pose images remain present; R66 existing assets were byte-for-byte retained in R67 source package
+- IndexedDB version remains 100
+
+NOT VERIFIED
+- Real Android/browser visual/end-to-end playback
+- Live GitHub Pages deployment
+
+NOTE ON SKIPPED/CROPPED POSE
+- assets/couple-story-r62/pose-11.webp remains in the ZIP unchanged. It is not played because the source art cuts the tops of both heads; a full-head raised-arms frame substitutes for that beat. The rest of the loop is retained.
+
+RELEASE GUIDANCE
+- Candidate test archive only. Preserve the currently published copy and user data until the updated site is manually tested.

@@ -1,0 +1,15 @@
+OsRa v122 — R67.1 RELEASE LABEL + LEGACY DANCE PRESERVATION
+Build date: 2026-10-27
+Base: R67 full legacy dance restoration archive.
+
+Included behavior (same tested R67 behavior):
+- Restore the 26-frame legacy paired-dance loop, retaining the historical pose files and the R62 supplemental pose files in their original folders.
+- Keep the small original celebrations and the new large dance as separate choices.
+- Use full-head framing in the live loop. The original R62 pose-11.webp is preserved byte-for-byte, but that particular source has cropped head tops, so a full-head raised-arms frame substitutes for it in active playback. The rest of the dance is not skipped.
+- Preserve app data compatibility: OsRaDB stays at version 100; no reset/migration and no personal library or database content is packaged.
+
+R67.1 maintenance correction:
+- Align app.js OSRA_BUILD and cache/version labels with R67.1 so the app diagnostics no longer show the stale R65 build label. Service-worker cache and HTML asset query strings were advanced together to avoid stale browser cache.
+- Dance assets, choreography, original assets, and business logic are otherwise unchanged from the tested R67 package.
+
+No live GitHub deployment or real Android end-to-end visual acceptance is claimed. Test as a candidate archive first.

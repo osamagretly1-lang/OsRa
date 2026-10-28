@@ -1,0 +1,15 @@
+OsRa v122 — R67.2 CHANGELOG
+Date: 2026-10-27
+Base: OsRa_v122_R67_1_FULL_LEGACY_DANCE_RESTORED.zip
+
+1) Preserved the R67.1 restored 26-frame paired legacy dance and the separate original small celebration / large-dance choices. No dance asset was removed or modified.
+2) Added a visible retry action when a completed source scan contains skipped files. The user can retry only the stored skipped relative paths rather than rescanning the whole library.
+3) Retry success removes only that path from the skipped queue after processing completes. Failures update the retained item and reason; paths no longer present in the selected source remain listed for follow-up.
+4) Added retry buttons to the home scan card and source rows. Confirmation explains the operation is limited to skipped paths and does not delete photos or albums.
+5) Retry processing preserves the previous scan totals and adds retry counters; it uses the same source identity/content checks and existing save routines.
+6) Updated app, HTML, and service-worker build/cache labels to R67.2. IndexedDB remains OsRaDB version 100. No schema reset or migration.
+
+LIMITS
+- This is a static/code-level release candidate. Actual Android/browser playback and file permission behavior still need on-device verification.
+- This package contains application code/assets only. It does not contain the user's personal photo library, folder handles or IndexedDB data.
+- No live GitHub Pages deployment was performed.

@@ -1,6 +1,6 @@
-const BUILD='osra122-20261021-r66-small-celebrations';
+const BUILD='osra122-20261028-r70-original-dance-sequence-compact-message';
 const CACHE=`OsRa-v122-${BUILD}`;
-const APP=['./','./index.html','./style.css?v=osra122-r66-small-celebrations','./app.js?v=osra122-r66-small-celebrations','./manifest.json','./icon.svg','./icon-192.png','./icon-512.png',
+const APP=['./','./index.html','./style.css?v=osra122-r70-original-dance-sequence-compact-message','./app.js?v=osra122-r70-original-dance-sequence-compact-message','./manifest.json','./icon.svg','./icon-192.png','./icon-512.png',
  './assets/osama-3d.png',
  './assets/rania-3d.png',
  './assets/osama-page-push.png',
@@ -105,7 +105,34 @@ const APP=['./','./index.html','./style.css?v=osra122-r66-small-celebrations','.
  './assets/couple-story-r62/pose-09.webp',
  './assets/couple-story-r62/pose-10.webp',
  './assets/couple-story-r62/pose-11.webp',
- './assets/couple-story-r62/pose-12.webp',];
+ './assets/couple-story-r62/pose-12.webp',
+ './assets/couple-story-r67/frame-01.webp',
+ './assets/couple-story-r67/frame-02.webp',
+ './assets/couple-story-r67/frame-03.webp',
+ './assets/couple-story-r67/frame-04.webp',
+ './assets/couple-story-r67/frame-05.webp',
+ './assets/couple-story-r67/frame-06.webp',
+ './assets/couple-story-r67/frame-07.webp',
+ './assets/couple-story-r67/frame-08.webp',
+ './assets/couple-story-r67/frame-09.webp',
+ './assets/couple-story-r67/frame-10.webp',
+ './assets/couple-story-r67/frame-11.webp',
+ './assets/couple-story-r67/frame-12.webp',
+ './assets/couple-story-r67/frame-13.webp',
+ './assets/couple-story-r67/frame-14.webp',
+ './assets/couple-story-r67/frame-15.webp',
+ './assets/couple-story-r67/frame-16.webp',
+ './assets/couple-story-r67/frame-17.webp',
+ './assets/couple-story-r67/frame-18.webp',
+ './assets/couple-story-r67/frame-19.webp',
+ './assets/couple-story-r67/frame-20.webp',
+ './assets/couple-story-r67/frame-21.webp',
+ './assets/couple-story-r67/frame-22.webp',
+ './assets/couple-story-r67/frame-23.webp',
+ './assets/couple-story-r67/frame-24.webp',
+ './assets/couple-story-r67/frame-25.webp',
+ './assets/couple-story-r67/frame-26.webp',
+ './assets/couple-story-r67/manifest.csv',];
 const SHELL=new Set(APP.map(x=>new URL(x,self.location.href).href));
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(APP)).then(()=>self.skipWaiting())));
 self.addEventListener('message',event=>{if(event.data?.type==='SKIP_WAITING')self.skipWaiting()});

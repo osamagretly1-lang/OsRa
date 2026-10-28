@@ -1,0 +1,26 @@
+OsRa R69 — BUILD/STATIC TEST REPORT
+Date: 2026-10-28
+Base: OsRa_v122_R68_PRIVATE_DRIVE_SYNC_OFFLINE_ALBUMS.zip
+
+PASS
+- node --check app.js
+- node --check sw.js
+- CSS parsed by tinycss2: 1,426 top-level rules/at-rules; zero parse errors
+- index.html: 40 IDs; zero duplicate IDs
+- All local references in index.html exist
+- IndexedDB schema constant remains DB='OsRaDB', VER=100
+- Google Drive sync code, selected-album offline support, and prior R68 files retained
+- Dance-model selections for large/small/legacy/alternate/small-only/hidden retained
+- Small-model routine restored to varied original slow/shuffle/joy modes with 560–1,450ms holds instead of 175–210ms rapid pose switching
+- Startup falling rain now favors hearts while retaining other decorative symbols
+- Continuous celebration batches display at least two falling hearts and keep flowers, kisses, sparkles and balloons in rotation
+- All 137 original assets under assets/ are byte-for-byte unchanged from R68
+- R69 cache/build markers aligned in index.html and sw.js
+- ZIP integrity verified after packaging
+
+NOT VERIFIED
+- Visual animation on a real Android device/browser
+- Live Google OAuth/Drive synchronization (requires the existing owner OAuth Client ID and Drive folder configuration)
+- GitHub Pages deployment
+
+Release guidance: keep the R68 archive and current deployed site until R69 is reviewed on the device.
