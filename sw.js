@@ -1,6 +1,6 @@
-const BUILD='osra122-20261028-r70-original-dance-sequence-compact-message';
+const BUILD='osra122-20261029-r71-drive-csp-original-small-dance';
 const CACHE=`OsRa-v122-${BUILD}`;
-const APP=['./','./index.html','./style.css?v=osra122-r70-original-dance-sequence-compact-message','./app.js?v=osra122-r70-original-dance-sequence-compact-message','./manifest.json','./icon.svg','./icon-192.png','./icon-512.png',
+const APP=['./','./index.html','./style.css?v=osra122-r71-drive-csp-original-small-dance','./app.js?v=osra122-r71-drive-csp-original-small-dance','./manifest.json','./icon.svg','./icon-192.png','./icon-512.png',
  './assets/osama-3d.png',
  './assets/rania-3d.png',
  './assets/osama-page-push.png',

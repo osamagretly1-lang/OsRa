@@ -1582,10 +1582,9 @@ body.dance-model-hidden .osra-couple-stage, body.dance-model-hidden #pageTurnCou
  .osra-couple-stage[data-dance-model="legacy"].osra-pair-art-active .osra-couple-paired-art img.osra-pair-frame{transition:opacity .14s linear!important}
 }
 
-/* R70 — restore the gentle cross-fade of the original small dance; avoid rapid pose snapping. */
-.osra-couple-person img.osra-pose-layer{
- transition:opacity .28s cubic-bezier(.22,.72,.18,1),filter .24s ease!important;
-}
+/* R71 — preserve the original small-dance cadence and R69 pose crossfade; R70's 280ms transition slowed the rhythm. */
+.osra-couple-person img.osra-pose-layer{transition:opacity .11s ease-out,filter .11s ease-out!important;}
+@media(prefers-reduced-motion:reduce){.osra-couple-person img.osra-pose-layer{transition:none!important}}
 
 /* R70 — keep page-push poses fully visible on narrow screens; the source cutouts include transparent safety margins. */
 .osra-page-turn-couple{overflow:visible!important;}
