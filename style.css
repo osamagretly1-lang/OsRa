@@ -1637,30 +1637,3 @@ body.dance-model-hidden .osra-couple-stage, body.dance-model-hidden #pageTurnCou
  .romantic-scene-layer .rs-card.has-osra-sticker .rs-message{font-size:clamp(20px,5.1vw,30px)!important;max-height:min(35vh,245px)!important;}
  .romantic-scene-layer .rs-card.has-osra-sticker .rs-mini-row{font-size:clamp(18px,4.7vw,26px)!important;}
 }
-
-
-/* R72 — photo clarity pass: keep the complete frame visible in galleries and strips.
-   Presentation only: original photo files and stored thumbnails remain untouched. */
-.mini-thumb img,
-.mini-calendar-gallery img,
-.strip-thumb img,
-.lb-thumb img,
-.romantic-thumb img,
-.romantic-cover-photo img,
-.duplicate-preview img{
- object-fit:contain!important;
- object-position:center center!important;
- background:linear-gradient(145deg,rgba(248,242,244,.98),rgba(235,225,232,.96))!important;
- image-rendering:auto;
-}
-.romantic-photo-item{background:linear-gradient(145deg,#fffdf9,#f4e9ee)!important;border:1px solid rgba(108,70,100,.12);box-shadow:0 9px 24px rgba(55,32,46,.09)!important}
-.romantic-thumb{overflow:hidden;background:linear-gradient(145deg,#f8f0ee,#e9dce4)!important;border:1px solid rgba(108,70,100,.12)!important;box-shadow:0 5px 16px rgba(55,32,46,.10)!important}
-.romantic-thumb img{display:block;width:100%;height:100%;border-radius:10px;object-fit:contain!important}
-.romantic-cover-photo{background:linear-gradient(145deg,#faf4f1,#e8dce5)!important}
-.mini-thumb,.strip-thumb,.lb-thumb{background:linear-gradient(145deg,#faf4f1,#e8dce5)!important}
-.lb-frame img{max-width:100%;max-height:100%;object-fit:contain!important;object-position:center center!important}
-.memory-hero img{object-fit:contain!important;object-position:center center!important}
-/* Slightly larger page-turn characters while retaining the full transparent cutout. */
-.osra-page-turn-couple .osra-couple-person{width:clamp(66px,12vw,116px)!important;height:clamp(112px,21vh,190px)!important}
-.osra-page-turn-couple .osra-couple-person img{width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain!important;object-position:center bottom!important}
-@media(max-width:600px){.osra-page-turn-couple .osra-couple-person{width:clamp(56px,16vw,84px)!important;height:clamp(94px,18vh,132px)!important}}

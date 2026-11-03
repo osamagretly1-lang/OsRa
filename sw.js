@@ -1,6 +1,6 @@
-const BUILD='osra122-20261101-r72-drive-account-picker-photo-polish';
+const BUILD='osra122-20261029-r71-drive-csp-original-small-dance';
 const CACHE=`OsRa-v122-${BUILD}`;
-const APP=['./','./index.html','./style.css?v=osra122-r72-drive-account-picker-safe-auth','./app.js?v=osra122-r72-drive-account-picker-safe-auth','./manifest.json','./icon.svg','./icon-192.png','./icon-512.png',
+const APP=['./','./index.html','./style.css?v=osra122-r71-drive-csp-original-small-dance','./app.js?v=osra122-r71-drive-csp-original-small-dance','./manifest.json','./icon.svg','./icon-192.png','./icon-512.png',
  './assets/osama-3d.png',
  './assets/rania-3d.png',
  './assets/osama-page-push.png',
