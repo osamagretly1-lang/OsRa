@@ -1637,3 +1637,172 @@ body.dance-model-hidden .osra-couple-stage, body.dance-model-hidden #pageTurnCou
  .romantic-scene-layer .rs-card.has-osra-sticker .rs-message{font-size:clamp(20px,5.1vw,30px)!important;max-height:min(35vh,245px)!important;}
  .romantic-scene-layer .rs-card.has-osra-sticker .rs-mini-row{font-size:clamp(18px,4.7vw,26px)!important;}
 }
+
+
+/* R72 — photo clarity pass: keep the complete frame visible in galleries and strips.
+   Presentation only: original photo files and stored thumbnails remain untouched. */
+.mini-thumb img,
+.mini-calendar-gallery img,
+.strip-thumb img,
+.lb-thumb img,
+.romantic-thumb img,
+.romantic-cover-photo img,
+.duplicate-preview img{
+ object-fit:contain!important;
+ object-position:center center!important;
+ background:linear-gradient(145deg,rgba(248,242,244,.98),rgba(235,225,232,.96))!important;
+ image-rendering:auto;
+}
+.romantic-photo-item{background:linear-gradient(145deg,#fffdf9,#f4e9ee)!important;border:1px solid rgba(108,70,100,.12);box-shadow:0 9px 24px rgba(55,32,46,.09)!important}
+.romantic-thumb{overflow:hidden;background:linear-gradient(145deg,#f8f0ee,#e9dce4)!important;border:1px solid rgba(108,70,100,.12)!important;box-shadow:0 5px 16px rgba(55,32,46,.10)!important}
+.romantic-thumb img{display:block;width:100%;height:100%;border-radius:10px;object-fit:contain!important}
+.romantic-cover-photo{background:linear-gradient(145deg,#faf4f1,#e8dce5)!important}
+.mini-thumb,.strip-thumb,.lb-thumb{background:linear-gradient(145deg,#faf4f1,#e8dce5)!important}
+.lb-frame img{max-width:100%;max-height:100%;object-fit:contain!important;object-position:center center!important}
+.memory-hero img{object-fit:contain!important;object-position:center center!important}
+/* Slightly larger page-turn characters while retaining the full transparent cutout. */
+.osra-page-turn-couple .osra-couple-person{width:clamp(66px,12vw,116px)!important;height:clamp(112px,21vh,190px)!important}
+.osra-page-turn-couple .osra-couple-person img{width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain!important;object-position:center bottom!important}
+@media(max-width:600px){.osra-page-turn-couple .osra-couple-person{width:clamp(56px,16vw,84px)!important;height:clamp(94px,18vh,132px)!important}}
+
+
+/* R79 — phone-safe full-screen scene: keep the stage full-height, while the paired art itself is deliberately compact and lower. */
+.osra-couple-stage{height:auto!important;min-height:100dvh!important;overflow:visible!important;}
+.osra-couple-stage .osra-couple-paired-art{inset:0!important;align-items:flex-end!important;overflow:visible!important;padding-bottom:2.4vh!important;}
+.osra-couple-stage[data-dance-model="legacy62"].osra-pair-art-active .osra-couple-paired-art img.osra-pair-frame{width:min(86vw,430px)!important;height:min(48vh,420px)!important;max-width:86vw!important;max-height:48vh!important;object-fit:contain!important;object-position:center bottom!important;bottom:0!important;}
+.osra-couple-stage[data-dance-model="legacy"].osra-pair-art-active .osra-couple-paired-art img.osra-pair-frame{width:min(76vw,360px)!important;height:min(56vh,490px)!important;max-width:76vw!important;max-height:56vh!important;object-fit:contain!important;object-position:center bottom!important;bottom:0!important;}
+.osra-couple-stage[data-dance-model="large"].osra-pair-art-active .osra-couple-paired-art img.osra-pair-frame{width:min(86vw,430px)!important;height:min(50vh,430px)!important;max-width:86vw!important;max-height:50vh!important;object-fit:contain!important;object-position:center bottom!important;bottom:0!important;}
+@media(max-width:600px){
+ .osra-couple-stage{height:auto!important;min-height:100dvh!important;padding-bottom:1.5vh!important}
+ .osra-couple-stage .osra-couple-paired-art{padding-bottom:3vh!important}
+ .osra-couple-stage[data-dance-model="legacy62"].osra-pair-art-active .osra-couple-paired-art img.osra-pair-frame{width:min(88vw,360px)!important;height:min(47vh,370px)!important;max-width:88vw!important;max-height:47vh!important;}
+ .osra-couple-stage[data-dance-model="legacy"].osra-pair-art-active .osra-couple-paired-art img.osra-pair-frame{width:min(78vw,310px)!important;height:min(54vh,455px)!important;max-width:78vw!important;max-height:54vh!important;}
+ .osra-couple-stage[data-dance-model="large"].osra-pair-art-active .osra-couple-paired-art img.osra-pair-frame{width:min(90vw,380px)!important;height:min(49vh,390px)!important;max-width:90vw!important;max-height:49vh!important;}
+}
+@media(prefers-reduced-motion:reduce){.osra-couple-stage.osra-pair-art-active>.osra-couple-paired-art{animation:none!important}.osra-couple-paired-art img.osra-pair-frame{transition:opacity .14s linear!important}}
+
+/* R79 — four-model selection. One checked option runs alone; several run in order. */
+.osra-dance-picks{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.42)}
+.osra-dance-picks label{display:flex;align-items:flex-start;gap:8px;padding:7px;border-radius:9px;line-height:1.45;font-size:13px}
+.osra-dance-picks input{width:18px;height:18px;flex:0 0 18px;margin-top:2px;accent-color:var(--rose)}
+.osra-dance-picks label:has(input:checked){background:rgba(108,70,100,.09)}
+@media(max-width:520px){.osra-dance-picks{grid-template-columns:1fr}}
+
+/* R79 — red top celebration ribbon/message bar restored. */
+.romantic-ticker{top:54px!important;height:76px!important;padding:5px 8px 3px;display:flex!important;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(90deg,#8f111b,#c62828 35%,#e53935 55%,#b71c1c 78%,#6f172e)!important;border-top:2px solid rgba(255,255,255,.45);border-bottom:3px solid #f3c4c8;box-shadow:0 5px 18px rgba(78,9,22,.28)}
+.romantic-ticker #romanticTickerText{position:relative!important;display:block!important;inset:auto!important;color:#fff!important;text-shadow:0 2px 5px rgba(35,0,8,.48)!important;font-weight:900;line-height:1.35;max-width:96vw;white-space:normal}
+.romantic-ticker.show #romanticTickerText{animation:romanticTickerRide 3.55s cubic-bezier(.17,.75,.22,1) both}
+.romantic-ticker #romanticTickerText[data-variant="1"]{animation-name:romanticTickerDrop}.romantic-ticker #romanticTickerText[data-variant="2"]{animation-name:romanticTickerBounce}.romantic-ticker #romanticTickerText[data-variant="3"]{animation-name:romanticTickerPop}.romantic-ticker #romanticTickerText[data-variant="4"]{animation-name:romanticTickerWiggle}
+.osra-message-mascots{display:flex;align-items:center;justify-content:center;gap:10px;height:28px;direction:ltr;overflow:hidden;pointer-events:none}
+.osra-mascot-pet{display:inline-flex;align-items:center;justify-content:center;position:relative;font-size:23px;line-height:1;opacity:0;transform:translateX(-18px) translateY(7px) scale(.72)}
+.osra-mascot-pet svg{display:block;width:31px;height:24px;filter:drop-shadow(0 2px 2px rgba(30,15,25,.18))}
+.romantic-ticker .osra-mascot-pet{position:relative!important;inset:auto!important;white-space:normal!important;color:#fff!important;text-shadow:none!important}
+.osra-message-mascots.run .dog{animation:osraPetRun 2.65s ease-in-out .02s both}.osra-message-mascots.run .cat{animation:osraPetRun 2.65s ease-in-out .62s both}.osra-message-mascots.run .mouse{animation:osraPetRun 2.65s ease-in-out 1.24s both}.osra-message-mascots.run .croc{animation:osraPetRun 2.65s ease-in-out 1.86s both}
+@keyframes osraPetRun{0%{opacity:0;transform:translateX(-22px) translateY(7px) scale(.66)}12%{opacity:1}32%{transform:translateX(-4px) translateY(-3px) scale(1.04)}54%{transform:translateX(9px) translateY(0) scale(1)}78%{opacity:1;transform:translateX(25px) translateY(-2px) scale(.96)}100%{opacity:0;transform:translateX(42px) translateY(4px) scale(.8)}}
+.osra-opening-pet-parade{position:fixed;top:12vh;left:0;right:0;z-index:10020;margin:auto;width:min(88vw,270px);height:42px;display:flex;align-items:center;justify-content:center;gap:12px;direction:ltr;pointer-events:none}
+.osra-opening-pet-parade .osra-mascot-pet{font-size:27px}.osra-opening-pet-parade .osra-mascot-pet svg{width:36px;height:28px}
+.osra-opening-pet-parade.run .dog{animation:osraPetRun 3.2s ease-in-out .04s both}.osra-opening-pet-parade.run .cat{animation:osraPetRun 3.2s ease-in-out .76s both}.osra-opening-pet-parade.run .mouse{animation:osraPetRun 3.2s ease-in-out 1.48s both}.osra-opening-pet-parade.run .croc{animation:osraPetRun 3.2s ease-in-out 2.20s both}
+@media(max-width:600px){.romantic-ticker{top:50px!important;height:72px!important}.osra-message-mascots{height:26px}.osra-opening-pet-parade{top:10vh}}
+@media(prefers-reduced-motion:reduce){.osra-mascot-pet,.osra-message-mascots.run .osra-mascot-pet,.osra-opening-pet-parade.run .osra-mascot-pet{animation:none!important;opacity:1;transform:none}}
+
+/* R79 — restore the real image page-flip overlay introduced in R74; do not cover or crop the photo outside the transition. */
+.lb-frame{position:relative!important;perspective:2600px!important;isolation:isolate!important;overflow:visible!important;contain:layout style!important}
+.lb-frame #lbImage{position:relative!important;z-index:2!important}
+#lbFlip{position:absolute!important;inset:0!important;z-index:8!important;display:block!important;pointer-events:none!important;perspective:2600px!important;overflow:hidden!important;border-radius:8px!important;background:transparent!important}
+#lbFlip[hidden]{display:none!important}
+#lbFlip .lb-photo-sheet{position:absolute!important;inset:0!important;transform-style:preserve-3d!important;backface-visibility:hidden!important;-webkit-backface-visibility:hidden!important;transform-origin:100% 50%!important;will-change:transform}
+#lbFlip .lb-flip-face{position:absolute!important;inset:0!important;display:grid!important;place-items:center!important;overflow:hidden!important;backface-visibility:hidden!important;-webkit-backface-visibility:hidden!important;border-radius:8px!important;background:transparent!important}
+#lbFlip .lb-flip-face img{display:block!important;width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important;background:transparent!important;box-shadow:none!important;border:0!important}
+#lbFlip .lb-flip-back{transform:rotateY(180deg)!important}
+#lbFlip.play-next .lb-photo-sheet{transform-origin:100% 50%!important;animation:realBookTurnNext 760ms cubic-bezier(.12,.72,.16,1) forwards!important}
+#lbFlip.play-prev .lb-photo-sheet{transform-origin:100% 50%!important;animation:realBookTurnPrev 760ms cubic-bezier(.12,.72,.16,1) forwards!important}
+@media(prefers-reduced-motion:reduce){#lbFlip.play-next .lb-photo-sheet,#lbFlip.play-prev .lb-photo-sheet{animation-duration:.001ms!important;animation:none!important}}
+@media(max-width:600px){.heart-transition-person{width:min(62vw,246px)!important;max-height:47vh!important;top:55%!important}}
+
+/* R79 final framing guard: keep paired characters at native contain scale, while the stage camera moves only slightly. */
+.osra-couple-stage.osra-pair-art-active>.osra-couple-paired-art{
+ animation:osraPairStoryCameraR79 6.4s ease-in-out infinite!important;
+}
+@keyframes osraPairStoryCameraR79{
+ 0%,100%{transform:translate3d(0,0,0) rotateZ(-.04deg) scale(1)}
+ 25%{transform:translate3d(-.10vw,-.10vh,1px) rotateZ(.03deg) scale(1.003)}
+ 50%{transform:translate3d(.10vw,-.14vh,2px) rotateZ(0deg) scale(1.006)}
+ 75%{transform:translate3d(.12vw,-.05vh,1px) rotateZ(-.03deg) scale(1.002)}
+}
+.osra-couple-stage.osra-pair-art-active .osra-couple-paired-art img.osra-pair-frame.is-visible{
+ transform:translate3d(-50%,0,0) scale(1) rotateZ(0deg)!important;
+}
+@media(prefers-reduced-motion:reduce){
+ .osra-couple-stage.osra-pair-art-active>.osra-couple-paired-art{animation:none!important}
+}
+
+
+/* R79 — real user-approved story mascots: no cat/crocodile emoji substitutes. */
+.osra-message-mascots{height:38px!important;min-height:38px!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:clamp(3px,1.2vw,9px)!important;direction:ltr!important;overflow:hidden!important;pointer-events:none!important}
+.osra-mascot-pet{display:inline-flex!important;align-items:center!important;justify-content:center!important;position:relative!important;flex:0 1 34px!important;width:clamp(27px,7.5vw,38px)!important;height:36px!important;max-width:38px!important;opacity:0;transform:translateX(-10px) translateY(5px) scale(.82);filter:drop-shadow(0 2px 3px rgba(30,15,25,.18))}
+.osra-mascot-pet img{display:block!important;width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important;object-position:center bottom!important;background:transparent!important;border:0!important;border-radius:0!important}
+.osra-message-mascots.run .osra-mascot-pet{animation:osraPetRunR79 2.05s cubic-bezier(.2,.7,.25,1) both}
+.osra-message-mascots.run .dog{animation-delay:.00s}.osra-message-mascots.run .tom{animation-delay:.34s}.osra-message-mascots.run .jerry{animation-delay:.68s}.osra-message-mascots.run .masha{animation-delay:1.02s}.osra-message-mascots.run .bear{animation-delay:1.36s}.osra-message-mascots.run .shaun{animation-delay:1.70s}
+.osra-opening-pet-parade{position:fixed!important;top:12vh!important;left:0!important;right:0!important;z-index:10020!important;margin:auto!important;width:min(94vw,340px)!important;height:54px!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:clamp(4px,1.5vw,10px)!important;direction:ltr!important;pointer-events:none!important}
+.osra-opening-pet-parade .osra-mascot-pet{flex:0 1 42px!important;width:clamp(30px,8.3vw,44px)!important;height:48px!important;max-width:44px!important}
+.osra-opening-pet-parade.run .osra-mascot-pet{animation:osraPetRunR79 2.55s cubic-bezier(.2,.7,.25,1) both}
+.osra-opening-pet-parade.run .dog{animation-delay:.00s}.osra-opening-pet-parade.run .tom{animation-delay:.42s}.osra-opening-pet-parade.run .jerry{animation-delay:.84s}.osra-opening-pet-parade.run .masha{animation-delay:1.26s}.osra-opening-pet-parade.run .bear{animation-delay:1.68s}.osra-opening-pet-parade.run .shaun{animation-delay:2.10s}
+@keyframes osraPetRunR79{0%{opacity:0;transform:translate3d(-14px,8px,0) scale(.76)}14%{opacity:1}34%{transform:translate3d(-3px,-5px,0) scale(1.04)}56%{transform:translate3d(3px,0,0) scale(1)}80%{opacity:1;transform:translate3d(12px,-2px,0) scale(.98)}100%{opacity:0;transform:translate3d(19px,5px,0) scale(.86)}}
+@media(max-width:600px){.romantic-ticker{height:82px!important;top:50px!important}.romantic-ticker #romanticTickerText{font-size:clamp(15px,4.2vw,20px)!important;max-width:98vw!important}.osra-message-mascots{height:37px!important}.osra-opening-pet-parade{top:9vh!important}}
+@media(prefers-reduced-motion:reduce){.osra-mascot-pet,.osra-message-mascots.run .osra-mascot-pet,.osra-opening-pet-parade.run .osra-mascot-pet{animation:none!important;opacity:1;transform:none}}
+
+/* R79 — small model is deliberately small and grounded; paired models are centered and height-bounded. */
+.osra-couple-stage{height:100dvh!important;min-height:100dvh!important;overflow:hidden!important;box-sizing:border-box!important}
+.osra-couple-stage:not(.osra-pair-art-active){align-items:flex-end!important;justify-content:center!important;gap:clamp(8px,3.5vw,18px)!important;padding:0 8px calc(5.5vh + env(safe-area-inset-bottom,0px))!important}
+.osra-couple-stage:not(.osra-pair-art-active)>.osra-couple-person{width:clamp(58px,8vw,94px)!important;height:clamp(132px,25vh,206px)!important;max-width:24vw!important;flex:0 1 auto!important}
+.osra-couple-stage:not(.osra-pair-art-active)>.osra-couple-person img{width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important;object-position:center bottom!important}
+.osra-couple-stage.osra-pair-art-active{align-items:center!important;justify-content:center!important;padding:0!important;overflow:hidden!important}
+.osra-couple-stage.osra-pair-art-active>.osra-couple-paired-art{position:absolute!important;inset:0!important;display:flex!important;align-items:center!important;justify-content:center!important;overflow:hidden!important;padding:0!important;margin:0!important;transform-origin:center center!important}
+.osra-couple-stage.osra-pair-art-active .osra-couple-paired-art img.osra-pair-frame{position:absolute!important;left:50%!important;top:50%!important;right:auto!important;bottom:auto!important;display:block!important;width:min(92vw,620px)!important;height:min(64vh,560px)!important;max-width:92vw!important;max-height:64vh!important;object-fit:contain!important;object-position:center center!important;transform:translate3d(-50%,-50%,0) scale(1)!important;transform-origin:center center!important;margin:0!important}
+.osra-couple-stage[data-dance-model="legacy62"].osra-pair-art-active .osra-couple-paired-art img.osra-pair-frame{width:min(84vw,500px)!important;height:min(62vh,540px)!important;max-width:84vw!important;max-height:62vh!important}
+.osra-couple-stage[data-dance-model="legacy"].osra-pair-art-active .osra-couple-paired-art img.osra-pair-frame{width:min(86vw,520px)!important;height:min(64vh,560px)!important;max-width:86vw!important;max-height:64vh!important}
+.osra-couple-stage[data-dance-model="large"].osra-pair-art-active .osra-couple-paired-art img.osra-pair-frame{width:min(94vw,680px)!important;height:min(68vh,600px)!important;max-width:94vw!important;max-height:68vh!important}
+@media(max-width:600px){
+ .osra-couple-stage:not(.osra-pair-art-active){padding-bottom:calc(5vh + env(safe-area-inset-bottom,0px))!important;gap:8px!important}
+ .osra-couple-stage:not(.osra-pair-art-active)>.osra-couple-person{width:clamp(50px,15vw,72px)!important;height:clamp(118px,22vh,165px)!important;max-width:22vw!important}
+ .osra-couple-stage.osra-pair-art-active .osra-couple-paired-art img.osra-pair-frame{width:min(94vw,450px)!important;height:min(60vh,470px)!important;max-width:94vw!important;max-height:60vh!important}
+ .osra-couple-stage[data-dance-model="legacy62"].osra-pair-art-active .osra-couple-paired-art img.osra-pair-frame{width:min(90vw,390px)!important;height:min(60vh,460px)!important;max-width:90vw!important;max-height:60vh!important}
+ .osra-couple-stage[data-dance-model="legacy"].osra-pair-art-active .osra-couple-paired-art img.osra-pair-frame{width:min(92vw,410px)!important;height:min(62vh,485px)!important;max-width:92vw!important;max-height:62vh!important}
+ .osra-couple-stage[data-dance-model="large"].osra-pair-art-active .osra-couple-paired-art img.osra-pair-frame{width:min(96vw,480px)!important;height:min(62vh,490px)!important;max-width:96vw!important;max-height:62vh!important}
+}
+@media(prefers-reduced-motion:reduce){.osra-couple-stage.osra-pair-art-active>.osra-couple-paired-art{animation:none!important}.osra-couple-paired-art img.osra-pair-frame{transition:opacity .14s linear!important}}
+
+/* R79 — small character cameo within every romantic message card, chosen from the six approved mascot images. */
+.rs-mini-row{display:flex!important;align-items:center!important;justify-content:center!important;gap:clamp(5px,1.3vw,11px)!important;min-height:32px}
+.rs-mini-pet{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:29px!important;height:31px!important;flex:0 0 29px!important;vertical-align:middle!important}
+.rs-mini-pet img{display:block!important;width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important;object-position:center bottom!important;filter:drop-shadow(0 1px 2px rgba(45,18,34,.16))}
+@media(max-width:600px){.rs-mini-pet{width:25px!important;height:27px!important;flex-basis:25px!important}.rs-mini-row{gap:5px!important}}
+
+
+/* R79 FINAL GUARD — keep every paired frame fully inside the screen, including cross-fade states. */
+.osra-couple-stage.osra-pair-art-active>.osra-couple-paired-art{align-items:center!important;justify-content:center!important;overflow:hidden!important;}
+.osra-couple-stage.osra-pair-art-active .osra-couple-paired-art img.osra-pair-frame,
+.osra-couple-stage.osra-pair-art-active .osra-couple-paired-art img.osra-pair-frame.is-visible,
+.osra-couple-stage.osra-pair-art-active .osra-couple-paired-art img.osra-pair-frame.is-leaving{position:absolute!important;left:50%!important;top:50%!important;right:auto!important;bottom:auto!important;object-fit:contain!important;object-position:center center!important;transform:translate3d(-50%,-50%,0) scale(1)!important;transform-origin:center center!important;max-width:94vw!important;max-height:68vh!important;}
+.osra-couple-stage[data-dance-model="large"].osra-pair-art-active .osra-couple-paired-art img.osra-pair-frame,
+.osra-couple-stage[data-dance-model="large"].osra-pair-art-active .osra-couple-paired-art img.osra-pair-frame.is-visible,
+.osra-couple-stage[data-dance-model="large"].osra-pair-art-active .osra-couple-paired-art img.osra-pair-frame.is-leaving{width:min(94vw,680px)!important;height:min(68vh,600px)!important;max-width:94vw!important;max-height:68vh!important;}
+.osra-couple-stage:not(.osra-pair-art-active)>.osra-couple-person{width:clamp(72px,9vw,102px)!important;height:clamp(145px,27vh,210px)!important;}
+.osra-couple-stage:not(.osra-pair-art-active)>.osra-couple-person img{object-fit:contain!important;object-position:center bottom!important;}
+.romantic-scene-layer .rs-mini-row{flex-wrap:nowrap!important;align-items:center!important;justify-content:center!important;overflow:visible!important;}
+.rs-mini-row .rs-mini-pet{display:inline-flex!important;flex:0 0 29px!important;}
+@media(max-width:600px){
+ .osra-couple-stage:not(.osra-pair-art-active)>.osra-couple-person{width:clamp(56px,16vw,80px)!important;height:clamp(126px,23vh,178px)!important;}
+ .osra-couple-stage.osra-pair-art-active .osra-couple-paired-art img.osra-pair-frame,
+ .osra-couple-stage.osra-pair-art-active .osra-couple-paired-art img.osra-pair-frame.is-visible,
+ .osra-couple-stage.osra-pair-art-active .osra-couple-paired-art img.osra-pair-frame.is-leaving{max-width:96vw!important;max-height:62vh!important;width:min(96vw,480px)!important;height:min(62vh,490px)!important;}
+ .osra-couple-stage[data-dance-model="legacy62"].osra-pair-art-active .osra-couple-paired-art img.osra-pair-frame,
+ .osra-couple-stage[data-dance-model="legacy62"].osra-pair-art-active .osra-couple-paired-art img.osra-pair-frame.is-visible,
+ .osra-couple-stage[data-dance-model="legacy62"].osra-pair-art-active .osra-couple-paired-art img.osra-pair-frame.is-leaving{width:min(90vw,390px)!important;height:min(60vh,460px)!important;max-width:90vw!important;max-height:60vh!important;}
+ .osra-couple-stage[data-dance-model="legacy"].osra-pair-art-active .osra-couple-paired-art img.osra-pair-frame,
+ .osra-couple-stage[data-dance-model="legacy"].osra-pair-art-active .osra-couple-paired-art img.osra-pair-frame.is-visible,
+ .osra-couple-stage[data-dance-model="legacy"].osra-pair-art-active .osra-couple-paired-art img.osra-pair-frame.is-leaving{width:min(92vw,410px)!important;height:min(62vh,485px)!important;max-width:92vw!important;max-height:62vh!important;}
+}
+
+/* R80 — garden dance model preview: compact and mobile-safe. */
+.garden-model-preview{display:flex;align-items:center;gap:12px;margin-top:12px;padding:9px;border:1px solid rgba(135,80,135,.22);border-radius:14px;background:rgba(255,255,255,.62)}.garden-model-preview img{display:block;width:min(40%,220px);max-height:150px;object-fit:cover;border-radius:10px}.garden-model-preview span{font-size:12px;line-height:1.55;color:var(--muted,#665)}@media(max-width:520px){.garden-model-preview{align-items:flex-start}.garden-model-preview img{width:42%;max-height:126px}.garden-model-preview span{font-size:11px}}
