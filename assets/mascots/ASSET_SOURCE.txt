@@ -1,0 +1,4 @@
+R79 approved mascot sprites
+Six transparent cutouts from the user-approved OsRa character collage:
+dog.png, tom.png, jerry.png, masha.png, bear.png, shaun.png
+No cat-only extra asset or crocodile was added. The existing classic white-dog SVG remains in app.js.
