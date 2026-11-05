@@ -1,6 +1,6 @@
-const BUILD='osra122-20261104-r80-garden-opening-account-picker';
+const BUILD='osra122-20261105-r82-branding-account';
 const CACHE=`OsRa-v122-${BUILD}`;
-const APP=['./','./index.html','./style.css?v=osra122-r80-garden-opening-account-picker','./app.js?v=osra122-r80-garden-opening-account-picker','./manifest.json','./icon.svg','./icon-192.png','./icon-512.png',
+const APP=['./','./index.html','./style.css?v=osra122-20261105-r82-branding-account','./app.js?v=osra122-20261105-r82-branding-account','./manifest.json','./manifest-highres.json','./icon.svg','./icon-192.png','./icon-512.png','./assets/osra-brand-highres.png','./assets/osra-brand-icon-192.png','./assets/osra-brand-icon-512.png',
  './assets/osama-3d.png',
  './assets/rania-3d.png',
  './assets/mascots/dog.png',
