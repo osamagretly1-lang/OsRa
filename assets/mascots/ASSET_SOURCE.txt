@@ -2,3 +2,6 @@ R79 approved mascot sprites
 Six transparent cutouts from the user-approved OsRa character collage:
 dog.png, tom.png, jerry.png, masha.png, bear.png, shaun.png
 No cat-only extra asset or crocodile was added. The existing classic white-dog SVG remains in app.js.
+
+R84 addition
+white-dog.png: transparent full-body crop of the white fluffy dog with a red heart bandana from the Library reference image «واجهة رومانسية لزوجين وقلوب.png». Added as an independent selectable mascot for messages and occasions.
