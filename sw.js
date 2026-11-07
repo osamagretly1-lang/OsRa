@@ -1,6 +1,6 @@
-const BUILD='osra122-20261107-r84-link-verify-brand-occasions';
+const BUILD='osra122-20261107-r86-one-tap-relink';
 const CACHE=`OsRa-v122-${BUILD}`;
-const APP=['./','./index.html','./style.css?v=osra122-20261107-r84-link-verify-brand-occasions','./app.js?v=osra122-20261107-r84-link-verify-brand-occasions','./manifest.json','./manifest-highres.json','./icon.svg','./icon-192.png','./icon-512.png','./assets/osra-brand-highres.png','./assets/osra-brand-icon-192.png','./assets/osra-brand-icon-512.png',
+const APP=['./','./index.html','./style.css?v=osra122-20261107-r86-one-tap-relink','./app.js?v=osra122-20261107-r86-one-tap-relink','./manifest.json','./manifest-highres.json','./icon.svg','./icon-192.png','./icon-512.png','./assets/osra-brand-highres.png','./assets/osra-brand-icon-192.png','./assets/osra-brand-icon-512.png',
  './assets/osama-3d.png',
  './assets/rania-3d.png',
  './assets/mascots/dog.png',
@@ -153,5 +153,3 @@ self.addEventListener('message',event=>{if(event.data?.type==='SKIP_WAITING')sel
 self.addEventListener('activate',event=>event.waitUntil((async()=>{const keys=await caches.keys();const hadOlderCache=keys.some(k=>/^OsRa-v122-/i.test(k)&&k!==CACHE);await Promise.all(keys.filter(k=>/^OsRa-v122-/i.test(k)&&k!==CACHE).map(k=>caches.delete(k)));await self.clients.claim();if(hadOlderCache){const pages=await self.clients.matchAll({type:'window'});await Promise.all(pages.map(c=>c.navigate(c.url).catch(()=>null)))}})()));
 async function freshNetwork(request){const fresh=new Request(request,{cache:'no-store'});const res=await fetch(fresh);if(res.ok){const cache=await caches.open(CACHE);await cache.put(request,res.clone()).catch(()=>{})}return res}
 self.addEventListener('fetch',event=>{if(event.request.method!=='GET')return;const u=new URL(event.request.url);if(u.origin!==location.origin)return;const isNav=event.request.mode==='navigate'||event.request.destination==='document';const isShell=SHELL.has(event.request.url);if(isNav||isShell){event.respondWith((async()=>{try{return await freshNetwork(event.request)}catch{return (await caches.match(event.request,{ignoreSearch:false}))||(isNav?await caches.match('./index.html'):null)||new Response('',{status:504})}})());return}event.respondWith(caches.match(event.request,{ignoreSearch:false}).then(c=>c||freshNetwork(event.request)).catch(()=>new Response('',{status:504})))})
-
-self.addEventListener('notificationclick',event=>{event.notification.close();event.waitUntil((async()=>{const target=new URL(event.notification.data?.url||'./',self.location.href).href;const wins=await self.clients.matchAll({type:'window',includeUncontrolled:true});for(const client of wins){if(client.url===target||client.url.startsWith(target)){await client.focus();return}}if(self.clients.openWindow)await self.clients.openWindow(target)})())});
