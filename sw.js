@@ -1,6 +1,6 @@
-const BUILD='osra122-20261107-r84-verified-link-patch';
+const BUILD='osra122-20261107-r85-linking-repair';
 const CACHE=`OsRa-v122-${BUILD}`;
-const APP=['./','./index.html','./style.css?v=osra122-20261107-r84-verified-link-patch','./app.js?v=osra122-20261107-r84-verified-link-patch','./manifest.json','./manifest-highres.json','./icon.svg','./icon-192.png','./icon-512.png','./assets/osra-brand-highres.png','./assets/osra-brand-icon-192.png','./assets/osra-brand-icon-512.png',
+const APP=['./','./index.html','./style.css?v=osra122-20261107-r85-linking-repair','./app.js?v=osra122-20261107-r85-linking-repair','./manifest.json','./manifest-highres.json','./icon.svg','./icon-192.png','./icon-512.png','./assets/osra-brand-highres.png','./assets/osra-brand-icon-192.png','./assets/osra-brand-icon-512.png',
  './assets/osama-3d.png',
  './assets/rania-3d.png',
  './assets/mascots/dog.png',
