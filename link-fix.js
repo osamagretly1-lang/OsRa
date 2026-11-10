@@ -1,9 +1,9 @@
-/* OsRa R97 — real single-file relinking + repaired source-folder quick linking.
+/* OsRa R98 — robust direct-file validation, duplicate candidate review, and restored link modes.
    This patch only attaches an original-file handle to an EXISTING photo record.
    It never creates a photo, album, memory, or thumbnail. */
 (function installOsRaLinkRepairR97(){
   'use strict';
-  const BUILD = 'osra122-20261109-r97-real-file-link';
+  const BUILD = 'osra122-20261110-r98-link-engine-repair';
   if (window.__osraLinkRepairBuild === BUILD) return;
 
   const originalNormalizePhotoLinks = window.normalizePhotoLinks;
@@ -159,22 +159,17 @@
             if (!(await fileHandlePermission(link.fileHandle, ask))) continue;
             const file = await link.fileHandle.getFile();
             if (!imageFile(file)) throw new Error('directly selected item is no longer an image');
-            let identityOk = false;
-            if (link.contentKey && typeof window.contentKey === 'function') {
-              const key = await window.contentKey(file);
-              identityOk = !!key && key === link.contentKey;
-              if (!identityOk && link.fingerprint && typeof window.fingerprint === 'function') {
-                const fp = await window.fingerprint(file);
-                identityOk = !!fp && fp === link.fingerprint;
-              }
-            } else if (link.fingerprint && typeof window.fingerprint === 'function') {
-              const fp = await window.fingerprint(file);
-              identityOk = !!fp && fp === link.fingerprint;
-            } else {
-              identityOk = number(file.size) === number(link.size) &&
-                number(file.lastModified) === number(link.lastModified);
-            }
-            if (!identityOk) throw new Error('direct file changed after it was linked');
+            /* Use the same multi-signal verifier as folder matching. The old
+               direct-file path rejected a valid file as soon as its saved
+               contentKey differed, even when its saved fingerprint or exact
+               legacy metadata still matched. */
+            const identity = typeof window.verifyExactPhotoCandidate === 'function'
+              ? await window.verifyExactPhotoCandidate(photo, file)
+              : {matched: number(file.size) === number(link.size) &&
+                  number(file.lastModified) === number(link.lastModified)};
+            if (!identity || !identity.matched) throw new Error('direct file identity could not be verified');
+            if (identity.key) link.contentKey = identity.key;
+            if (identity.fingerprint) link.fingerprint = identity.fingerprint;
             link.verified = true;
             link.verifiedAt = number(link.verifiedAt) || Date.now();
             const source = {id:link.sourceId, name:`ملف مباشر: ${link.name || file.name}`, handle:null, directFile:true};
@@ -371,7 +366,31 @@
           } catch (_) {}
           if (status && i % 8 === 0) status.textContent = `التحقق من الاسم المتطابق ${i+1} / ${exactCandidates.length}…`;
         }
-        if (matched.length) {
+        if (matched.length > 1) {
+          /* Multiple files can be byte-identical copies in different folders.
+             Never silently bind the first one: show every verified location
+             and let the user choose the intended source. */
+          const rootRef = {id:String(tempSource.id),name:tempSource.name,handle:chosen,source:source || null,relPath:baseRel};
+          const verifiedCandidates = [];
+          for (const item of matched) {
+            let sig = null;
+            try { sig = await window.imageSignatureFromThumb(item.file); } catch (_) {}
+            if (!sig) continue;
+            verifiedCandidates.push({entry:item.row.entry,name:item.file.name,relPath:item.rel,sig,score:1,root:rootRef});
+          }
+          if (!verifiedCandidates.length) throw new Error('NO_TARGET_PREVIEW');
+          visualLinkStopRequested = false;
+          visualLinkSession = {
+            albumId:albums[0].id, roots:[rootRef],
+            results:[{photoId:String(photo.id),candidates:verifiedCandidates}],
+            sourceRows:[],status:'ready',origin:'report',filterPhotoId:String(photo.id)
+          };
+          busy = false;
+          manualLinkSession.running = false;
+          window.visualResultsModal();
+          return;
+        }
+        if (matched.length === 1) {
           const chosenMatch = matched[0];
           pendingAutoSourceAlbum = {
             source:tempSource, isNew:!source, staged:[chosenMatch],
@@ -520,8 +539,10 @@
     window.pageSettings = function pageSettingsR97(){
       let markup = originalPageSettings.apply(this, arguments);
       if (typeof markup !== 'string') return markup;
-      markup = markup.replace(/<button\b[^>]*data-action="matchAlbumsByName"[^>]*>[\s\S]*?<\/button>/i, '');
-      markup = markup.replace(/<button\b[^>]*data-action="linkSourceBatchAutoAlbums"[^>]*>[\s\S]*?<\/button>/i, '');
+      /* R98 deliberately preserves the user's existing fast, batch/slow,
+         and source-first controls. R97 hid two modes while the focused-photo
+         path was being repaired; removing those controls also removed useful
+         recovery routes. */
       return markup;
     };
   }
