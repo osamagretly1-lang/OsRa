@@ -1,0 +1,9 @@
+التغيير الوحيد في index.html الحالي:
+
+احتفظ بهذا السطر كما هو:
+<script src="app.js?v=osra122-20261107-r86-one-tap-relink" defer></script>
+
+استبدل سطر link-fix.js القديم (R98) بهذا السطر:
+<script src="link-fix.js?v=osra122-20261110-r99-link-engine-repair" defer></script>
+
+لا تستبدل index.html كاملًا بملف من حزمة أقدم.

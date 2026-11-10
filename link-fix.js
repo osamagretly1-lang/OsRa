@@ -1,9 +1,9 @@
-/* OsRa R98 — robust direct-file validation, duplicate candidate review, and restored link modes.
+/* OsRa R99 — multi-signal verification, duplicate-name candidate preservation, and restored link modes.
    This patch only attaches an original-file handle to an EXISTING photo record.
    It never creates a photo, album, memory, or thumbnail. */
-(function installOsRaLinkRepairR97(){
+(function installOsRaLinkRepairR99(){
   'use strict';
-  const BUILD = 'osra122-20261110-r98-link-engine-repair';
+  const BUILD = 'osra122-20261110-r99-link-engine-repair';
   if (window.__osraLinkRepairBuild === BUILD) return;
 
   const originalNormalizePhotoLinks = window.normalizePhotoLinks;
@@ -30,13 +30,13 @@
     pendingDirect = null;
   };
   const notify = message => {
-    try { window.toast(message); } catch (_) { console.warn('[OsRa R97]', message); }
+    try { window.toast(message); } catch (_) { console.warn('[OsRa R99]', message); }
   };
 
   /* Preserve ordinary folder links exactly as before, while retaining the
      FileSystemFileHandle for a user-selected single original file. */
   if (typeof originalNormalizePhotoLinks === 'function') {
-    window.normalizePhotoLinks = function normalizePhotoLinksR97(photo){
+    window.normalizePhotoLinks = function normalizePhotoLinksR99(photo){
       const normalized = originalNormalizePhotoLinks(photo) || [];
       const raw = Array.isArray(photo && photo.sourceLinks) ? photo.sourceLinks : [];
       for (const item of raw) {
@@ -66,29 +66,83 @@
   /* Fix the actual R86 rejection bug: never stop after one stale content hash.
      Try every saved content key, then every saved fingerprint, then the exact
      legacy metadata tuple (name + size + lastModified). */
-  window.verifyExactPhotoCandidate = async function verifyExactPhotoCandidateR97(photo, file){
-    if (!photo || !imageFile(file)) return {matched:false};
+  async function legacyLinkHashes(file){
+    try {
+      const size = Number(file && file.size) || 0;
+      const lastModified = number(file && file.lastModified);
+      const max = 65536;
+      const head = await file.slice(0, Math.min(max, size)).arrayBuffer();
+      const tail = await file.slice(Math.max(0, size - max), size).arrayBuffer();
+      const headBytes = new Uint8Array(head), tailBytes = new Uint8Array(tail);
+      const content = new Uint8Array(headBytes.length + tailBytes.length + 8);
+      const contentView = new DataView(content.buffer);
+      contentView.setBigUint64(0, BigInt(size));
+      content.set(headBytes, 8); content.set(tailBytes, 8 + headBytes.length);
+      const fingerprintBytes = new Uint8Array(headBytes.length + tailBytes.length + 16);
+      const fingerprintView = new DataView(fingerprintBytes.buffer);
+      fingerprintView.setBigUint64(0, BigInt(size));
+      fingerprintView.setBigUint64(8, BigInt(lastModified));
+      fingerprintBytes.set(headBytes, 16); fingerprintBytes.set(tailBytes, 16 + headBytes.length);
+      const fnv = bytes => {
+        let hash = 2166136261;
+        for (const value of bytes) { hash ^= value; hash = Math.imul(hash, 16777619); }
+        return hash >>> 0;
+      };
+      return {
+        contentKey: `${fnv(content)}-${size}`,
+        fingerprint: `${fnv(fingerprintBytes)}-${size}-${lastModified}`
+      };
+    } catch (_) { return {contentKey:'',fingerprint:''}; }
+  }
+  const validSavedKey = (value, file) => {
+    const text = String(value || '');
+    if (!text || text === `${number(file && file.size)}-${String(file && file.name || '')}`) return false;
+    return /^[a-f0-9]{64}$/i.test(text) || /^\d+-\d+$/.test(text);
+  };
+  const validSavedFingerprint = (value, file) => {
+    const text = String(value || '');
+    if (!text || text === `${number(file && file.size)}-${number(file && file.lastModified)}-${String(file && file.name || '')}`) return false;
+    return /^[a-f0-9]{64}$/i.test(text) || /^\d+-\d+-\d+$/.test(text);
+  };
+
+  /*
+   * R99 fixes two distinct identity failures:
+   * 1) a stale contentKey no longer short-circuits a valid fingerprint;
+   * 2) hashes created when crypto.subtle was unavailable remain verifiable
+   *    after the browser later starts using SHA-256.
+   * Metadata is automatic only when the record has no usable hash at all.
+   * When a saved hash conflicts with otherwise matching metadata, the file is
+   * flagged for visual/manual review instead of being silently auto-linked.
+   */
+  window.verifyExactPhotoCandidate = async function verifyExactPhotoCandidateR99(photo, file){
+    if (!photo || !imageFile(file)) return {matched:false,method:'none'};
     let photoLinks = [];
     try { photoLinks = window.photoLocations(photo) || []; } catch (_) {}
-    const keys = [photo.contentKey, ...photoLinks.map(link=>link && link.contentKey)]
-      .filter(value=>typeof value === 'string' && value.length);
-    const fingerprints = [photo.fingerprint, ...photoLinks.map(link=>link && link.fingerprint)]
-      .filter(value=>typeof value === 'string' && value.length);
-    let actualKey = '', actualFingerprint = '';
-    if (keys.length && typeof window.contentKey === 'function') {
-      try {
-        actualKey = await window.contentKey(file) || '';
-        if (actualKey && keys.includes(actualKey))
-          return {matched:true,key:actualKey,fingerprint:'',method:'content-key'};
-      } catch (_) {}
+    const keys = [...new Set([photo.contentKey, ...photoLinks.map(link=>link && link.contentKey)]
+      .filter(value=>validSavedKey(value,file)))];
+    const fingerprints = [...new Set([photo.fingerprint, ...photoLinks.map(link=>link && link.fingerprint)]
+      .filter(value=>validSavedFingerprint(value,file)))];
+    const actualKey = await safeCall(window.contentKey, file) || '';
+    const actualFingerprint = await safeCall(window.fingerprint, file) || '';
+    let legacy = {contentKey:'',fingerprint:''};
+    if ((keys.length && !keys.includes(actualKey)) || (fingerprints.length && !fingerprints.includes(actualFingerprint))) {
+      legacy = await legacyLinkHashes(file);
     }
-    if (fingerprints.length && typeof window.fingerprint === 'function') {
-      try {
-        actualFingerprint = await window.fingerprint(file) || '';
-        if (actualFingerprint && fingerprints.includes(actualFingerprint))
-          return {matched:true,key:actualKey,fingerprint:actualFingerprint,method:'fingerprint'};
-      } catch (_) {}
+    const keyValue = validSavedKey(actualKey,file) ? actualKey : '';
+    const fingerprintValue = validSavedFingerprint(actualFingerprint,file) ? actualFingerprint : '';
+    if (keyValue && keys.includes(keyValue)) {
+      return {matched:true,key:keyValue,fingerprint:fingerprintValue,method:'content-key',matchedValue:keyValue};
     }
+    if (legacy.contentKey && keys.includes(legacy.contentKey)) {
+      return {matched:true,key:keyValue || legacy.contentKey,fingerprint:fingerprintValue,method:'legacy-content-key',matchedValue:legacy.contentKey};
+    }
+    if (fingerprintValue && fingerprints.includes(fingerprintValue)) {
+      return {matched:true,key:keyValue,fingerprint:fingerprintValue,method:'fingerprint',matchedValue:fingerprintValue};
+    }
+    if (legacy.fingerprint && fingerprints.includes(legacy.fingerprint)) {
+      return {matched:true,key:keyValue || legacy.contentKey,fingerprint:fingerprintValue || legacy.fingerprint,method:'legacy-fingerprint',matchedValue:legacy.fingerprint};
+    }
+
     const normalizeName = value => {
       try { return window.normalizeFileName(String(value || '')); }
       catch (_) { return String(value || '').trim().toLocaleLowerCase(); }
@@ -102,18 +156,28 @@
       ...photoLinks.map(link=>({name:link && link.name,size:link && link.size,lastModified:link && link.lastModified}))
     ];
     const actualName = String(file.name || '');
-    const actualSize = number(file.size), actualTime = number(file.lastModified);
-    const metadataMatch = expected.some(spec=>{
+    const actualNormalized = normalizeName(actualName);
+    const actualStem = normalizeStem(actualName);
+    const metadataMatches = expected.some(spec=>{
       const expectedSize = number(spec.size), expectedTime = number(spec.lastModified);
-      const nameMatch = normalizeName(spec.name) === normalizeName(actualName) ||
-        (!!normalizeStem(spec.name) && normalizeStem(spec.name) === normalizeStem(actualName));
-      return nameMatch && expectedSize > 0 && expectedSize === actualSize &&
-        expectedTime > 0 && expectedTime === actualTime;
+      const exactName = !!actualNormalized && normalizeName(spec.name) === actualNormalized;
+      const sameStem = !!actualStem && normalizeStem(spec.name) === actualStem;
+      return (exactName || sameStem) && expectedSize > 0 && expectedSize === number(file.size) &&
+        expectedTime > 0 && expectedTime === number(file.lastModified);
     });
-    return {matched:metadataMatch,key:actualKey,fingerprint:actualFingerprint,method:metadataMatch?'legacy-metadata-fallback':'none'};
+    const exactMetadata = expected.some(spec=>normalizeName(spec.name) === actualNormalized &&
+      number(spec.size) > 0 && number(spec.size) === number(file.size) &&
+      number(spec.lastModified) > 0 && number(spec.lastModified) === number(file.lastModified));
+    if (keys.length || fingerprints.length) {
+      return {matched:false,key:keyValue,fingerprint:fingerprintValue,metadataCandidate:metadataMatches,method:metadataMatches?'metadata-review':'none'};
+    }
+    if (exactMetadata) {
+      return {matched:true,key:keyValue,fingerprint:fingerprintValue,method:'legacy-metadata',matchedValue:`${actualNormalized}|${number(file.size)}|${number(file.lastModified)}`};
+    }
+    return {matched:false,key:keyValue,fingerprint:fingerprintValue,metadataCandidate:metadataMatches,method:metadataMatches?'metadata-review':'none'};
   };
 
-  window.hasOriginalLink = function hasOriginalLinkR97(photo){
+  window.hasOriginalLink = function hasOriginalLinkR99(photo){
     if (!photo) return false;
     try {
       return window.photoLocations(photo).some(link =>
@@ -125,7 +189,7 @@
       );
     } catch (_) { return false; }
   };
-  window.originalLinkCount = function originalLinkCountR97(photo){
+  window.originalLinkCount = function originalLinkCountR99(photo){
     if (!photo) return 0;
     try {
       return window.photoLocations(photo).filter(link =>
@@ -151,7 +215,7 @@
   /* Directly selected file handles are tried first. They remain local to the
      existing photo row and are never copied into OsRa's photo collection. */
   if (typeof originalFindOriginalFile === 'function') {
-    window.findOriginalFile = async function findOriginalFileR97(photo, ask=true){
+    window.findOriginalFile = async function findOriginalFileR99(photo, ask=true){
       if (photo) {
         for (const link of window.photoLocations(photo)) {
           if (link.directFile !== true || !link.fileHandle) continue;
@@ -178,7 +242,7 @@
             link.verified = false;
             link.verifiedAt = 0;
             try { await savePhoto(photo); } catch (_) {}
-            console.warn('[OsRa R97] direct-file source unavailable', photo.id, error);
+            console.warn('[OsRa R99] direct-file source unavailable', photo.id, error);
           }
         }
       }
@@ -227,7 +291,7 @@
         try { window.hydrate($('#modalBody')); } catch (_) {}
       } catch (error) {
         if (error && error.name === 'AbortError') return;
-        console.error('[OsRa R97] direct file picker failed', error);
+        console.error('[OsRa R99] direct file picker failed', error);
         notify('تعذر فتح ملف الصورة. لم يتم حفظ أي تغيير. جرّب اختيار مجلد المصدر.');
         window.openQuickLinkSourceChooser('', String(photoId), 'report');
       }
@@ -269,7 +333,7 @@
       if (oldLinks) photo.sourceLinks = oldLinks;
       cleanObjectUrl();
       window.closeModal();
-      console.error('[OsRa R97] could not persist direct file link', error);
+      console.error('[OsRa R99] could not persist direct file link', error);
       notify('لم يتم حفظ الربط؛ لم تتغير الصور أو الألبومات. تأكد من إذن قراءة الملف ثم أعد المحاولة.');
     }
   }
@@ -294,7 +358,7 @@
      each one, and if strict identity still fails it offers a visual side-by-side
      review from the SAME selected folder. No candidate is saved automatically. */
   if (typeof originalLinkSourceAutoAlbum === 'function') {
-    window.linkSourceAutoAlbum = async function linkSourceAutoAlbumR97(focusPhotoId=null, sourceId=null){
+    window.linkSourceAutoAlbum = async function linkSourceAutoAlbumR99(focusPhotoId=null, sourceId=null){
       if (!focusPhotoId) return originalLinkSourceAutoAlbum.call(this, focusPhotoId, sourceId);
       const photo = photos && photos.get(String(focusPhotoId));
       if (!photo || !window.isPhotoRecord(photo) || window.hasOriginalLink(photo)) {
@@ -323,7 +387,7 @@
         }
       } catch (error) {
         if (error && error.name === 'AbortError') return;
-        console.error('[OsRa R97] source folder picker failed', error);
+        console.error('[OsRa R99] source folder picker failed', error);
         notify('تعذر اختيار مجلد المصدر.'); return;
       }
       const tempSource = source || {id:id('src'),name:chosen.name || 'مجلد مصدر',handle:chosen,asAlbum:false,directAlbumFolder:false,mergeIntoMemoryId:'',createdAt:Date.now()};
@@ -362,7 +426,7 @@
           try {
             const file = await row.entry.getFile();
             const identity = await window.verifyExactPhotoCandidate(photo, file);
-            if (identity && identity.matched) matched.push({p:photo,row,file,identity,rel:window.normalizeFolderRelPath([baseRel,row.relPath].filter(Boolean).join('/'))});
+            if (identity && identity.matched && identity.method !== 'legacy-metadata') matched.push({p:photo,row,file,identity,rel:window.normalizeFolderRelPath([baseRel,row.relPath].filter(Boolean).join('/'))});
           } catch (_) {}
           if (status && i % 8 === 0) status.textContent = `التحقق من الاسم المتطابق ${i+1} / ${exactCandidates.length}…`;
         }
@@ -445,7 +509,7 @@
         if (error && (error.name === 'ManualLinkCancelled' || error.message === 'MANUAL_LINK_CANCELLED')) {
           notify('تم إلغاء البحث دون حفظ أي رابط.');
         } else {
-          console.warn('[OsRa R97] source matching did not produce a confirmed link', error);
+          console.warn('[OsRa R99] source matching did not produce a confirmed link', error);
           const message = error && error.message === 'EMPTY_SOURCE' ? 'المجلد لا يحتوي على صور.' :
             error && error.message === 'NO_TARGET_PREVIEW' ? 'تعذر قراءة معاينة الصورة الموجودة في OsRa.' :
             'لم أجد ملفًا مطابقًا بدرجة كافية. لم يتم حفظ أي رابط أو إضافة أي صورة.';
@@ -460,7 +524,7 @@
 
   /* Keep the visual route's accepted handle hashes so later lookups validate
      the chosen original itself. This commits links only; it adds no photo rows. */
-  window.applyVisualLinks = async function applyVisualLinksR97(){
+  window.applyVisualLinks = async function applyVisualLinksR99(){
     const session = visualLinkSession;
     if (!session) return;
     const accepted = [...document.querySelectorAll('.visual-link-check:checked')]
@@ -524,7 +588,7 @@
 
   /* In reports, the fast action now opens a one-file picker when available.
      On browsers without this API it falls back to the repaired folder flow. */
-  window.quickLinkMissingPhoto = function quickLinkMissingPhotoR97(photoId){
+  window.quickLinkMissingPhoto = function quickLinkMissingPhotoR99(photoId){
     const id = String(photoId);
     const photo = photos && photos.get(id);
     const candidates = window.visibleMemories().filter(memory=>(memory.photoIds || []).some(pid=>String(pid)===id));
@@ -536,7 +600,7 @@
 
   /* Keep the existing settings simplification from R96, without touching other pages. */
   if (typeof originalPageSettings === 'function') {
-    window.pageSettings = function pageSettingsR97(){
+    window.pageSettings = function pageSettingsR99(){
       let markup = originalPageSettings.apply(this, arguments);
       if (typeof markup !== 'string') return markup;
       /* R98 deliberately preserves the user's existing fast, batch/slow,
@@ -546,6 +610,190 @@
       return markup;
     };
   }
+
+  /* R99 engine layer for the current R86 app.js.
+     The old helper maps discarded duplicate names by replacing them with null.
+     Keep every path, test every candidate, and auto-link only one verified hit. */
+  const addCandidate = (map, key, row) => {
+    if (!key) return;
+    const rows = map.get(key) || [];
+    if (!rows.some(item => String(item.relPath) === String(row.relPath))) rows.push(row);
+    map.set(key, rows);
+  };
+  const arrayForKey = (map, key) => {
+    if (!map || !key) return [];
+    const value = map.get(key);
+    return Array.isArray(value) ? value : value ? [value] : [];
+  };
+  function candidateRowsForPhoto(photo, index, includeSavedPaths = true) {
+    if (!photo || !index) return [];
+    const names = new Set([photo.name]);
+    if (includeSavedPaths) {
+      try {
+        for (const link of window.photoLocations(photo) || []) {
+          const base = String(link.relPath || '').split('/').filter(Boolean).pop();
+          if (base) names.add(base);
+        }
+        const base = String(photo.relPath || '').split('/').filter(Boolean).pop();
+        if (base) names.add(base);
+      } catch (_) {}
+    }
+    const normalized = [...names].map(value => {
+      try { return window.normalizeFileName(String(value || '')); }
+      catch (_) { return String(value || '').trim().toLocaleLowerCase(); }
+    }).filter(Boolean);
+    const stems = new Set(normalized.map(value => {
+      try { return window.normalizeFileStem(value); }
+      catch (_) { return value.replace(/\.[^.\/]+$/, ''); }
+    }).filter(Boolean));
+    const rows = [], seen = new Set();
+    for (const name of normalized) for (const row of arrayForKey(index.byName, name)) {
+      const key = String(row.relPath || row.rowId || '');
+      if (key && !seen.has(key)) { seen.add(key); rows.push(row); }
+    }
+    for (const stem of stems) for (const row of arrayForKey(index.byStem, stem)) {
+      const key = String(row.relPath || row.rowId || '');
+      if (key && !seen.has(key)) { seen.add(key); rows.push(row); }
+    }
+    return rows;
+  }
+  function resolvedCandidateRow(photo, candidates) {
+    if (!candidates || !candidates.length) return null;
+    let selected = null;
+    const proxy = {
+      ...candidates[0],
+      __osraIdentity: null,
+      entry: {
+        getFile: async () => {
+          if (selected) return selected.file;
+          const hits = [];
+          for (const original of candidates) {
+            try {
+              const file = await original.entry.getFile();
+              const identity = await window.verifyExactPhotoCandidate(photo, file);
+              if (identity && identity.matched === true) hits.push({ row: original, file, identity });
+            } catch (error) {
+              console.warn('[OsRa R99] candidate skipped', original.relPath, error);
+            }
+          }
+          // More than one hit is ambiguous even when partial hashes are equal:
+          // OsRa's historical hashes sample file edges, not every byte.
+          if (hits.length !== 1) {
+            const error = new Error(hits.length ? 'MULTIPLE_IDENTITY_MATCHES_REQUIRE_REVIEW' : 'NO_IDENTITY_MATCH');
+            error.name = hits.length ? 'AmbiguousPhotoCandidate' : 'PhotoCandidateNotVerified';
+            throw error;
+          }
+          selected = hits[0];
+          const entry = proxy.entry;
+          Object.assign(proxy, selected.row);
+          proxy.entry = entry;
+          proxy.__osraIdentity = selected.identity;
+          return selected.file;
+        }
+      }
+    };
+    return proxy;
+  }
+
+  /* The full-resolution source batch uses its own indexes. Retain duplicate
+     names and return a lazy resolver that checks every path before one can win. */
+  window.collectSourceBatchImages = async function collectSourceBatchImagesR99(root, onProgress) {
+    const rows = [], byName = new Map(), byStem = new Map();
+    let filesSeen = 0, dirsSeen = 0;
+    sourceBatchCancelRequested = false;
+    async function walk(dir, base = '', depth = 0) {
+      if (depth > 14) return;
+      const entries = [];
+      for await (const pair of dir.entries()) {
+        if (sourceBatchCancelRequested) throw Object.assign(new Error('SOURCE_BATCH_CANCELLED'), {name:'SourceBatchCancelled'});
+        entries.push(pair);
+      }
+      entries.sort((a,b)=>a[0].localeCompare(b[0],undefined,{numeric:true,sensitivity:'base'}));
+      for (const [name, entry] of entries) {
+        if (sourceBatchCancelRequested) throw Object.assign(new Error('SOURCE_BATCH_CANCELLED'), {name:'SourceBatchCancelled'});
+        const relPath = base ? `${base}/${name}` : String(name);
+        if (entry.kind === 'directory') { dirsSeen++; await walk(entry, relPath, depth + 1); continue; }
+        if (entry.kind !== 'file' || !window.isImage(name)) continue;
+        const row = {rowId:relPath,entry,relPath,name:String(name),size:0,lastModified:0,mimeType:''};
+        rows.push(row); filesSeen++;
+        addCandidate(byName, window.normalizeFileName(name), row);
+        addCandidate(byStem, window.normalizeFileStem(name), row);
+        if (filesSeen % 100 === 0) { onProgress?.({filesSeen,dirsSeen}); await new Promise(resolve=>setTimeout(resolve,0)); }
+      }
+    }
+    await walk(root, '', 0);
+    onProgress?.({filesSeen,dirsSeen,done:true});
+    return {rows,byName,byStem,filesSeen,dirsSeen};
+  };
+  window.sourceBatchCandidate = function sourceBatchCandidateR99(photo, index) {
+    return resolvedCandidateRow(photo, candidateRowsForPhoto(photo, index, false));
+  };
+
+  /* Both manual/quick and fast-source routes share these indexes. */
+  window.buildDirectFolderIndex = async function buildDirectFolderIndexR99(dir, pathBase = '') {
+    const byName = new Map(), byStem = new Map(); let filesSeen = 0;
+    for await (const [name, entry] of dir.entries()) {
+      if (entry.kind !== 'file' || !window.isImage(name)) continue;
+      filesSeen++;
+      const row = {entry,relPath:pathBase ? `${pathBase}/${name}` : String(name),name:String(name)};
+      addCandidate(byName, window.normalizeFileName(name), row);
+      addCandidate(byStem, window.normalizeFileStem(name), row);
+    }
+    return {byName,byStem,filesSeen,dir};
+  };
+  window.buildRecursiveNameIndex = async function buildRecursiveNameIndexR99(dir, pathBase, wanted, onProgress) {
+    const wantedNames = new Set(), wantedStems = new Set(), byName = new Map(), byStem = new Map();
+    for (const target of wanted || []) {
+      const names = [target.photo?.name];
+      try { for (const link of window.photoLocations(target.photo) || []) names.push(String(link.relPath || '').split('/').pop()); } catch (_) {}
+      for (const value of names) {
+        const name = window.normalizeFileName(value || ''), stem = window.normalizeFileStem(value || '');
+        if (name) wantedNames.add(name); if (stem) wantedStems.add(stem);
+      }
+    }
+    let filesSeen = 0;
+    async function walk(current, base = '') {
+      for await (const [name, entry] of current.entries()) {
+        if (manualLinkSession?.running && manualLinkSession.cancelled) throw Object.assign(new Error('MANUAL_LINK_CANCELLED'), {name:'ManualLinkCancelled'});
+        const rel = base ? `${base}/${name}` : name;
+        if (entry.kind === 'directory') { await walk(entry, rel); continue; }
+        if (entry.kind !== 'file' || !window.isImage(name)) continue;
+        filesSeen++;
+        const normalizedName = window.normalizeFileName(name), normalizedStem = window.normalizeFileStem(name);
+        if (!wantedNames.has(normalizedName) && !wantedStems.has(normalizedStem)) continue;
+        const row = {entry,relPath:pathBase ? `${pathBase}/${rel}` : rel,name:String(name)};
+        addCandidate(byName, normalizedName, row); addCandidate(byStem, normalizedStem, row);
+      }
+      const candidates = new Set([...byName.values(),...byStem.values()].flat().map(row=>row.relPath));
+      onProgress?.({filesSeen,candidates:candidates.size});
+    }
+    await walk(dir, '');
+    return {byName,byStem,filesSeen};
+  };
+
+  window.folderCandidate = function folderCandidateR99(target, index) {
+    return resolvedCandidateRow(target?.photo, candidateRowsForPhoto(target?.photo, index, true));
+  };
+  window.verifiedFolderCandidate = async function verifiedFolderCandidateR99(target, index) {
+    const row = window.folderCandidate(target, index);
+    if (!row) return null;
+    try {
+      const file = await row.entry.getFile();
+      const identity = row.__osraIdentity || await window.verifyExactPhotoCandidate(target.photo, file);
+      return identity?.matched ? {...row,file,identity} : null;
+    } catch (error) {
+      if (error?.name === 'AmbiguousPhotoCandidate') console.info('[OsRa R99] ambiguous duplicate paths require review', target?.photo?.name);
+      return null;
+    }
+  };
+
+  /* The all-library restore pass already stores duplicate-aware arrays. Route
+     its candidate enumeration through the same unique-identity resolver so it
+     cannot auto-write several ambiguous copies for one OsRa photo. */
+  window.completeIndexCandidates = function completeIndexCandidatesR99(photo, index) {
+    const row = resolvedCandidateRow(photo, candidateRowsForPhoto(photo, index, true));
+    return row ? [row] : [];
+  };
 
   window.__osraLinkRepairBuild = BUILD;
   console.info('[OsRa] link-only repair loaded:', BUILD);

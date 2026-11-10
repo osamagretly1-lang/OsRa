@@ -1,0 +1,7 @@
+Baseline app.js (current GitHub source)
+Repository: osamagretly1-lang/OsRa
+Path: app.js
+Version header: OsRa R86 — one-tap complete original-photo relinking
+Blob SHA: 6d9514d9857e025e483636a3596ef99b9af3e461
+
+Important: keep this app.js. This patch intentionally does not replace it.
