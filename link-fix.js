@@ -117,7 +117,7 @@
    * When a saved hash conflicts with otherwise matching metadata, the file is
    * flagged for visual/manual review instead of being silently auto-linked.
    */
-  window.verifyExactPhotoCandidate = async function verifyExactPhotoCandidateR103(photo, file){
+  window.verifyExactPhotoCandidate = async function verifyExactPhotoCandidateR99(photo, file){
     if (!photo || !imageFile(file)) return {matched:false,method:'none'};
     let photoLinks = [];
     try { photoLinks = window.photoLocations(photo) || []; } catch (_) {}
@@ -125,6 +125,26 @@
       .filter(value=>validSavedKey(value,file)))];
     const fingerprints = [...new Set([photo.fingerprint, ...photoLinks.map(link=>link && link.fingerprint)]
       .filter(value=>validSavedFingerprint(value,file)))];
+    const actualKey = await safeCall(window.contentKey, file) || '';
+    const actualFingerprint = await safeCall(window.fingerprint, file) || '';
+    let legacy = {contentKey:'',fingerprint:''};
+    if ((keys.length && !keys.includes(actualKey)) || (fingerprints.length && !fingerprints.includes(actualFingerprint))) {
+      legacy = await legacyLinkHashes(file);
+    }
+    const keyValue = validSavedKey(actualKey,file) ? actualKey : '';
+    const fingerprintValue = validSavedFingerprint(actualFingerprint,file) ? actualFingerprint : '';
+    if (keyValue && keys.includes(keyValue)) {
+      return {matched:true,key:keyValue,fingerprint:fingerprintValue,method:'content-key',matchedValue:keyValue};
+    }
+    if (legacy.contentKey && keys.includes(legacy.contentKey)) {
+      return {matched:true,key:keyValue || legacy.contentKey,fingerprint:fingerprintValue,method:'legacy-content-key',matchedValue:legacy.contentKey};
+    }
+    if (fingerprintValue && fingerprints.includes(fingerprintValue)) {
+      return {matched:true,key:keyValue,fingerprint:fingerprintValue,method:'fingerprint',matchedValue:fingerprintValue};
+    }
+    if (legacy.fingerprint && fingerprints.includes(legacy.fingerprint)) {
+      return {matched:true,key:keyValue || legacy.contentKey,fingerprint:fingerprintValue || legacy.fingerprint,method:'legacy-fingerprint',matchedValue:legacy.fingerprint};
+    }
 
     const normalizeName = value => {
       try { return window.normalizeFileName(String(value || '')); }
@@ -151,52 +171,13 @@
     const exactMetadata = expected.some(spec=>normalizeName(spec.name) === actualNormalized &&
       number(spec.size) > 0 && number(spec.size) === number(file.size) &&
       number(spec.lastModified) > 0 && number(spec.lastModified) === number(file.lastModified));
-
-    /* R103 performance fix: clean/legacy backups usually have no usable hashes.
-       In that case the exact name + size + timestamp tuple is sufficient and
-       avoids reading file bytes or computing two SHA-256 digests per candidate. */
-    if (!keys.length && !fingerprints.length) {
-      if (exactMetadata) {
-        return {matched:true,key:'',fingerprint:'',method:'legacy-metadata',
-          matchedValue:`${actualNormalized}|${number(file.size)}|${number(file.lastModified)}`};
-      }
-      return {matched:false,key:'',fingerprint:'',metadataCandidate:metadataMatches,
-        method:metadataMatches?'metadata-review':'none'};
+    if (keys.length || fingerprints.length) {
+      return {matched:false,key:keyValue,fingerprint:fingerprintValue,metadataCandidate:metadataMatches,method:metadataMatches?'metadata-review':'none'};
     }
-
-    let actualKey = '', actualFingerprint = '';
-    if (keys.length) {
-      actualKey = await safeCall(window.contentKey, file) || '';
-      const keyValue = validSavedKey(actualKey,file) ? actualKey : '';
-      if (keyValue && keys.includes(keyValue)) {
-        return {matched:true,key:keyValue,fingerprint:'',method:'content-key',matchedValue:keyValue};
-      }
+    if (exactMetadata) {
+      return {matched:true,key:keyValue,fingerprint:fingerprintValue,method:'legacy-metadata',matchedValue:`${actualNormalized}|${number(file.size)}|${number(file.lastModified)}`};
     }
-    if (fingerprints.length) {
-      actualFingerprint = await safeCall(window.fingerprint, file) || '';
-      const fingerprintValue = validSavedFingerprint(actualFingerprint,file) ? actualFingerprint : '';
-      if (fingerprintValue && fingerprints.includes(fingerprintValue)) {
-        return {matched:true,key:validSavedKey(actualKey,file)?actualKey:'',fingerprint:fingerprintValue,
-          method:'fingerprint',matchedValue:fingerprintValue};
-      }
-    }
-
-    /* Legacy FNV signatures are computed only when a saved cryptographic
-       signature exists but fails the current algorithm. */
-    const legacy = await legacyLinkHashes(file);
-    if (keys.length && legacy.contentKey && keys.includes(legacy.contentKey)) {
-      return {matched:true,key:validSavedKey(actualKey,file)?actualKey:legacy.contentKey,
-        fingerprint:validSavedFingerprint(actualFingerprint,file)?actualFingerprint:'',
-        method:'legacy-content-key',matchedValue:legacy.contentKey};
-    }
-    if (fingerprints.length && legacy.fingerprint && fingerprints.includes(legacy.fingerprint)) {
-      return {matched:true,key:validSavedKey(actualKey,file)?actualKey:legacy.contentKey,
-        fingerprint:validSavedFingerprint(actualFingerprint,file)?actualFingerprint:legacy.fingerprint,
-        method:'legacy-fingerprint',matchedValue:legacy.fingerprint};
-    }
-    return {matched:false,key:validSavedKey(actualKey,file)?actualKey:'',
-      fingerprint:validSavedFingerprint(actualFingerprint,file)?actualFingerprint:'',
-      metadataCandidate:metadataMatches,method:metadataMatches?'metadata-review':'none'};
+    return {matched:false,key:keyValue,fingerprint:fingerprintValue,metadataCandidate:metadataMatches,method:metadataMatches?'metadata-review':'none'};
   };
 
   window.hasOriginalLink = function hasOriginalLinkR99(photo){
@@ -800,9 +781,7 @@
   };
 
   /* Both manual/quick and fast-source routes share these indexes. */
-  const yieldToMain = () => new Promise(resolve => setTimeout(resolve, 0));
-
-  window.buildDirectFolderIndex = async function buildDirectFolderIndexR103(dir, pathBase = '') {
+  window.buildDirectFolderIndex = async function buildDirectFolderIndexR99(dir, pathBase = '') {
     const byName = new Map(), byStem = new Map(); let filesSeen = 0;
     for await (const [name, entry] of dir.entries()) {
       if (entry.kind !== 'file' || !window.isImage(name)) continue;
@@ -810,12 +789,10 @@
       const row = {entry,relPath:pathBase ? `${pathBase}/${name}` : String(name),name:String(name)};
       addCandidate(byName, window.normalizeFileName(name), row);
       addCandidate(byStem, window.normalizeFileStem(name), row);
-      if (filesSeen % 250 === 0) await yieldToMain();
     }
     return {byName,byStem,filesSeen,dir};
   };
-
-  window.buildRecursiveNameIndex = async function buildRecursiveNameIndexR103(dir, pathBase, wanted, onProgress) {
+  window.buildRecursiveNameIndex = async function buildRecursiveNameIndexR99(dir, pathBase, wanted, onProgress) {
     const wantedNames = new Set(), wantedStems = new Set(), byName = new Map(), byStem = new Map();
     for (const target of wanted || []) {
       const names = [target.photo?.name];
@@ -825,31 +802,23 @@
         if (name) wantedNames.add(name); if (stem) wantedStems.add(stem);
       }
     }
-    let filesSeen = 0, candidateCount = 0;
-    async function walk(current, base = '', depth = 0) {
-      if (depth > 24) return;
+    let filesSeen = 0;
+    async function walk(current, base = '') {
       for await (const [name, entry] of current.entries()) {
         if (manualLinkSession?.running && manualLinkSession.cancelled) throw Object.assign(new Error('MANUAL_LINK_CANCELLED'), {name:'ManualLinkCancelled'});
         const rel = base ? `${base}/${name}` : name;
-        if (entry.kind === 'directory') { await walk(entry, rel, depth + 1); continue; }
+        if (entry.kind === 'directory') { await walk(entry, rel); continue; }
         if (entry.kind !== 'file' || !window.isImage(name)) continue;
         filesSeen++;
         const normalizedName = window.normalizeFileName(name), normalizedStem = window.normalizeFileStem(name);
-        if (wantedNames.has(normalizedName) || wantedStems.has(normalizedStem)) {
-          const row = {entry,relPath:pathBase ? `${pathBase}/${rel}` : rel,name:String(name)};
-          const before = (byName.get(normalizedName) || []).length + (byStem.get(normalizedStem) || []).length;
-          addCandidate(byName, normalizedName, row); addCandidate(byStem, normalizedStem, row);
-          const after = (byName.get(normalizedName) || []).length + (byStem.get(normalizedStem) || []).length;
-          if (after > before) candidateCount++;
-        }
-        if (filesSeen % 250 === 0) {
-          onProgress?.({filesSeen,candidates:candidateCount});
-          await yieldToMain();
-        }
+        if (!wantedNames.has(normalizedName) && !wantedStems.has(normalizedStem)) continue;
+        const row = {entry,relPath:pathBase ? `${pathBase}/${rel}` : rel,name:String(name)};
+        addCandidate(byName, normalizedName, row); addCandidate(byStem, normalizedStem, row);
       }
+      const candidates = new Set([...byName.values(),...byStem.values()].flat().map(row=>row.relPath));
+      onProgress?.({filesSeen,candidates:candidates.size});
     }
-    await walk(dir, '', 0);
-    onProgress?.({filesSeen,candidates:candidateCount,done:true});
+    await walk(dir, '');
     return {byName,byStem,filesSeen};
   };
 
@@ -872,42 +841,6 @@
   /* The all-library restore pass already stores duplicate-aware arrays. Route
      its candidate enumeration through the same unique-identity resolver so it
      cannot auto-write several ambiguous copies for one OsRa photo. */
-  /* R103: full-library recovery indexing now yields to the UI periodically.
-     The index shape and duplicate-aware candidate semantics remain unchanged. */
-  window.buildCompleteImageIndex = async function buildCompleteImageIndexR103(root, onProgress) {
-    const byName = new Map(), byStem = new Map(), rows = [];
-    let filesSeen = 0, dirsSeen = 0, errors = 0;
-    const add = (map, key, row) => {
-      if (!key) return;
-      const list = map.get(key) || [];
-      if (!list.some(item => item.relPath === row.relPath)) list.push(row);
-      map.set(key, list);
-    };
-    async function walk(dir, base = '', depth = 0) {
-      if (depth > 24) return;
-      const entries = [];
-      try { for await (const pair of dir.entries()) entries.push(pair); }
-      catch (_) { errors++; return; }
-      entries.sort((a,b)=>String(a[0]).localeCompare(String(b[0]),undefined,{numeric:true,sensitivity:'base'}));
-      for (const [name, entry] of entries) {
-        const relPath = base ? `${base}/${name}` : String(name);
-        if (entry.kind === 'directory') { dirsSeen++; await walk(entry, relPath, depth + 1); continue; }
-        if (entry.kind !== 'file' || !window.isImage(name)) continue;
-        const row = {entry,relPath,name:String(name)};
-        rows.push(row); filesSeen++;
-        add(byName, window.normalizeFileName(name), row);
-        add(byStem, window.normalizeFileStem(name), row);
-        if (filesSeen % 250 === 0) {
-          onProgress?.({filesSeen,dirsSeen,errors});
-          await yieldToMain();
-        }
-      }
-    }
-    await walk(root, '', 0);
-    onProgress?.({filesSeen,dirsSeen,errors,done:true});
-    return {byName,byStem,rows,filesSeen,dirsSeen,errors};
-  };
-
   window.completeIndexCandidates = function completeIndexCandidatesR99(photo, index) {
     const row = resolvedCandidateRow(photo, candidateRowsForPhoto(photo, index, true));
     return row ? [row] : [];
@@ -944,16 +877,6 @@
         delete item.relPath;
         delete item.contentKey;
         delete item.fingerprint;
-        return item;
-      });
-    }
-    if (Array.isArray(clean.excludedPhotos)) {
-      clean.excludedPhotos = clean.excludedPhotos.map(photo => {
-        if (!photo || typeof photo !== 'object') return photo;
-        const item = {...photo};
-        delete item.sourceLinks;
-        delete item.directFile;
-        delete item.fileHandle;
         return item;
       });
     }
