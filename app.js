@@ -3191,6 +3191,7 @@ async function backup(){if(window.showSaveFilePicker){if(await writeBackupToHand
 async function maybeAutoFileBackup(){if(!backupFileHandle)return;const week=7*24*60*60*1000;if(Date.now()-(backupMeta.lastAutoFileAt||0)<week)return;const ok=await writeBackupToHandle(false);if(ok){toast('تم تحديث النسخة الاحتياطية الدورية تلقائيًا.')}else{console.info('Automatic file backup skipped: permission needs user action.')}}
 async function restoreSafety(){try{if(scanLock){toast('أوقف الفحص الحالي قبل الاسترجاع ثم أعد المحاولة.');return}const s=await get('state','safetyBackup');if(!s?.value){toast('لا توجد نسخة أمان محلية بعد.');return}if(!confirm('استرجاع آخر نسخة أمان محلية؟\nسيعود OsRa إلى تلك اللحظة، ولن تُحذف الصور الأصلية من الجهاز.'))return;clearTimeout(safetyTimer);await clearScanProgress();const x=s.value;if(x.app!=='OsRa')throw 0;await snapshotBeforeRestore();applyBackupPayload(x);if(Array.isArray(x.photoManifest))await replacePhotoSnapshot(x.photoManifest);await saveMainExact();soundOn=!!state.settings.soundEnabled;updateSoundButton();toast('تم استرجاع نسخة الأمان المحلية بالكامل.');renderNoAnim()}catch(e){console.error(e);toast('تعذر استرجاع نسخة الأمان المحلية.')}}
 async function mergeBackupPayload(x){
+ x=cleanExternalBackupPayload(x);
  if(scanLock){toast('أوقف الفحص الحالي قبل دمج النسخة الاحتياطية ثم أعد المحاولة.');return}
  if(x?.app!=='OsRa'||!Array.isArray(x.memories))throw new Error('invalid backup');
  await clearScanProgress();await snapshotBeforeRestore();
@@ -3218,19 +3219,38 @@ async function mergeBackupPayload(x){
  if(idRemap.size){for(const m of state.memories){if(!Array.isArray(m.photoIds))continue;m.photoIds=[...new Set(m.photoIds.map(pid=>idRemap.get(pid)||pid))]}}
  normalizeState();await saveMainExact();toast('تم دمج النسخة الاحتياطية مع حفظ الذكريات والألبومات والمعاينات. اربط/أضف مجلدات الصور ثم استخدم «ربط الأصول في كل المجلدات» لبحث الأصول داخل المجلدات المسموح بها دون إضافة صور جديدة.');renderNoAnim();
 }
-function restoreMerge(){const i=document.createElement('input');i.type='file';i.accept='.json,application/json';i.onchange=async()=>{try{const f=i.files?.[0];if(!f)return;const x=JSON.parse(await f.text());const stamp=x.exportedAt?new Date(x.exportedAt):null;const when=stamp&&!isNaN(stamp)?stamp.toLocaleString('ar-EG'):'وقت غير معروف';const n=Array.isArray(x.photoManifest)?x.photoManifest.length:0;if(!confirm(`دمج نسخة OsRa المحفوظة في:
+function cleanExternalBackupPayload(payload){
+ if(!payload||typeof payload!=='object')throw new Error('invalid backup');
+ const clean=structuredClone(payload);clean.photoLinksOmitted=true;
+ if(Array.isArray(clean.memories))clean.memories=clean.memories.map(memory=>{
+  if(!memory||typeof memory!=='object')return memory;
+  const item={...memory};delete item.linkSourceId;delete item.linkFolderPath;delete item.linkFolders;return item;
+ });
+ if(Array.isArray(clean.photoManifest))clean.photoManifest=clean.photoManifest.map(photo=>{
+  if(!photo||typeof photo!=='object')return photo;
+  const item={...photo};delete item.sourceId;delete item.sourceLinks;delete item.relPath;delete item.contentKey;delete item.fingerprint;return item;
+ });
+ if(Array.isArray(clean.excludedPhotos))clean.excludedPhotos=clean.excludedPhotos.map(photo=>{
+  if(!photo||typeof photo!=='object')return photo;
+  const item={...photo};delete item.sourceLinks;delete item.directFile;delete item.fileHandle;return item;
+ });
+ return clean;
+}
+function restoreMerge(){const i=document.createElement('input');i.type='file';i.accept='.json,application/json';i.onchange=async()=>{try{const f=i.files?.[0];if(!f)return;const x=cleanExternalBackupPayload(JSON.parse(await f.text()));const stamp=x.exportedAt?new Date(x.exportedAt):null;const when=stamp&&!isNaN(stamp)?stamp.toLocaleString('ar-EG'):'وقت غير معروف';const n=Array.isArray(x.photoManifest)?x.photoManifest.length:0;if(!confirm(`دمج نسخة OsRa المحفوظة في:
 ${when}
 
 سيتم الاحتفاظ بكل ما هو موجود على هذا الجهاز، وإضافة/تحديث بيانات النسخة فقط.
 سجلات الصور: ${n}
 
 لن تُحذف الصور الأصلية من الجهاز.`))return;await mergeBackupPayload(x)}catch(e){console.error(e);toast('ملف النسخة الاحتياطية غير صالح أو تالف.')}};i.click()}
-function restore(){const i=document.createElement('input');i.type='file';i.accept='.json,application/json';i.onchange=async()=>{try{const f=i.files?.[0];if(!f)return;const x=JSON.parse(await f.text());if(x.app!=='OsRa'||!Array.isArray(x.memories))throw 0;const stamp=x.exportedAt?new Date(x.exportedAt):null;const when=stamp&&!isNaN(stamp)?stamp.toLocaleString('ar-EG'):'وقت غير معروف';const photoCount=Array.isArray(x.photoManifest)?x.photoManifest.length:0;if(!confirm(`استرجاع نسخة OsRa المحفوظة في:\n${when}
+function restore(){const i=document.createElement('input');i.type='file';i.accept='.json,application/json';i.onchange=async()=>{try{const f=i.files?.[0];if(!f)return;const x=cleanExternalBackupPayload(JSON.parse(await f.text()));if(x.app!=='OsRa'||!Array.isArray(x.memories))throw 0;const stamp=x.exportedAt?new Date(x.exportedAt):null;const when=stamp&&!isNaN(stamp)?stamp.toLocaleString('ar-EG'):'وقت غير معروف';const photoCount=Array.isArray(x.photoManifest)?x.photoManifest.length:0;if(!confirm(`استرجاع نسخة OsRa المحفوظة في:\n${when}
 
 الذكريات: ${x.memories.length}
 سجلات الصور في تلك اللحظة: ${photoCount}
 
 سيتم إعادة OsRa إلى هذه اللحظة فقط. سجلات الصور التي أُضيفت بعد النسخة ستختفي من فهرس OsRa، لكن الصور الأصلية نفسها لن تُحذف من الجهاز.
+سيتم تجاهل روابط المجلدات وبصمات الربط القديمة فقط؛ ستظل معاينات الصور والألبومات وترتيبها ووصفها والرسائل وباقي البيانات محفوظة من ملف النسخة. ستحتاج بعد الاسترجاع إلى اختيار مجلد الصور الحالي وإعادة الربط.
+
 ستُحفظ نسخة أمان من الحالة الحالية قبل الاسترجاع.`))return;if(scanLock){toast('أوقف الفحص الحالي قبل الاسترجاع ثم أعد المحاولة.');return}clearTimeout(safetyTimer);await clearScanProgress();await snapshotBeforeRestore();applyBackupPayload(x);if(Array.isArray(x.photoManifest))await replacePhotoSnapshot(x.photoManifest);await saveMainExact();soundOn=!!state.settings.soundEnabled;updateSoundButton();selectedMemories.clear();selectedPhotos.clear();toast(`تم الاسترجاع كما كان في ${when}، وتم الحفاظ على ترتيب الألبومات. على الهاتف الآخر اربط مجلد الصور أو مصدر HQ من الإعدادات.`);renderNoAnim()}catch(e){console.error(e);toast('ملف النسخة الاحتياطية غير صالح أو تالف.')}};i.click()}
 async function diagnostic(){const secure=!!isSecureContext,picker=!!window.showDirectoryPicker;let activePerm='لا يوجد مجلد';const active=activeSource();if(active)try{activePerm=await active.handle.queryPermission({mode:'read'})}catch{}const e=await navigator.storage?.estimate?.();const rows=sources.map((x,i)=>{const cp=scanProgresses[x.id];return `<div class="card"><b>${i===0?'⭐ ':''}${esc(sourceLabel(x))}</b><div class="meta">${i===0?'المكتبة الأساسية':'مكتبة مصدر'}${sourceMergeLabel(x)}${cp?.status==='done'?' • آخر فحص مكتمل':''}${cp?.status==='paused'?' • فحص متوقف':''}</div><div class="actions"><button class="btn small" data-action="activateSource" data-id="${x.id}">تحديد</button><button class="btn small" data-action="grantSourcePermission" data-id="${x.id}">منح الإذن</button><button class="btn small" data-action="scanSource" data-id="${x.id}">↻ فحص هذا المجلد</button></div></div>`}).join('');modal(`<h2>تشخيص OsRa</h2><div class="cards"><div class="card">HTTPS/secure: <b>${secure?'نعم':'لا'}</b></div><div class="card">اختيار المجلد: <b>${picker?'متاح':'غير متاح'}</b></div><div class="card">المصادر المرتبطة: <b>${sources.length}</b></div><div class="card">المصدر النشط: <b>${esc(sourceLabel(active))}</b></div><div class="card">إذن المصدر النشط: <b>${esc(activePerm)}</b></div>${rows||'<div class="empty">لا توجد مكتبات مرتبطة.</div>'}<div class="card">الصور داخل الألبومات الظاهرة: <b>${visiblePhotoCount()}</b></div><div class="card">سجلات الصور الكلية: <b>${allPhotos().length}</b></div><div class="card">الذكريات الظاهرة: <b>${visibleMemories().length}</b></div><div class="card">الذكريات المخفية: <b>${state.memories.length-visibleMemories().length}</b></div><div class="card">التخزين المستخدم: <b>${e?.usage?Math.round(e.usage/1024/1024)+' MB':'غير معروف'}</b></div><div class="actions">${active?`<button class="btn" data-action="grantPermission">منح إذن المصدر النشط</button>`:''}<button class="btn primary" data-action="folder">＋ إضافة مجلد / ألبوم</button></div></div>`)}
 function paperSound(duration=720){if(!soundOn)return;try{audioCtx??=new (window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume();const dur=Math.max(.32,Math.min(1.05,Number(duration)/1000)),sr=audioCtx.sampleRate,len=Math.floor(sr*dur),buf=audioCtx.createBuffer(1,len,sr),data=buf.getChannelData(0);for(let i=0;i<len;i++){const x=i/len,a=Math.min(1,x/.11),r=Math.max(0,1-(x-.54)/.46),s=Math.sin(Math.PI*Math.min(1,x/.82));data[i]=(Math.random()*2-1)*(0.026+0.17*a*r*s)}const src=audioCtx.createBufferSource(),filter=audioCtx.createBiquadFilter(),gain=audioCtx.createGain();src.buffer=buf;filter.type='bandpass';filter.frequency.setValueAtTime(1500,audioCtx.currentTime);filter.frequency.exponentialRampToValueAtTime(3600,audioCtx.currentTime+dur*.56);filter.frequency.exponentialRampToValueAtTime(2000,audioCtx.currentTime+dur);filter.Q.value=.65;gain.gain.setValueAtTime(.0001,audioCtx.currentTime);gain.gain.exponentialRampToValueAtTime(.05,audioCtx.currentTime+dur*.12);gain.gain.exponentialRampToValueAtTime(.16,audioCtx.currentTime+dur*.48);gain.gain.exponentialRampToValueAtTime(.0001,audioCtx.currentTime+dur*.98);src.connect(filter).connect(gain).connect(audioCtx.destination);src.start();src.stop(audioCtx.currentTime+dur+.02)}catch{}}
