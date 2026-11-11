@@ -1880,3 +1880,26 @@ body.osra-highres-brand .boot-logo{width:176px!important;height:auto!important;m
 .mascot-preview-strip{grid-template-columns:repeat(auto-fit,minmax(64px,1fr))}
 .mascot-preview-strip img[src$="white-dog.svg"]{object-fit:contain}
 @media(max-width:520px){.night-message-details>summary{min-height:44px}.occasion-day-item{padding:10px}}
+
+/* R104: Keep the daily photo fully visible and precisely centered. */
+.feature > .memory-cover {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: clamp(220px, 38vh, 340px);
+  margin-inline: auto;
+  padding: 8px;
+  box-sizing: border-box;
+  transform: none;
+}
+.feature > .memory-cover > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center center;
+  margin: auto;
+  transform: none;
+}
