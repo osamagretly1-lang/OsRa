@@ -3,7 +3,7 @@
    It never creates a photo, album, memory, or thumbnail. */
 (function installOsRaLinkRepairR102(){
   'use strict';
-  const BUILD = 'osra122-20261111-r103-clean-restore-fast-index';
+  const BUILD = 'osra122-20261111-r105-stale-link-persist-and-confirmed-relink';
   if (window.__osraLinkRepairBuild === BUILD) return;
 
   const originalNormalizePhotoLinks = window.normalizePhotoLinks;
@@ -108,6 +108,41 @@
     return /^[a-f0-9]{64}$/i.test(text) || /^\d+-\d+-\d+$/.test(text);
   };
 
+  /* A direct file handle is an explicit user-confirmed relationship.
+     Validate it against the direct-link's own saved signature/metadata only;
+     stale hashes on other folder links for the same photo must not poison it. */
+  async function verifyDirectFileIdentity(link, file){
+    if (!link || !imageFile(file)) return {matched:false,method:'none'};
+    const actualKeyRaw = await safeCall(window.contentKey, file) || '';
+    const actualFingerprintRaw = await safeCall(window.fingerprint, file) || '';
+    const actualKey = validSavedKey(actualKeyRaw,file) ? actualKeyRaw : '';
+    const actualFingerprint = validSavedFingerprint(actualFingerprintRaw,file) ? actualFingerprintRaw : '';
+    const savedKey = validSavedKey(link.contentKey,file) ? String(link.contentKey) : '';
+    const savedFingerprint = validSavedFingerprint(link.fingerprint,file) ? String(link.fingerprint) : '';
+    let legacy = {contentKey:'',fingerprint:''};
+    if ((savedKey && savedKey !== actualKey) || (savedFingerprint && savedFingerprint !== actualFingerprint)) {
+      legacy = await legacyLinkHashes(file);
+    }
+    if (savedKey && (savedKey === actualKey || savedKey === legacy.contentKey)) {
+      return {matched:true,key:actualKey||savedKey,fingerprint:actualFingerprint||legacy.fingerprint||savedFingerprint,method:'direct-file-signature'};
+    }
+    if (savedFingerprint && (savedFingerprint === actualFingerprint || savedFingerprint === legacy.fingerprint)) {
+      return {matched:true,key:actualKey||legacy.contentKey||savedKey,fingerprint:actualFingerprint||savedFingerprint,method:'direct-file-fingerprint'};
+    }
+    const norm = value => {
+      try { return window.normalizeFileName(String(value||'')); }
+      catch (_) { return String(value||'').trim().toLocaleLowerCase(); }
+    };
+    const exactMetadata = !!norm(link.name) && norm(link.name) === norm(file.name) &&
+      number(link.size) > 0 && number(link.size) === number(file.size) &&
+      number(link.lastModified) > 0 && number(link.lastModified) === number(file.lastModified);
+    const hashAvailable = !!(actualKey || actualFingerprint);
+    if (exactMetadata && (!savedKey && !savedFingerprint || !hashAvailable)) {
+      return {matched:true,key:actualKey,fingerprint:actualFingerprint,method:'direct-file-metadata'};
+    }
+    return {matched:false,key:actualKey,fingerprint:actualFingerprint,method:'direct-file-mismatch'};
+  }
+
   /*
    * R99 fixes two distinct identity failures:
    * 1) a stale contentKey no longer short-circuits a valid fingerprint;
@@ -180,6 +215,63 @@
     return {matched:false,key:keyValue,fingerprint:fingerprintValue,metadataCandidate:metadataMatches,method:metadataMatches?'metadata-review':'none'};
   };
 
+  /* R105 critical persistence fix: photoLocations() returns normalized copies.
+     Mutating one of those copies does NOT update photo.sourceLinks. The old
+     verifier therefore displayed a failed link as invalid for the current
+     attempt but saved the original verified:true record again. That stale
+     flag kept dead links out of the missing-photo/relink queue. */
+  function persistPhotoLinkState(photo, link, changes){
+    if (!photo || !link || !link.sourceId || !link.relPath) return false;
+    if (!Array.isArray(photo.sourceLinks)) photo.sourceLinks = window.photoLocations(photo).map(item=>({...item}));
+    let raw = photo.sourceLinks.find(item => String(item?.sourceId)===String(link.sourceId) && String(item?.relPath)===String(link.relPath));
+    if (!raw) { raw = {...link}; photo.sourceLinks.push(raw); }
+    Object.assign(raw, changes || {});
+    return true;
+  }
+  async function persistPhotoLinkRecord(photo){
+    if (!photo) return;
+    await window.savePhoto(photo);
+    photos.set(String(photo.id), photo);
+  }
+
+  /* R105 replaces the broken copy-only state update in app.js. A link is
+     marked invalid only after permission was available and its saved path is
+     missing or its identity check fails. A denied permission is NOT evidence
+     that the source file is gone. */
+  window.verifyExistingPhotoLinks = async function verifyExistingPhotoLinksR105(photo){
+    if (!photo) return null;
+    let changed = false;
+    for (const link of window.photoLocations(photo) || []) {
+      const source = sources.find(item => String(item.id)===String(link.sourceId) && item?.handle);
+      if (!source?.handle) continue;
+      if (!(await window.ensureSourcePermission(source, false))) continue;
+      try {
+        const handle = await window.resolve(source.handle, link.relPath);
+        const file = await handle.getFile();
+        const identity = await window.verifyExactPhotoCandidate(photo, file);
+        if (!identity || identity.matched !== true) throw new Error('saved source path no longer verifies against this photo');
+        persistPhotoLinkState(photo, link, {
+          verified:true, verifiedAt:Date.now(), name:file.name||link.name||photo.name||'',
+          size:number(file.size), lastModified:number(file.lastModified),
+          mimeType:file.type||link.mimeType||photo.mimeType||'',
+          contentKey:identity.key||link.contentKey||'', fingerprint:identity.fingerprint||link.fingerprint||''
+        });
+        await persistPhotoLinkRecord(photo);
+        return {source,file,link:window.photoLocations(photo).find(x=>String(x.sourceId)===String(link.sourceId)&&String(x.relPath)===String(link.relPath)),identity};
+      } catch (error) {
+        persistPhotoLinkState(photo, link, {verified:false, verifiedAt:0});
+        changed = true;
+      }
+    }
+    if (changed) await persistPhotoLinkRecord(photo);
+    return null;
+  };
+
+  /* Also persist failed direct-file handles when the photo viewer discovers
+     one is no longer readable. Keep permission-denied handles intact so the
+     user can grant access again instead of losing a valid saved reference. */
+
+
   window.hasOriginalLink = function hasOriginalLinkR99(photo){
     if (!photo) return false;
     try {
@@ -230,10 +322,7 @@
                direct-file path rejected a valid file as soon as its saved
                contentKey differed, even when its saved fingerprint or exact
                legacy metadata still matched. */
-            const identity = typeof window.verifyExactPhotoCandidate === 'function'
-              ? await window.verifyExactPhotoCandidate(photo, file)
-              : {matched: number(file.size) === number(link.size) &&
-                  number(file.lastModified) === number(link.lastModified)};
+            const identity = await verifyDirectFileIdentity(link, file);
             if (!identity || !identity.matched) throw new Error('direct file identity could not be verified');
             if (identity.key) link.contentKey = identity.key;
             if (identity.fingerprint) link.fingerprint = identity.fingerprint;
@@ -898,9 +987,45 @@
   if (typeof originalLinkSourceAutoAlbum === 'function') {
     window.linkSourceAutoAlbum = originalLinkSourceAutoAlbum;
   }
-  if (typeof originalQuickLinkMissingPhoto === 'function') {
-    window.quickLinkMissingPhoto = originalQuickLinkMissingPhoto;
-  }
+  /* Keep R102's explicit one-file chooser active. The previous final reset
+     silently replaced it with the older folder-only path, removing the only
+     safe manual recovery route when a legacy hash or file timestamp changed. */
+
+  /* Install this wrapper after the direct-file resolver above so it observes
+     both direct and folder-based lookups. */
+  const findWithDirectFileR104 = window.findOriginalFile;
+  window.findOriginalFile = async function findOriginalFileR105(photo, ask=true){
+    const result = await findWithDirectFileR104.call(this, photo, ask);
+    if (result) {
+      if (result.link && result.source && result.source.handle && result.link.directFile !== true) {
+        persistPhotoLinkState(photo, result.link, {
+          verified:true, verifiedAt:Date.now(), name:result.file?.name||result.link.name||photo.name||'',
+          size:number(result.file?.size), lastModified:number(result.file?.lastModified),
+          mimeType:result.file?.type||result.link.mimeType||'',
+          contentKey:result.link.contentKey||'', fingerprint:result.link.fingerprint||''
+        });
+        await persistPhotoLinkRecord(photo);
+      }
+      return result;
+    }
+    let changed = false;
+    for (const link of window.photoLocations(photo) || []) {
+      if (link.directFile !== true || !link.fileHandle) continue;
+      if (!(await fileHandlePermission(link.fileHandle, false))) continue;
+      try {
+        const file = await link.fileHandle.getFile();
+        const identity = await verifyDirectFileIdentity(link, file);
+        if (!identity || identity.matched !== true) throw new Error('direct file identity mismatch');
+        persistPhotoLinkState(photo, link, {verified:true,verifiedAt:Date.now(),size:number(file.size),lastModified:number(file.lastModified),contentKey:identity.key||link.contentKey||'',fingerprint:identity.fingerprint||link.fingerprint||''});
+      } catch (_) {
+        persistPhotoLinkState(photo, link, {verified:false,verifiedAt:0});
+        changed = true;
+      }
+    }
+    if (changed) await persistPhotoLinkRecord(photo);
+    await window.verifyExistingPhotoLinks(photo);
+    return null;
+  };
 
   window.__osraLinkRepairBuild = BUILD;
   console.info('[OsRa] link-only repair loaded:', BUILD);

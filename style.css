@@ -1903,3 +1903,9 @@ body.osra-highres-brand .boot-logo{width:176px!important;height:auto!important;m
   margin: auto;
   transform: none;
 }
+
+/* R105: compact recovery choices when automatic source identity is inconclusive. */
+.osra-link-recovery-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:8px 0;padding:10px}
+.osra-link-recovery-row>div:first-child{min-width:0;flex:1;overflow-wrap:anywhere}
+.osra-link-recovery-row .actions{margin:0;gap:6px;flex-wrap:wrap}
+@media(max-width:560px){.osra-link-recovery-row{align-items:stretch;flex-direction:column}.osra-link-recovery-row .actions{display:grid;grid-template-columns:1fr 1fr}.osra-link-recovery-row .btn{width:100%}}

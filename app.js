@@ -2658,7 +2658,21 @@ async function linkSourceAutoAlbum(focusPhotoId=null,sourceId=null){
   try{index=await buildRecursiveNameIndex(chosen,'',wanted,info=>{if(status)status.textContent=`فحص ${info.filesSeen||0} ملفًا… وُجد ${info.candidates||0} اسمًا مرشحًا.`})}finally{manualLinkSession.running=false}
   if(manualLinkSession.cancelled){manualLinkSession.cancelled=false;pendingAutoSourceAlbum=null;closeModal();toast('تم إلغاء فحص المصدر دون حفظ ارتباط.');return}
   const staged=[];for(const p of byId.values()){const row=folderCandidate({photo:p},index);if(!row)continue;try{const file=await row.entry.getFile(),identity=await verifyExactPhotoCandidate(p,file);if(identity.matched)staged.push({p,row,file,identity,rel:normalizeFolderRelPath([baseRel,row.relPath].filter(Boolean).join('/'))})}catch{}}
-  if(!staged.length){pendingAutoSourceAlbum=null;closeModal();modal(`<h2>❌ المصدر لا يطابق الصور الناقصة</h2><p>تم فحص «${esc(chosen.name||'المصدر')}» ولم نتحقق من أي صورة مطابقة. لم يُحفظ المصدر ولم يتغير أي رابط.</p><div class="actions"><button class="btn primary" data-action="linkSourceAutoAlbum">اختيار مصدر آخر</button><button class="btn" data-action="closeModal">إغلاق</button></div>`);return}
+  if(!staged.length){
+   pendingAutoSourceAlbum=null;closeModal();
+   const rejectedTargets=[...byId.values()];
+   const manualRows=rejectedTargets.slice(0,24).map(p=>{
+    const albumNames=albums.filter(x=>(x.m.photoIds||[]).some(pid=>String(pid)===String(p.id))).map(x=>x.m.title||x.m.album||'ألبوم');
+    return `<div class="card osra-link-recovery-row"><div><b>${esc(p.name||'صورة بلا اسم')}</b><div class="meta">${esc([...new Set(albumNames)].join(' • ')||'صورة موجودة في OsRa')}</div></div><div class="actions"><button class="btn small primary" data-action="quickLinkMissingPhoto" data-id="${esc(p.id)}">اختيار الملف ومعاينته</button><button class="btn small" data-action="quickVisualMissingPhoto" data-id="${esc(p.id)}">بحث بصري</button></div></div>`;
+   }).join('');
+   modal(`<h2>⚠️ لم يثبت التطابق الآلي</h2>
+    <p>فُحص «${esc(chosen.name||'المصدر')}»، لكن لم تظهر مطابقة مؤكدة. هذا <b>لا يعني بالضرورة أن المجلد خطأ</b>: قد تكون بصمة السجل قديمة، أو تغيّر تاريخ الملف/حجمه بعد النسخ أو إعادة الحفظ.</p>
+    <p class="note">لن يربط OsRa اعتمادًا على الاسم وحده. اختر الصورة المقصودة من القائمة: خيار «اختيار الملف ومعاينته» يعرض صورة OsRa والملف المختار جنبًا إلى جنب، ولا يحفظ الربط إلا بعد تأكيدك. خيار «بحث بصري» يبحث عن النسخة المشابهة داخل المصدر ويترك القرار لك.</p>
+    <div style="max-height:48vh;overflow:auto">${manualRows||'<div class="empty">لا توجد صور ناقصة ظاهرة للمراجعة.</div>'}</div>
+    ${rejectedTargets.length>24?`<p class="meta">تظهر أول 24 صورة فقط هنا. أكمل بقية الصور من تقرير ربط الأصول بعد معالجة هذه المجموعة.</p>`:''}
+    <div class="actions"><button class="btn" data-action="linkSourceAutoAlbum">اختيار مجلد آخر</button><button class="btn" data-action="closeModal">إغلاق</button></div>`);
+   return;
+  }
   const stagedIds=new Set(staged.map(x=>x.p.id));const scored=albums.map(({m,targets})=>{const matches=[...new Set(targets)].filter(pid=>stagedIds.has(pid));return {m,targets:matches.length,missingBefore:targets.length,matchedIds:matches}}).filter(x=>x.targets>0).sort((a,b)=>(b.targets/Math.max(1,b.missingBefore))-(a.targets/Math.max(1,a.missingBefore))||b.targets-a.targets);
   if(!scored.length){pendingAutoSourceAlbum=null;closeModal();toast('لم نجد تطابقًا مرتبطًا بألبوم ظاهر؛ لم يُحفظ المصدر.');return}
   pendingAutoSourceAlbum={source:tempSource,isNew:!source,staged,scores:scored,chosenName:chosen.name||'مجلد مصدر',createdAt:Date.now()};
