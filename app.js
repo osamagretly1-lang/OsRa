@@ -1144,12 +1144,13 @@ function prepareBirthdayDogs(){
 function showNextBirthdayDog(){
  const parts=prepareBirthdayDogs();if(!parts)return;
  const {wrap,original}=parts;
- const dogs=[original,wrap.querySelector('[data-osra-birthday-dog=\"german\"]'),wrap.querySelector('[data-osra-birthday-dog=\"white\"]')].filter(x=>x&&x.dataset.osraDogUnavailable!=='1');
- if(!dogs.length)return;
- let index=0;try{const saved=Number(localStorage.getItem(BIRTHDAY_DOG_NEXT_KEY));if(Number.isInteger(saved)&&saved>=0)index=saved}catch{}
- index%=dogs.length;
- dogs.forEach((dog,i)=>{const visible=i===index;dog.hidden=!visible;dog.style.display=visible?'block':'none'});
- try{localStorage.setItem(BIRTHDAY_DOG_NEXT_KEY,String((index+1)%dogs.length))}catch{}
+ // Keep the original sign dog and show both mascot dogs together on every opening.
+ original.hidden=false;original.style.display='block';
+ for(const key of ['german','white']){
+  const dog=wrap.querySelector(`[data-osra-birthday-dog="${key}"]`);
+  if(dog&&dog.dataset.osraDogUnavailable!=='1'){dog.hidden=false;dog.style.display='block'}
+ }
+ wrap.classList.add('birthday-dog-ensemble');
 }
 function birthdayRaniaGreeting(){
  const d=$('#birthday-dog-dialog');

@@ -1881,16 +1881,34 @@ body.osra-highres-brand .boot-logo{width:176px!important;height:auto!important;m
 .mascot-preview-strip img[src$="white-dog.svg"]{object-fit:contain}
 @media(max-width:520px){.night-message-details>summary{min-height:44px}.occasion-day-item{padding:10px}}
 
-/* R111: alternate the classic white birthday dog and the new German shepherd without cropping either figure. */
-.birthday-dog-wrap{position:relative;}
-.birthday-dog-new-art{width:min(100%,292px);height:100%;max-height:330px;object-fit:contain;object-position:center bottom;padding:60px 8px 0;box-sizing:border-box;filter:drop-shadow(0 7px 11px rgba(35,15,24,.16));}
-.birthday-dog-new-sign{position:absolute;top:8px;left:18px;right:18px;z-index:3;text-align:center;border:2px solid #f2bf27;border-radius:13px;background:#fff7b8;color:#c62828;padding:9px 7px;font:800 15px Tahoma,Segoe UI,sans-serif;box-shadow:0 5px 12px rgba(80,30,50,.1);}
-.birthday-dog-new-sign span{display:block;margin-top:3px;font-size:18px;}
-#birthdayDogOldArt[hidden],#birthdayDogNewArt[hidden],#birthdayDogHeartArt[hidden],#birthdayDogNewSign[hidden]{display:none!important;}
 
-.birthday-dog-title{position:relative;z-index:2;text-align:center;font:900 22px Tahoma,Segoe UI,sans-serif;color:#8b3f5d;margin:0 0 -4px;text-shadow:0 1px 0 #fff}
-.birthday-dog-new-sign span{font-size:14px!important}
-
-.birthday-dog-heart-art{object-fit:contain;object-position:center bottom}
-
-.source-batch-extra-wrap{min-width:0;display:flex;flex-direction:column;gap:5px}.source-batch-extra-destination{width:100%;max-width:100%;min-width:0;padding:5px 6px;border-radius:8px;font-size:.68em;line-height:1.25}
+/* Birthday ensemble R2: original sign dog + German shepherd + white heart dog. */
+.birthday-dog-dialog{width:min(620px,calc(100% - 16px));max-width:620px;max-height:94vh;overflow:auto}
+.birthday-dog-card{padding:22px 12px 8px}
+.birthday-dog-wrap.birthday-dog-ensemble{height:auto;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;overflow:visible}
+.birthday-dog-wrap.birthday-dog-ensemble>.birthday-dog-svg{display:block!important;visibility:visible!important;width:min(270px,62vw);height:clamp(220px,34vh,270px);flex:0 0 auto;overflow:visible}
+.birthday-dog-friends{width:min(100%,540px);display:flex;flex-direction:column;align-items:center;gap:5px;padding:0 5px 4px}
+.birthday-dog-second-sign{width:100%;max-width:490px;padding:9px 12px;border:3px solid #f0a92e;border-radius:15px;background:linear-gradient(135deg,#fff8c9,#ffe9a5);box-shadow:0 5px 13px rgba(116,66,19,.15);color:#a51f35;text-align:center;font-weight:900;font-size:clamp(13px,3.2vw,20px);line-height:1.45;animation:birthdaySecondSignPop 1.8s ease-in-out infinite alternate}
+.birthday-dog-friend-row{width:100%;display:flex;align-items:flex-end;justify-content:center;gap:clamp(14px,7vw,54px);min-height:175px}
+.birthday-dog-friend{position:relative;flex:0 1 42%;width:42%;max-width:190px;height:178px;display:grid;place-items:end center}
+.birthday-dog-friend img{display:block!important;visibility:visible!important;width:100%;height:100%;max-height:178px;object-fit:contain;object-position:center bottom;filter:drop-shadow(0 6px 7px rgba(42,20,34,.18))}
+.birthday-dog-german img{animation:birthdayGermanBounce 1.05s ease-in-out infinite}
+.birthday-dog-white img{animation:birthdayWhiteBounce 1.55s ease-in-out infinite}
+.birthday-dog-wave-hand{position:absolute;top:3px;right:7%;font-size:clamp(26px,7vw,40px);transform-origin:70% 85%;animation:birthdayDogWaveHand .72s ease-in-out infinite;filter:drop-shadow(0 2px 2px rgba(0,0,0,.12))}
+.birthday-dog-friend-flower{position:absolute;top:34px;left:5%;font-size:clamp(19px,5vw,27px);animation:birthdayDogFlowerFloat 1.4s ease-in-out infinite}
+.birthday-dog-white .birthday-dog-friend-flower{top:22px;left:2%}
+@keyframes birthdayGermanBounce{0%,100%{transform:translateY(0) rotate(-1deg)}35%{transform:translateY(-13px) rotate(2deg)}55%{transform:translateY(-5px) rotate(-1deg)}75%{transform:translateY(-9px) rotate(1deg)}}
+@keyframes birthdayWhiteBounce{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-7px) rotate(2deg)}}
+@keyframes birthdayDogWaveHand{0%,100%{transform:rotate(16deg)}50%{transform:rotate(-28deg)}}
+@keyframes birthdayDogFlowerFloat{0%,100%{transform:translateY(0) rotate(-9deg)}50%{transform:translateY(-7px) rotate(8deg)}}
+@keyframes birthdaySecondSignPop{from{transform:translateY(2px) scale(.99)}to{transform:translateY(-2px) scale(1.015)}}
+@media(max-width:560px){
+ .birthday-dog-dialog{width:calc(100% - 12px);max-height:94vh}
+ .birthday-dog-card{padding:20px 8px 6px}
+ .birthday-dog-wrap.birthday-dog-ensemble>.birthday-dog-svg{width:min(245px,68vw);height:clamp(205px,31vh,240px)}
+ .birthday-dog-friend-row{min-height:148px;gap:12px}
+ .birthday-dog-friend{height:150px;max-width:150px}
+ .birthday-dog-friend img{max-height:150px}
+ .birthday-dog-second-sign{padding:7px 6px;font-size:clamp(12px,3.4vw,16px)}
+}
+@media(prefers-reduced-motion:reduce){.birthday-dog-german img,.birthday-dog-white img,.birthday-dog-wave-hand,.birthday-dog-friend-flower,.birthday-dog-second-sign{animation:none!important}}

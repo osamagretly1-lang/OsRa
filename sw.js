@@ -1,6 +1,6 @@
-const BUILD='osra122-20261112-birthday-date-clean-r1';
+const BUILD='osra122-20261112-birthday-dog-ensemble-r2';
 const CACHE=`OsRa-v122-${BUILD}`;
-const APP=['./','./index.html','./style.css?v=osra122-20261111-r104-photo-of-day-center','./app.js?v=osra122-20261112-birthday-date-clean-r1','./link-fix.js?v=osra122-20261111-r103-clean-restore-fast-index','./manifest.json','./manifest-highres.json','./icon.svg','./icon-192.png','./icon-512.png','./assets/osra-brand-highres.png','./assets/osra-brand-icon-192.png','./assets/osra-brand-icon-512.png',
+const APP=['./','./index.html','./style.css?v=osra122-20261112-birthday-dog-ensemble-r2','./app.js?v=osra122-20261112-birthday-dog-ensemble-r2','./link-fix.js?v=osra122-20261111-r103-clean-restore-fast-index','./manifest.json','./manifest-highres.json','./icon.svg','./icon-192.png','./icon-512.png','./assets/osra-brand-highres.png','./assets/osra-brand-icon-192.png','./assets/osra-brand-icon-512.png',
  './assets/osama-3d.png',
  './assets/rania-3d.png',
  './assets/mascots/dog.png',
