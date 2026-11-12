@@ -1,18 +1,6 @@
-const BUILD='osra122-20261112-r111-link-commit-safe-explicit-import';
+const BUILD='osra122-20261112-birthday-date-clean-r1';
 const CACHE=`OsRa-v122-${BUILD}`;
-const APP=['./',
- './index.html',
- './style.css?v=osra122-20261112-r111-link-commit-safe-explicit-import',
- './app.js?v=osra122-20261112-r111-link-commit-safe-explicit-import',
- './link-fix.js?v=osra122-20261112-r111-safe-visual-link-commit',
- './manifest.json',
- './manifest-highres.json',
- './icon.svg',
- './icon-192.png',
- './icon-512.png',
- './assets/osra-brand-highres.png',
- './assets/osra-brand-icon-192.png',
- './assets/osra-brand-icon-512.png',
+const APP=['./','./index.html','./style.css?v=osra122-20261111-r104-photo-of-day-center','./app.js?v=osra122-20261112-birthday-date-clean-r1','./link-fix.js?v=osra122-20261111-r103-clean-restore-fast-index','./manifest.json','./manifest-highres.json','./icon.svg','./icon-192.png','./icon-512.png','./assets/osra-brand-highres.png','./assets/osra-brand-icon-192.png','./assets/osra-brand-icon-512.png',
  './assets/osama-3d.png',
  './assets/rania-3d.png',
  './assets/mascots/dog.png',
@@ -158,7 +146,7 @@ const APP=['./',
  './assets/couple-story-r67/frame-24.webp',
  './assets/couple-story-r67/frame-25.webp',
  './assets/couple-story-r67/frame-26.webp',
- './assets/couple-story-r67/manifest.csv'];
+ './assets/couple-story-r67/manifest.csv',];
 const SHELL=new Set(APP.map(x=>new URL(x,self.location.href).href));
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(APP)).then(()=>self.skipWaiting())));
 self.addEventListener('message',event=>{if(event.data?.type==='SKIP_WAITING')self.skipWaiting()});
