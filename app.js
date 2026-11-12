@@ -1,10 +1,12 @@
 // OsRa R86 — one-tap complete original-photo relinking; preserves existing data and verifies file identity.
 window.__osraBootAt=performance.now();
-const OSRA_BUILD='OsRa v122 — 2026-11-07 — R86 ONE-TAP PHOTO RELINK';
+const OSRA_BUILD='OsRa v122 — 2026-11-12 — R6 BIRTHDAY DOGS + RANDOM CARTOON MASCOTS';
 const OSRA_3D_ASSETS={osama:'assets/osama-3d.png',rania:'assets/rania-3d.png'};
 const OSRA_MASCOT_ASSETS=[
  {key:'dog',src:'assets/mascots/dog.png',label:'الكلب'},
  {key:'white-dog',src:'assets/mascots/white-dog.png',label:'الكلب الأبيض'},
+ {key:'bops-dog',src:'assets/mascots/bops-dog.png',label:'بوبس — الكلب الأبيض'},
+ {key:'spongebob',src:'assets/mascots/spongebob.png',label:'سبونج بوب'},
  {key:'tom',src:'assets/mascots/tom.png',label:'Tom'},
  {key:'jerry',src:'assets/mascots/jerry.png',label:'Jerry'},
  {key:'masha',src:'assets/mascots/masha.png',label:'ماشا'},
@@ -1109,7 +1111,8 @@ function countdownInfo(x){
 }
 function countdownCardData(x){const info=countdownInfo(x);if(!info)return null;let label;if(info.days===0)label='اليوم ❤️';else if(info.elapsed)label=`مرّ عليه ${info.days} يومًا`;else label=`بعد ${info.days} يومًا`;return {id:x.id,title:x.title,emoji:x.emoji,label,date:info.date}}
 function countdownDateLabel(x){const info=countdownInfo(x);return info?`${info.elapsed&&!x.annual?'مرّ الموعد في':'الموعد'} ${fmt(x.date)}${x.annual?' • يتكرر سنويًا':''}`:'تاريخ غير صالح'}
-const BIRTHDAY_DOG_NEXT_KEY='OsRa_BirthdayDog_Next_v2';
+const BIRTHDAY_DOG_NEXT_KEY='OsRa_BirthdayDog_Next_v3';
+const BIRTHDAY_DOG_SCENES=['original','ensemble','party-hat','bops','roses'];
 function birthdayCelebrationDayKeys(){
  const raw=String(state?.settings?.birthdayRania||'1996-10-07');
  if(!/^\d{4}-\d{2}-\d{2}$/.test(raw))return [];
@@ -1127,10 +1130,10 @@ function prepareBirthdayDogs(){
  wrap.style.position='relative';
  const sources=[
   {key:'german',src:'assets/mascots/dog.png',alt:'كلب جيرمن'},
-  {key:'white',src:'assets/mascots/white-dog.png',alt:'كلب أبيض'}
+  {key:'white',src:'assets/mascots/white-dog.png',alt:'كلب أبيض بقلب أحمر'}
  ];
  for(const item of sources){
-  let image=wrap.querySelector(`[data-osra-birthday-dog=\"${item.key}\"]`);
+  let image=wrap.querySelector(`[data-osra-birthday-dog="${item.key}"]`);
   if(!image){
    image=document.createElement('img');image.dataset.osraBirthdayDog=item.key;image.alt=item.alt;
    image.decoding='async';image.loading='eager';image.src=new URL(item.src,document.baseURI).href;
@@ -1139,23 +1142,43 @@ function prepareBirthdayDogs(){
    wrap.appendChild(image);
   }
  }
- return {wrap,original};
+ let custom=wrap.querySelector('.birthday-dog-custom-scenes');
+ if(!custom){
+  custom=document.createElement('div');custom.className='birthday-dog-custom-scenes';
+  const scenes=[
+   {key:'party-hat',src:'assets/birthday/party-hat-dog.jpg',alt:'كلب عيد الميلاد بقبعة الحفلة',message:'Happy birthday to you ya Ranoush'},
+   {key:'bops',src:'assets/mascots/bops-dog.png',alt:'بوبس الكلب الأبيض',message:'بوبس بيقولك كل سنة وانتي طيبة يا حياتي واعتبريني بوبس بقي🙊😍'},
+   {key:'roses',src:'assets/birthday/rose-dog.jpg',alt:'كلب أبيض وسط الورد والقلوب',message:'كل سنة وانتي طيبة يا احلي روني في الدنيا ❤️🎉♥️🌹🌹🎂🥰'}
+  ];
+  for(const item of scenes){
+   const scene=document.createElement('section');scene.className=`birthday-dog-custom-scene birthday-dog-scene-${item.key}`;scene.dataset.birthdayScene=item.key;scene.hidden=true;
+   const image=document.createElement('img');image.src=new URL(item.src,document.baseURI).href;image.alt=item.alt;image.decoding='async';image.loading='eager';image.draggable=false;
+   image.addEventListener('error',()=>{scene.classList.add('asset-missing');image.hidden=true},{once:true});
+   const caption=document.createElement('p');caption.className='birthday-dog-custom-caption';caption.textContent=item.message;
+   scene.append(image,caption);custom.appendChild(scene);
+  }
+  wrap.appendChild(custom);
+ }
+ return {wrap,original,custom};
 }
 function showNextBirthdayDog(){
  const parts=prepareBirthdayDogs();if(!parts)return;
- const {wrap,original}=parts;
- // Alternate two independent scenes: original sign dog, then the two mascot dogs.
- let showEnsemble=false;
- try{showEnsemble=localStorage.getItem(BIRTHDAY_DOG_NEXT_KEY)==='ensemble'}catch{}
+ const {wrap,original,custom}=parts;
+ let nextIndex=0;
+ try{const saved=Number(localStorage.getItem(BIRTHDAY_DOG_NEXT_KEY));if(Number.isInteger(saved)&&saved>=0&&saved<BIRTHDAY_DOG_SCENES.length)nextIndex=saved}catch{}
+ const scene=BIRTHDAY_DOG_SCENES[nextIndex]||'original';
+ const showOriginal=scene==='original',showEnsemble=scene==='ensemble',showCustom=!showOriginal&&!showEnsemble;
  wrap.classList.toggle('birthday-dog-ensemble',showEnsemble);
- original.hidden=showEnsemble;original.style.display=showEnsemble?'none':'block';
+ wrap.classList.toggle('birthday-dog-custom-active',showCustom);
+ original.hidden=!showOriginal;original.style.display=showOriginal?'block':'none';
  const friends=wrap.querySelector('.birthday-dog-friends');
  if(friends){friends.hidden=!showEnsemble;friends.style.display=showEnsemble?'flex':'none'}
  for(const key of ['german','white']){
   const dog=wrap.querySelector(`[data-osra-birthday-dog="${key}"]`);
   if(dog){dog.hidden=!showEnsemble;dog.style.display=showEnsemble&&dog.dataset.osraDogUnavailable!=='1'?'block':'none'}
  }
- try{localStorage.setItem(BIRTHDAY_DOG_NEXT_KEY,showEnsemble?'original':'ensemble')}catch{}
+ custom.querySelectorAll('[data-birthday-scene]').forEach(item=>{const active=item.dataset.birthdayScene===scene;item.hidden=!active;item.style.display=active?'flex':'none'});
+ try{localStorage.setItem(BIRTHDAY_DOG_NEXT_KEY,String((nextIndex+1)%BIRTHDAY_DOG_SCENES.length))}catch{}
 }
 function birthdayRaniaGreeting(){
  const d=$('#birthday-dog-dialog');
@@ -1255,7 +1278,7 @@ function pageHome(){
  const birthdayInfo=annual(state.settings.birthdayRania);if(birthdayInfo&&isBirthdayCelebrationDay())birthdayInfo.days=0;
  const visibleCountdowns=state.settings.countdowns.filter(x=>x.showHome).map(countdownCardData);
  const birthdayLabel=birthdayInfo?(birthdayInfo.days===0?'اليوم 🎉🎂':`باقي ${birthdayInfo.days} يوم${birthdayInfo.days===1?'':'ًا'}`):'أضف تاريخ عيد ميلاد رانيا من الإعدادات';
- return `<div class="inner">${scanProgressCard()}<div class="dedication"><div class="our">Our Story</div><div class="names">رانيا ♥ أسامة</div><div class="tag">قصتنا وصداقتنا</div><div class="line"></div><div class="small">من أول لحظة... إلى كل لحظة بعدها. ❤️</div><div class="feature card" style="width:min(640px,100%);margin-top:18px"><div class="memory-body"><b>📸 صورة اليوم</b><div class="meta">${state.settings.dailyAlbumIds===null?'من كل الألبومات الظاهرة':dailyAlbums.length?`من ${dailyAlbums.length} ألبوم محدد`:'لا توجد ألبومات محددة'}</div></div>${daily?`<button class="memory-cover" data-action="photo" data-id="${daily.id}"><img data-thumb="${daily.id}" alt=""></button>`:`<div class="memory-cover"><span style="font:50px Georgia;color:var(--rose)">♥</span></div>`}<div class="memory-body"><b>${daily?esc(daily.name):'اربط مجلد الصور للبدء'}</b></div></div></div><div class="stats"><div class="stat"><b>${visibleMemories().length}</b><small>ذكرى ظاهرة</small></div><div class="stat"><b>${visiblePhotoCount()}</b><small>صورة ظاهرة</small></div><div class="stat"><b>${state.dreams.length}</b><small>حلم</small></div><div class="stat"><b>${state.verses.length}</b><small>آية</small></div></div><div class="actions"><button class="btn primary" data-action="go" data-section="memories">فتح ذكرياتنا</button><button class="btn" data-action="go" data-section="calendar">التقويم</button><button class="btn" data-action="go" data-section="story">رحلتنا</button><button class="btn" data-action="go" data-section="messages">رسائلنا ⭐</button></div><div class="line"></div><div class="grid"><div class="card"><b>⏳ معًا منذ</b><p>${duration(state.settings.startDate)}</p></div><div class="card"><b>💍 منذ الخطوبة</b><p>${duration(state.settings.engagementDate)}</p></div><div class="card birthday-home-mini-card ${birthdayInfo?.days===0?'birthday-today':''}"><b>🎂 عيد ميلاد رانيا</b><p>${birthdayLabel}</p>${isBirthdayCelebrationDay()?`<button class="btn small primary birthday-home-button" data-action="birthdayRania">🎂 افتحي تهنئة رانيا</button>`:''}</div></div>${visibleCountdowns.length?`<div class="line"></div><h3>⏳ عداداتنا</h3><div class="cards">${visibleCountdowns.map(x=>`<div class="card"><b>${esc(x.emoji)} ${esc(x.title)}</b><p>${esc(x.label)}</p></div>`).join('')}</div>`:''}${same.length?`<div class="line"></div><h3>في مثل هذا اليوم ✨</h3><p class="note">كل الذكريات التي تغطي تاريخ اليوم، حتى لو كانت من سنوات مختلفة.</p><div class="cards">${same.map(m=>`<article class="card today-memory"><div>${miniThumbs(m,6)}</div><div class="memory-body"><h3>${esc(m.title||'ذكرى')}</h3><div class="meta">${rangeLabel(m)}${m.place?' • '+esc(m.place):''}</div>${m.description?`<p>${esc(m.description)}</p>`:''}<button class="btn small primary" data-action="memory" data-id="${m.id}">فتح الذكرى والصور</button></div></article>`).join('')}</div>`:''}</div>`
+ return `<div class="inner home-inner">${scanProgressCard()}<div class="dedication"><div class="our">Our Story</div><div class="names">رانيا ♥ أسامة</div><div class="tag">قصتنا وصداقتنا</div><div class="line"></div><div class="small">من أول لحظة... إلى كل لحظة بعدها. ❤️</div><div class="feature card" style="width:min(640px,100%);margin-top:18px"><div class="memory-body"><b>📸 صورة اليوم</b><div class="meta">${state.settings.dailyAlbumIds===null?'من كل الألبومات الظاهرة':dailyAlbums.length?`من ${dailyAlbums.length} ألبوم محدد`:'لا توجد ألبومات محددة'}</div></div>${daily?`<button class="memory-cover" data-action="photo" data-id="${daily.id}"><img data-thumb="${daily.id}" alt=""></button>`:`<div class="memory-cover"><span style="font:50px Georgia;color:var(--rose)">♥</span></div>`}<div class="memory-body"><b>${daily?esc(daily.name):'اربط مجلد الصور للبدء'}</b></div></div></div><div class="stats"><div class="stat"><b>${visibleMemories().length}</b><small>ذكرى ظاهرة</small></div><div class="stat"><b>${visiblePhotoCount()}</b><small>صورة ظاهرة</small></div><div class="stat"><b>${state.dreams.length}</b><small>حلم</small></div><div class="stat"><b>${state.verses.length}</b><small>آية</small></div></div><div class="actions"><button class="btn primary" data-action="go" data-section="memories">فتح ذكرياتنا</button><button class="btn" data-action="go" data-section="calendar">التقويم</button><button class="btn" data-action="go" data-section="story">رحلتنا</button><button class="btn" data-action="go" data-section="messages">رسائلنا ⭐</button></div><div class="line"></div><div class="grid"><div class="card"><b>⏳ معًا منذ</b><p>${duration(state.settings.startDate)}</p></div><div class="card"><b>💍 منذ الخطوبة</b><p>${duration(state.settings.engagementDate)}</p></div><div class="card birthday-home-mini-card ${birthdayInfo?.days===0?'birthday-today':''}"><b>🎂 عيد ميلاد رانيا</b><p>${birthdayLabel}</p>${isBirthdayCelebrationDay()?`<button class="btn small primary birthday-home-button" data-action="birthdayRania">🎂 افتحي تهنئة رانيا</button>`:''}</div></div>${visibleCountdowns.length?`<div class="line"></div><h3>⏳ عداداتنا</h3><div class="cards">${visibleCountdowns.map(x=>`<div class="card"><b>${esc(x.emoji)} ${esc(x.title)}</b><p>${esc(x.label)}</p></div>`).join('')}</div>`:''}${same.length?`<div class="line"></div><h3>في مثل هذا اليوم ✨</h3><p class="note">كل الذكريات التي تغطي تاريخ اليوم، حتى لو كانت من سنوات مختلفة.</p><div class="cards">${same.map(m=>`<article class="card today-memory"><div>${miniThumbs(m,6)}</div><div class="memory-body"><h3>${esc(m.title||'ذكرى')}</h3><div class="meta">${rangeLabel(m)}${m.place?' • '+esc(m.place):''}</div>${m.description?`<p>${esc(m.description)}</p>`:''}<button class="btn small primary" data-action="memory" data-id="${m.id}">فتح الذكرى والصور</button></div></article>`).join('')}</div>`:''}</div>`
 }
 function detailScore(m){const photoCount=photoFor(m).length;return (m.date?30:0)+(m.endDate&&m.endDate!==m.date?10:0)+(m.place?20:0)+(m.description?Math.min(25,5+Math.floor(String(m.description).length/60)*5):0)+(m.title?5:0)+Math.min(20,photoCount*2)}
 function orderedMemories(ms){return [...ms].sort((a,b)=>state.settings.albumOrderMode==='details'?(detailScore(b)-detailScore(a)):state.settings.albumOrderMode==='linked'?(originalCoverage(b)-originalCoverage(a)):(a.order??0)-(b.order??0))}
@@ -1449,7 +1472,7 @@ function romanticSceneHtml(message,style,occasion=false,opts={}){
  const left=(centered?50:(14+Math.random()*72)).toFixed(1), top=(centered?46:(16+Math.random()*66)).toFixed(1);
  const useOsamaSticker=coupleCharactersAreEnabled()&&style!=='dogsign';
  const sticker=useOsamaSticker?`<div class="rs-sticker"><img src="${OSRA_3D_ASSETS.osama}" alt="" draggable="false" decoding="async" onerror="this.parentElement.classList.add('missing')"></div>`:'';
- const mascotChoice=opts.mascotChoice||'none';
+ const mascotChoice=opts.mascotChoice||'global';
  const cardMascot=selectedMessageMascot(mascotChoice);
  const mascotEnabled=!!cardMascot&&state.settings.messageMascotsEnabled!==false&&opts.messageMascotEnabled!==false;
  const placement=['below','inside','side'].includes(opts.mascotPlacement||state.settings.messageMascotPlacement)?(opts.mascotPlacement||state.settings.messageMascotPlacement):'below';
@@ -1825,7 +1848,7 @@ async function saveBuiltinSurpriseMessage(messageId){
  const idv=String(messageId||''),base=builtinSurpriseMessages().find(x=>x.id===idv);if(!base)return;
  const text=$('#builtinMsgText')?.value.trim()||'';if(!text){toast('لا يمكن حفظ رسالة فارغة.');return}
  const prior=state.settings.builtinSurpriseMessageOptions[idv]||{};
- state.settings.builtinSurpriseMessageOptions[idv]={...prior,text,enabled:!!$('#builtinMsgEnabled')?.checked,presentation:$('#builtinMsgPresentation')?.value||'random',motion:$('#builtinMsgMotion')?.value||'random',mascotChoice:$('#builtinMsgMascot')?.value||'none',mascotPlacement:$('#builtinMsgMascotPlacement')?.value||'global',mascotMotion:$('#builtinMsgMascotMotion')?.value||'global'};
+ state.settings.builtinSurpriseMessageOptions[idv]={...prior,text,enabled:!!$('#builtinMsgEnabled')?.checked,presentation:$('#builtinMsgPresentation')?.value||'random',motion:$('#builtinMsgMotion')?.value||'random',mascotChoice:$('#builtinMsgMascot')?.value||'global',mascotPlacement:$('#builtinMsgMascotPlacement')?.value||'global',mascotMotion:$('#builtinMsgMascotMotion')?.value||'global'};
  await save();closeModal();toast('تم حفظ الرسالة واختيارها وطريقة ظهورها.');renderNoAnim();
 }
 function surpriseBuiltinMessagesPanel(){
@@ -2485,7 +2508,7 @@ function surpriseMessagePool(){
    .map(x=>String(x||'').trim()).filter(Boolean);
 }
 function surpriseMessageForm(existingIndex=-1){
- const value=existingIndex>=0?(state.settings.customSurpriseMessages?.[existingIndex]||''):'',prefs=state.settings.customSurpriseMessageOptions?.[value]||{presentation:'random',motion:'random',frequency:'interval',mascotChoice:'none'};
+ const value=existingIndex>=0?(state.settings.customSurpriseMessages?.[existingIndex]||''):'',prefs=state.settings.customSurpriseMessageOptions?.[value]||{presentation:'random',motion:'random',frequency:'interval',mascotChoice:'global'};
  const sceneLabels={ribbon:'شريط متحرك',spotlight:'ضوء مسرحي',postcard:'بطاقة بريدية',burst:'انفجار زخرفي',neon:'نيون مضيء',heartframe:'إطار قلب',flowerframe:'إطار ورد',balloons:'بالونات',orbit:'مدار حول الرسالة',stamp:'ختم',sticker:'ملصق',cloud:'سحابة',shooting:'نجوم متحركة',curtain:'ستارة مسرح',split:'عرض منقسم',bottomwave:'موجة سفلية',topwave:'موجة علوية',giantcenter:'رسالة كبيرة بالمنتصف',sidecard:'بطاقة جانبية',tiltcard:'بطاقة مائلة',bubblefield:'فقاعات',confetti:'قصاصات احتفال',rain:'مطر زخرفي',ticket:'تذكرة',polaroid:'صورة فورية',halo:'هالة ضوء',bootribbon:'شريط احتفالي',dogsign:'لافتة الكلب الأبيض',heartcinema:'مشهد سينمائي داخل القلب',redcard:'بطاقة حمراء واضحة',blackcard:'بطاقة سوداء بخط مضيء'};
  const motionLabels={drop:'سقوط',rise:'صعود', 'slide-left':'انزلاق لليسار','slide-right':'انزلاق لليمين',zoom:'تكبير',spin:'دوران',bounce:'ارتداد', 'float-left':'طفو لليسار','float-right':'طفو لليمين',soft:'حركة ناعمة','gentle-fall':'سقوط هادئ',feather:'سقوط كالريشة','rise-balloon':'صعود كالبالون',sway:'تمايل','drop-sway':'سقوط مع تمايل','spiral-in':'دوران للداخل','flip-in':'قلب ثلاثي الأبعاد','slide-up':'صعود من أسفل','slide-down':'هبوط من أعلى','diagonal-left':'دخول قطري من اليسار','diagonal-right':'دخول قطري من اليمين','zoom-spin':'تكبير مع دوران'};
  const presentationOptions=[['random','عشوائي — كل طرق البطاقات المتاحة'],['ticker','شريط الرسالة العلوي'],['balloon','بالون الرسالة'],['classic','مشهد كرتوني كلاسيكي'],...ROMANTIC_SCENE_STYLES.map(s=>['scene-'+s,sceneLabels[s]||s])];
@@ -2504,7 +2527,7 @@ async function saveSurpriseMessage(i){
  const presentation=$('#surpriseMsgPresentation')?.value||'random',motion=$('#surpriseMsgMotion')?.value||'random',frequency=$('#surpriseMsgFrequency')?.value||'interval';
  const prior=state.settings.customSurpriseMessageOptions[text]||(!old||old===text?{}:state.settings.customSurpriseMessageOptions[old]||{});
  if(old&&old!==text)delete state.settings.customSurpriseMessageOptions[old];
- state.settings.customSurpriseMessageOptions[text]={...prior,presentation,motion,frequency,mascotChoice:$('#surpriseMsgMascot')?.value||'none',mascotPlacement:$('#surpriseMsgMascotPlacement')?.value||'global',mascotMotion:$('#surpriseMsgMascotMotion')?.value||'global',lastShownPeriod:(prior.frequency||'interval')===frequency?(prior.lastShownPeriod||''):''};
+ state.settings.customSurpriseMessageOptions[text]={...prior,presentation,motion,frequency,mascotChoice:$('#surpriseMsgMascot')?.value||'global',mascotPlacement:$('#surpriseMsgMascotPlacement')?.value||'global',mascotMotion:$('#surpriseMsgMascotMotion')?.value||'global',lastShownPeriod:(prior.frequency||'interval')===frequency?(prior.lastShownPeriod||''):''};
  normalizeState();await save();closeModal();toast('تم حفظ الرسالة وطريقة ظهورها وجدول تكرارها.');renderNoAnim();
 }
 async function deleteSurpriseMessage(i){
@@ -2522,7 +2545,7 @@ function randomSurpriseMessage(){
  const custom=(state.settings.customSurpriseMessages||[]).includes(message);
  const builtin=builtinSurpriseMessages().find(x=>x.enabled&&x.text===message);
  if(custom)lastRomanticMessageConfig={isCustom:true,...(state.settings.customSurpriseMessageOptions?.[message]||{presentation:'random',motion:'random',frequency:'interval'})};
- else if(builtin){const opts=state.settings.builtinSurpriseMessageOptions?.[builtin.id]||{};lastRomanticMessageConfig={isBuiltin:true,presentation:opts.presentation||'random',motion:opts.motion||'random',mascotChoice:opts.mascotChoice||'none',mascotPlacement:opts.mascotPlacement||'global',mascotMotion:opts.mascotMotion||'global'};}
+ else if(builtin){const opts=state.settings.builtinSurpriseMessageOptions?.[builtin.id]||{};lastRomanticMessageConfig={isBuiltin:true,presentation:opts.presentation||'random',motion:opts.motion||'random',mascotChoice:opts.mascotChoice||'global',mascotPlacement:opts.mascotPlacement||'global',mascotMotion:opts.mascotMotion||'global'};}
  else lastRomanticMessageConfig={isCustom:false,presentation:'random',motion:'random'};
  return message;
 }
@@ -3396,7 +3419,7 @@ async function ensureLatestOsRa(){
     location.reload();
   },{once:true});
   try{
-    const reg=await navigator.serviceWorker.register('./sw.js?build=osra122-20261112-birthday-date-clean-r1',{updateViaCache:'none'});
+    const reg=await navigator.serviceWorker.register('./sw.js?build=osra122-20261112-birthday-dogs-alternating-r5-birthday-rotation',{updateViaCache:'none'});
     await reg.update().catch(()=>{});
     if(reg.waiting) reg.waiting.postMessage({type:'SKIP_WAITING'});
   }catch(e){console.warn('OsRa service worker update skipped',e)}
