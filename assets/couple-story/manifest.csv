@@ -1,0 +1,13 @@
+﻿frame,source,output,source_wh,output_wh,alpha_bbox,hold_ms,notes
+1,s_r01_c01.jpg,pose-01.webp,166x195,800x700,"191,40,608,690",520,"pose crop from user reference; checkerboard removed by GrabCut; whole-body frame, not skeletal rig"
+2,s_r01_c02.jpg,pose-02.webp,161x195,800x700,"225,40,574,690",480,"pose crop from user reference; checkerboard removed by GrabCut; whole-body frame, not skeletal rig"
+3,s_r01_c03.jpg,pose-03.webp,161x195,800x700,"164,40,635,690",620,"pose crop from user reference; checkerboard removed by GrabCut; whole-body frame, not skeletal rig"
+4,s_r02_c01.jpg,pose-04.webp,166x175,800x700,"137,40,663,690",560,"pose crop from user reference; checkerboard removed by GrabCut; whole-body frame, not skeletal rig"
+5,s_r02_c02.jpg,pose-05.webp,161x175,800x700,"147,40,652,690",600,"pose crop from user reference; checkerboard removed by GrabCut; whole-body frame, not skeletal rig"
+6,s_r02_c03.jpg,pose-06.webp,161x175,800x700,"144,40,656,690",520,"pose crop from user reference; checkerboard removed by GrabCut; whole-body frame, not skeletal rig"
+7,s_r03_c01.jpg,pose-07.webp,166x176,800x700,"227,40,573,690",500,"pose crop from user reference; checkerboard removed by GrabCut; whole-body frame, not skeletal rig"
+8,s_r03_c02.jpg,pose-08.webp,161x176,800x700,"251,40,548,690",560,"pose crop from user reference; checkerboard removed by GrabCut; whole-body frame, not skeletal rig"
+9,s_r03_c03.jpg,pose-09.webp,161x176,800x700,"204,40,595,690",540,"pose crop from user reference; checkerboard removed by GrabCut; whole-body frame, not skeletal rig"
+10,s_r04_c01.jpg,pose-10.webp,166x172,800x700,"221,40,579,690",620,"pose crop from user reference; checkerboard removed by GrabCut; whole-body frame, not skeletal rig"
+11,s_r04_c02.jpg,pose-11.webp,161x172,800x700,"220,40,580,690",520,"pose crop from user reference; checkerboard removed by GrabCut; whole-body frame, not skeletal rig"
+12,s_r04_c03.jpg,pose-12.webp,161x172,800x700,"120,40,680,690",560,"pose crop from user reference; checkerboard removed by GrabCut; whole-body frame, not skeletal rig"

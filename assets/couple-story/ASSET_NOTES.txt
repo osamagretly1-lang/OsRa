@@ -1,5 +1,1 @@
-OsRa R56 paired-couple choreography assets
-
-These 14 transparent WebP frames were extracted and normalized from the two pose sheets supplied on 2026-10-14. Each frame is 800x700 RGBA WebP and is referenced by the R56 choreography in app.js and cached by sw.js. The full R56 ZIP includes the application code that uses these frames; this asset folder is not a separate application.
-
-The frames are shown as an occasional paired-art interlude during the existing couple celebration dance. Existing character sprites and other animation modes remain available.
+OsRa R62 — 12 added transparent paired-pose frames extracted from the user-provided blue-jacket/purple-dress pose board. Checkerboard was removed using computer-vision foreground segmentation; source model/artwork was not regenerated. Frame images keep a consistent 800x700 canvas and bottom baseline. These are paired illustration keyframes, not an articulated 2.5D skeletal rig. Inspect the contact sheet for edge artifacts before final use.

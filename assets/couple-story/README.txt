@@ -1,1 +1,1 @@
-Reserved for OsRa couple story assets.
+Reserved for OsRa couple story R62 assets.
