@@ -1,9 +1,9 @@
-/* OsRa R111 — multi-signal verification, duplicate-name candidate preservation, safe visual-link commits, and restored link modes.
+/* OsRa R99 — multi-signal verification, duplicate-name candidate preservation, and restored link modes.
    This patch only attaches an original-file handle to an EXISTING photo record.
    It never creates a photo, album, memory, or thumbnail. */
 (function installOsRaLinkRepairR99(){
   'use strict';
-  const BUILD = 'osra122-20261112-r111-safe-visual-link-commit';
+  const BUILD = 'osra122-20261110-r99-link-engine-repair';
   if (window.__osraLinkRepairBuild === BUILD) return;
 
   const originalNormalizePhotoLinks = window.normalizePhotoLinks;
@@ -524,117 +524,66 @@
 
   /* Keep the visual route's accepted handle hashes so later lookups validate
      the chosen original itself. This commits links only; it adds no photo rows. */
-  window.applyVisualLinks = async function applyVisualLinksR111(){
+  window.applyVisualLinks = async function applyVisualLinksR99(){
     const session = visualLinkSession;
-    if (!session || busy || scanLock) { if (busy || scanLock) notify('هناك عملية أخرى تعمل الآن؛ انتظر اكتمالها.'); return; }
-    const chosen = [...document.querySelectorAll('.visual-link-check:checked')]
+    if (!session) return;
+    const accepted = [...document.querySelectorAll('.visual-link-check:checked')]
       .map(input=>({row:Number(input.dataset.row),candidate:Number(input.dataset.candidate)}));
-    const accepted = [...new Map(chosen.filter(x=>Number.isInteger(x.row)&&Number.isInteger(x.candidate)).map(x=>[x.row,x])).values()];
     if (!accepted.length) { notify('لم تعتمد أي نتيجة.'); return; }
     const album = state.memories.find(item=>String(item.id)===String(session.albumId));
-    if (!album || album.hidden) { notify('الألبوم غير متاح في القائمة الظاهرة؛ لم يتغير أي شيء.'); return; }
-
-    busy = true;
-    let linked = 0, saved = 0, failed = 0;
+    if (!album) return;
+    let linked = 0;
     const createdSources = [];
-    const sourceMap = new Map();
-    const sourceForCandidate = candidate => {
+    for (const pick of accepted) {
+      const result = session.results[pick.row], candidate = result && result.candidates[pick.candidate];
+      if (!result || !candidate) continue;
       let source = candidate.root && candidate.root.source;
-      if (source) return source;
-      const root = session.roots.find(item=>String(item.id)===String(candidate.root && candidate.root.id));
-      if (!root || !root.handle) return null;
-      source = root.source;
       if (!source) {
-        source = {id:id('src'),name:root.name || 'مجلد بصري',handle:root.handle,asAlbum:false,directAlbumFolder:false,mergeIntoMemoryId:'',createdAt:Date.now()};
-        root.source = source;
-        createdSources.push(source);
-      }
-      return source;
-    };
-    const updateProgress = (index,total) => {
-      const status = document.querySelector('#visualLinkCommitStatus');
-      const bar = document.querySelector('#visualLinkCommitBar');
-      if (status) status.textContent = `إعادة التحقق والحفظ ${index}/${total} • روابط جديدة ${linked} • محفوظ ${saved} • متعذر ${failed}`;
-      if (bar) bar.style.width = `${total ? Math.round(index*100/total) : 0}%`;
-    };
-    try {
-      /* Resolve and persist every selected source handle before changing any photo row. */
-      for (const pick of accepted) {
-        const result = session.results[pick.row], candidate = result && result.candidates && result.candidates[pick.candidate];
-        if (!candidate) continue;
-        const source = sourceForCandidate(candidate);
-        if (source && source.handle) sourceMap.set(String(source.id),source);
-      }
-      if (!sourceMap.size) { notify('تعذر الوصول إلى مصدر الملفات المختارة؛ لم يتم حفظ أي رابط.'); return; }
-      for (const source of sourceMap.values()) {
-        if (!(await window.ensureSourcePermission(source,true))) throw new Error('READ_PERMISSION');
-        if (!sources.some(item=>String(item.id)===String(source.id))) sources.push(source);
-      }
-      await window.persistSources();
-
-      window.modal(`<h2>⏳ اعتماد المطابقات البصرية</h2><p id="visualLinkCommitStatus">إعادة التحقق من الملفات المختارة…</p><div class="progress"><div id="visualLinkCommitBar" style="width:0%"></div></div><p class="meta">يُحدّث OsRa بيانات رابط الأصل فقط. لا ينشئ صورة أو ألبومًا، ولا يكتب أو ينقل أو يحذف أي ملف من مجلد الهاتف.</p>`);
-      for (let i=0;i<accepted.length;i++) {
-        const pick = accepted[i];
-        const result = session.results[pick.row], candidate = result && result.candidates && result.candidates[pick.candidate];
-        try {
-          if (!result || !candidate) throw new Error('MISSING_CANDIDATE');
-          const source = sourceForCandidate(candidate);
-          const photo = photos.get(String(result.photoId));
-          if (!source || !source.handle || !photo || !window.isPhotoRecord(photo)) throw new Error('MISSING_SOURCE_OR_PHOTO');
-          const file = await candidate.entry.getFile();
-          if (!imageFile(file)) throw new Error('NOT_IMAGE');
-          if (candidate.sig) {
-            const latest = await window.imageSignatureFromThumb(file);
-            if (!latest || window.visualCandidateScore(candidate.sig,latest) < .94) throw new Error('CANDIDATE_CHANGED');
-          }
-          const draft = structuredClone(photo);
-          const key = await safeCall(window.contentKey,file) || '';
-          const fp = await safeCall(window.fingerprint,file) || '';
-          const old = window.photoLocations(draft).some(link=>String(link.sourceId)===String(source.id)&&String(link.relPath)===String(candidate.relPath)&&link.verified===true);
-          window.markPhotoLinkVerified(draft,source.id,candidate.relPath);
-          const link = window.photoLocations(draft).find(item=>String(item.sourceId)===String(source.id)&&String(item.relPath)===String(candidate.relPath));
-          if (!link) throw new Error('LINK_ROW_NOT_CREATED');
-          link.name = file.name || candidate.name || draft.name;
-          link.size = number(file.size); link.lastModified = number(file.lastModified);
-          link.mimeType = file.type || link.mimeType || '';
-          link.contentKey = key || link.contentKey || '';
-          link.fingerprint = fp || link.fingerprint || '';
-          link.verified = true; link.verifiedAt = Date.now();
-          /* Update the in-memory photo only after IndexedDB confirms the cloned write. */
-          await window.savePhotoMetadataOnly(draft);
-          photos.set(String(draft.id),draft);
-          saved++;
-          if (!old) linked++;
-        } catch (error) {
-          failed++;
-          console.warn('[OsRa R111] visual source link skipped safely',error);
+        const root = session.roots.find(item=>String(item.id)===String(candidate.root && candidate.root.id));
+        if (!root || !root.handle) continue;
+        source = root.source;
+        if (!source) {
+          source = {id:id('src'),name:root.name || 'مجلد بصري',handle:root.handle,asAlbum:false,directAlbumFolder:false,mergeIntoMemoryId:'',createdAt:Date.now()};
+          root.source = source;
+          sources.push(source);
+          createdSources.push(source);
         }
-        updateProgress(i+1,accepted.length);
-        if (i%3===0) await new Promise(resolve=>setTimeout(resolve,0));
       }
-
-      if (saved) {
-        window.refreshLinkReportAfterManual();
+      if (!source || !source.handle) continue;
+      const photo = photos.get(String(result.photoId));
+      if (!photo || !window.isPhotoRecord(photo)) continue;
+      let file;
+      try { file = await candidate.entry.getFile(); } catch (_) { continue; }
+      if (!imageFile(file)) continue;
+      if (candidate.sig) {
+        const latest = await window.imageSignatureFromThumb(file);
+        if (!latest || window.visualCandidateScore(candidate.sig, latest) < .94) continue;
       }
-      if (failed) {
-        window.visualResultsModal();
-        notify(`تم حفظ ${linked} رابطًا جديدًا. تعذّر اعتماد ${failed} اختيارًا؛ بقيت للمراجعة وإعادة المحاولة. لم تتغير الملفات الأصلية.`);
-        return;
+      let key = await safeCall(window.contentKey, file) || '';
+      let fp = await safeCall(window.fingerprint, file) || '';
+      const old = window.photoLocations(photo).some(link=>String(link.sourceId)===String(source.id)&&String(link.relPath)===String(candidate.relPath));
+      window.markPhotoLinkVerified(photo, source.id, candidate.relPath);
+      const link = window.photoLocations(photo).find(item=>String(item.sourceId)===String(source.id)&&String(item.relPath)===String(candidate.relPath));
+      if (link) {
+        link.name = file.name || candidate.name || photo.name;
+        link.size = number(file.size); link.lastModified = number(file.lastModified);
+        link.mimeType = file.type || link.mimeType || '';
+        link.contentKey = key || link.contentKey || '';
+        link.fingerprint = fp || link.fingerprint || '';
+        link.verified = true; link.verifiedAt = Date.now();
       }
-      window.clearVisualPreviewUrls();
-      visualLinkSession = null;
-      window.closeModal();
-      window.renderNoAnim();
-      notify(`تم ربط ${linked} ملفًا بالصورة الموجودة بعد مراجعتك. لم تتم إضافة صور جديدة.`);
-      const remaining = window.remainingPhotoIdsForAlbum(album).length;
-      if (remaining) window.showManualLinkNext(album.id); else window.showAlbumLinkFinalReport(album.id);
-    } catch (error) {
-      console.error('[OsRa R111] visual link commit aborted',error);
-      if (session) window.visualResultsModal();
-      notify(error && error.message==='READ_PERMISSION' ? 'إذن قراءة أحد المصادر غير متاح؛ لم يبدأ حفظ الروابط. راجع الإذن ثم أعد المحاولة.' : 'تعذر إكمال الربط البصري. الروابط التي حُفظت تبقى محفوظة، ويمكنك إعادة محاولة الباقي.');
-    } finally {
-      busy = false;
+      await savePhoto(photo);
+      photos.set(String(photo.id), photo);
+      if (!old) linked++;
     }
+    window.normalizeState();
+    if (linked || createdSources.length) { await window.persistSources(); await save(); }
+    window.refreshLinkReportAfterManual();
+    const remaining = window.remainingPhotoIdsForAlbum(album).length;
+    window.clearVisualPreviewUrls(); visualLinkSession = null; window.closeModal();
+    notify(`تم ربط ${linked} ملفًا بالصورة الموجودة بعد مراجعتك. لم تتم إضافة صور جديدة.`);
+    window.renderNoAnim();
+    if (remaining) window.showManualLinkNext(album.id); else window.showAlbumLinkFinalReport(album.id);
   };
 
   /* In reports, the fast action now opens a one-file picker when available.
