@@ -1,18 +1,15 @@
-/* OsRa R102 — portable clean backup + restored fast source-first relinking.
+/* OsRa R111 — multi-signal verification, duplicate-name candidate preservation, safe visual-link commits, and restored link modes.
    This patch only attaches an original-file handle to an EXISTING photo record.
    It never creates a photo, album, memory, or thumbnail. */
-(function installOsRaLinkRepairR102(){
+(function installOsRaLinkRepairR99(){
   'use strict';
-  const BUILD = 'osra122-20261111-r105-stale-link-persist-and-confirmed-relink';
+  const BUILD = 'osra122-20261112-r111-safe-visual-link-commit';
   if (window.__osraLinkRepairBuild === BUILD) return;
 
   const originalNormalizePhotoLinks = window.normalizePhotoLinks;
   const originalFindOriginalFile = window.findOriginalFile;
   const originalLinkSourceAutoAlbum = window.linkSourceAutoAlbum;
-  const originalQuickLinkMissingPhoto = window.quickLinkMissingPhoto;
-  const originalBackupPayloadForExport = window.backupPayloadForExport;
   const originalApplyVisualLinks = window.applyVisualLinks;
-  const originalVisualResultsModal = window.visualResultsModal;
   const originalPageSettings = window.pageSettings;
   let pendingDirect = null;
 
@@ -33,7 +30,7 @@
     pendingDirect = null;
   };
   const notify = message => {
-    try { window.toast(message); } catch (_) { console.warn('[OsRa R102]', message); }
+    try { window.toast(message); } catch (_) { console.warn('[OsRa R99]', message); }
   };
 
   /* Preserve ordinary folder links exactly as before, while retaining the
@@ -108,41 +105,6 @@
     return /^[a-f0-9]{64}$/i.test(text) || /^\d+-\d+-\d+$/.test(text);
   };
 
-  /* A direct file handle is an explicit user-confirmed relationship.
-     Validate it against the direct-link's own saved signature/metadata only;
-     stale hashes on other folder links for the same photo must not poison it. */
-  async function verifyDirectFileIdentity(link, file){
-    if (!link || !imageFile(file)) return {matched:false,method:'none'};
-    const actualKeyRaw = await safeCall(window.contentKey, file) || '';
-    const actualFingerprintRaw = await safeCall(window.fingerprint, file) || '';
-    const actualKey = validSavedKey(actualKeyRaw,file) ? actualKeyRaw : '';
-    const actualFingerprint = validSavedFingerprint(actualFingerprintRaw,file) ? actualFingerprintRaw : '';
-    const savedKey = validSavedKey(link.contentKey,file) ? String(link.contentKey) : '';
-    const savedFingerprint = validSavedFingerprint(link.fingerprint,file) ? String(link.fingerprint) : '';
-    let legacy = {contentKey:'',fingerprint:''};
-    if ((savedKey && savedKey !== actualKey) || (savedFingerprint && savedFingerprint !== actualFingerprint)) {
-      legacy = await legacyLinkHashes(file);
-    }
-    if (savedKey && (savedKey === actualKey || savedKey === legacy.contentKey)) {
-      return {matched:true,key:actualKey||savedKey,fingerprint:actualFingerprint||legacy.fingerprint||savedFingerprint,method:'direct-file-signature'};
-    }
-    if (savedFingerprint && (savedFingerprint === actualFingerprint || savedFingerprint === legacy.fingerprint)) {
-      return {matched:true,key:actualKey||legacy.contentKey||savedKey,fingerprint:actualFingerprint||savedFingerprint,method:'direct-file-fingerprint'};
-    }
-    const norm = value => {
-      try { return window.normalizeFileName(String(value||'')); }
-      catch (_) { return String(value||'').trim().toLocaleLowerCase(); }
-    };
-    const exactMetadata = !!norm(link.name) && norm(link.name) === norm(file.name) &&
-      number(link.size) > 0 && number(link.size) === number(file.size) &&
-      number(link.lastModified) > 0 && number(link.lastModified) === number(file.lastModified);
-    const hashAvailable = !!(actualKey || actualFingerprint);
-    if (exactMetadata && (!savedKey && !savedFingerprint || !hashAvailable)) {
-      return {matched:true,key:actualKey,fingerprint:actualFingerprint,method:'direct-file-metadata'};
-    }
-    return {matched:false,key:actualKey,fingerprint:actualFingerprint,method:'direct-file-mismatch'};
-  }
-
   /*
    * R99 fixes two distinct identity failures:
    * 1) a stale contentKey no longer short-circuits a valid fingerprint;
@@ -215,63 +177,6 @@
     return {matched:false,key:keyValue,fingerprint:fingerprintValue,metadataCandidate:metadataMatches,method:metadataMatches?'metadata-review':'none'};
   };
 
-  /* R105 critical persistence fix: photoLocations() returns normalized copies.
-     Mutating one of those copies does NOT update photo.sourceLinks. The old
-     verifier therefore displayed a failed link as invalid for the current
-     attempt but saved the original verified:true record again. That stale
-     flag kept dead links out of the missing-photo/relink queue. */
-  function persistPhotoLinkState(photo, link, changes){
-    if (!photo || !link || !link.sourceId || !link.relPath) return false;
-    if (!Array.isArray(photo.sourceLinks)) photo.sourceLinks = window.photoLocations(photo).map(item=>({...item}));
-    let raw = photo.sourceLinks.find(item => String(item?.sourceId)===String(link.sourceId) && String(item?.relPath)===String(link.relPath));
-    if (!raw) { raw = {...link}; photo.sourceLinks.push(raw); }
-    Object.assign(raw, changes || {});
-    return true;
-  }
-  async function persistPhotoLinkRecord(photo){
-    if (!photo) return;
-    await window.savePhoto(photo);
-    photos.set(String(photo.id), photo);
-  }
-
-  /* R105 replaces the broken copy-only state update in app.js. A link is
-     marked invalid only after permission was available and its saved path is
-     missing or its identity check fails. A denied permission is NOT evidence
-     that the source file is gone. */
-  window.verifyExistingPhotoLinks = async function verifyExistingPhotoLinksR105(photo){
-    if (!photo) return null;
-    let changed = false;
-    for (const link of window.photoLocations(photo) || []) {
-      const source = sources.find(item => String(item.id)===String(link.sourceId) && item?.handle);
-      if (!source?.handle) continue;
-      if (!(await window.ensureSourcePermission(source, false))) continue;
-      try {
-        const handle = await window.resolve(source.handle, link.relPath);
-        const file = await handle.getFile();
-        const identity = await window.verifyExactPhotoCandidate(photo, file);
-        if (!identity || identity.matched !== true) throw new Error('saved source path no longer verifies against this photo');
-        persistPhotoLinkState(photo, link, {
-          verified:true, verifiedAt:Date.now(), name:file.name||link.name||photo.name||'',
-          size:number(file.size), lastModified:number(file.lastModified),
-          mimeType:file.type||link.mimeType||photo.mimeType||'',
-          contentKey:identity.key||link.contentKey||'', fingerprint:identity.fingerprint||link.fingerprint||''
-        });
-        await persistPhotoLinkRecord(photo);
-        return {source,file,link:window.photoLocations(photo).find(x=>String(x.sourceId)===String(link.sourceId)&&String(x.relPath)===String(link.relPath)),identity};
-      } catch (error) {
-        persistPhotoLinkState(photo, link, {verified:false, verifiedAt:0});
-        changed = true;
-      }
-    }
-    if (changed) await persistPhotoLinkRecord(photo);
-    return null;
-  };
-
-  /* Also persist failed direct-file handles when the photo viewer discovers
-     one is no longer readable. Keep permission-denied handles intact so the
-     user can grant access again instead of losing a valid saved reference. */
-
-
   window.hasOriginalLink = function hasOriginalLinkR99(photo){
     if (!photo) return false;
     try {
@@ -322,7 +227,10 @@
                direct-file path rejected a valid file as soon as its saved
                contentKey differed, even when its saved fingerprint or exact
                legacy metadata still matched. */
-            const identity = await verifyDirectFileIdentity(link, file);
+            const identity = typeof window.verifyExactPhotoCandidate === 'function'
+              ? await window.verifyExactPhotoCandidate(photo, file)
+              : {matched: number(file.size) === number(link.size) &&
+                  number(file.lastModified) === number(link.lastModified)};
             if (!identity || !identity.matched) throw new Error('direct file identity could not be verified');
             if (identity.key) link.contentKey = identity.key;
             if (identity.fingerprint) link.fingerprint = identity.fingerprint;
@@ -334,7 +242,7 @@
             link.verified = false;
             link.verifiedAt = 0;
             try { await savePhoto(photo); } catch (_) {}
-            console.warn('[OsRa R102] direct-file source unavailable', photo.id, error);
+            console.warn('[OsRa R99] direct-file source unavailable', photo.id, error);
           }
         }
       }
@@ -383,7 +291,7 @@
         try { window.hydrate($('#modalBody')); } catch (_) {}
       } catch (error) {
         if (error && error.name === 'AbortError') return;
-        console.error('[OsRa R102] direct file picker failed', error);
+        console.error('[OsRa R99] direct file picker failed', error);
         notify('تعذر فتح ملف الصورة. لم يتم حفظ أي تغيير. جرّب اختيار مجلد المصدر.');
         window.openQuickLinkSourceChooser('', String(photoId), 'report');
       }
@@ -425,7 +333,7 @@
       if (oldLinks) photo.sourceLinks = oldLinks;
       cleanObjectUrl();
       window.closeModal();
-      console.error('[OsRa R102] could not persist direct file link', error);
+      console.error('[OsRa R99] could not persist direct file link', error);
       notify('لم يتم حفظ الربط؛ لم تتغير الصور أو الألبومات. تأكد من إذن قراءة الملف ثم أعد المحاولة.');
     }
   }
@@ -479,7 +387,7 @@
         }
       } catch (error) {
         if (error && error.name === 'AbortError') return;
-        console.error('[OsRa R102] source folder picker failed', error);
+        console.error('[OsRa R99] source folder picker failed', error);
         notify('تعذر اختيار مجلد المصدر.'); return;
       }
       const tempSource = source || {id:id('src'),name:chosen.name || 'مجلد مصدر',handle:chosen,asAlbum:false,directAlbumFolder:false,mergeIntoMemoryId:'',createdAt:Date.now()};
@@ -531,15 +439,15 @@
           for (const item of matched) {
             let sig = null;
             try { sig = await window.imageSignatureFromThumb(item.file); } catch (_) {}
-            verifiedCandidates.push({entry:item.row.entry,name:item.file.name,relPath:item.rel,sig,score:sig?1:null,root:rootRef,manualReviewOnly:!sig});
+            if (!sig) continue;
+            verifiedCandidates.push({entry:item.row.entry,name:item.file.name,relPath:item.rel,sig,score:1,root:rootRef});
           }
-          if (!verifiedCandidates.length) throw new Error('NO_VERIFIED_CANDIDATE');
+          if (!verifiedCandidates.length) throw new Error('NO_TARGET_PREVIEW');
           visualLinkStopRequested = false;
           visualLinkSession = {
             albumId:albums[0].id, roots:[rootRef],
             results:[{photoId:String(photo.id),candidates:verifiedCandidates}],
-            sourceRows:[],status:'ready',origin:'report',filterPhotoId:String(photo.id),
-            manualReviewOnly:true,manualReviewReason:'duplicate-exact'
+            sourceRows:[],status:'ready',origin:'report',filterPhotoId:String(photo.id)
           };
           busy = false;
           manualLinkSession.running = false;
@@ -557,45 +465,33 @@
           window.modal(`<h2>✅ تم العثور على الملف الصحيح</h2><p>تم التحقق من هوية الملف قبل الحفظ. اختر الألبوم الذي توجد فيه الصورة؛ لن تضاف أي صورة جديدة.</p>${rowsHtml}<div class="actions"><button class="btn" data-action="closeModal">إلغاء دون حفظ</button></div>`);
           return;
         }
-        /* Exact hashes may be stale, and some older photo rows have no usable
-           thumbnail/hash. Never auto-link those cases. Build a ranked review
-           list from the entire chosen source when a target signature exists;
-           otherwise show filename/stem candidates for explicit visual review.
-           The user must inspect the previews and tick one candidate manually. */
+        /* Strict name/metadata matching did not pass. Use visual similarity as
+           a REVIEW step, never as automatic authorization. */
         if (!rows.length) throw new Error('EMPTY_SOURCE');
-        let thumb = null, targetSig = null;
-        try { thumb = await window.getThumbBlob(photo.id); } catch (_) {}
+        let thumb = await window.getThumbBlob(photo.id);
         if (!thumb && typeof window.resolveThumbFallbackBlob === 'function') {
-          try { const fallback = await window.resolveThumbFallbackBlob(photo); thumb = fallback && fallback.blob ? fallback.blob : null; } catch (_) {}
+          const fallback = await window.resolveThumbFallbackBlob(photo);
+          thumb = fallback && fallback.blob ? fallback.blob : null;
         }
-        try { targetSig = await window.imageSignatureFromThumb(thumb); } catch (_) { targetSig = null; }
-        const pool = targetSig ? rows : exactCandidates;
+        const targetSig = await window.imageSignatureFromThumb(thumb);
+        if (!targetSig) throw new Error('NO_TARGET_PREVIEW');
         const ranked = [];
-        for (let i=0;i<pool.length;i++) {
+        for (let i=0;i<rows.length;i++) {
           if (manualLinkSession && manualLinkSession.cancelled) throw Object.assign(new Error('MANUAL_LINK_CANCELLED'), {name:'ManualLinkCancelled'});
           try {
-            const file = await pool[i].entry.getFile();
-            let sig = null;
-            try { sig = await window.imageSignatureFromThumb(file); } catch (_) {}
-            const score = targetSig && sig ? window.visualCandidateScore(targetSig, sig) : null;
-            /* Do not discard a candidate solely because an automated score is
-               below .80: the score is only a ranking hint, not authorization. */
-            ranked.push({...pool[i],sig,score,root:null,manualReviewOnly:true});
+            const file = await rows[i].entry.getFile();
+            const sig = await window.imageSignatureFromThumb(file);
+            if (!sig) continue;
+            const score = window.visualCandidateScore(targetSig, sig);
+            if (score >= .80) ranked.push({...rows[i],sig,score,root:null});
           } catch (_) {}
-          if (status && i % 20 === 0) status.textContent = targetSig
-            ? `ترتيب المرشحين بصريًا ${i+1} من ${pool.length} صورة…`
-            : `تجهيز مرشحي الاسم للمراجعة اليدوية ${i+1} / ${pool.length}…`;
-          if (bar) bar.style.width = `${25 + Math.round((i+1)*65/Math.max(1,pool.length))}%`;
+          if (status && i % 20 === 0) status.textContent = `البحث البصري في ${i+1} من ${rows.length} صورة…`;
+          if (bar) bar.style.width = `${25 + Math.round((i+1)*65/rows.length)}%`;
           if (i % 12 === 0) await new Promise(resolve => setTimeout(resolve, 0));
         }
-        ranked.sort((a,b)=>{
-          if (a.score == null && b.score == null) return String(a.relPath).localeCompare(String(b.relPath),undefined,{numeric:true,sensitivity:'base'});
-          if (a.score == null) return 1;
-          if (b.score == null) return -1;
-          return b.score-a.score;
-        });
-        const best = ranked.slice(0,12);
-        if (!best.length) throw new Error(targetSig ? 'NO_VISUAL_CANDIDATE' : 'NO_NAMED_CANDIDATE');
+        ranked.sort((a,b)=>b.score-a.score);
+        const best = ranked.slice(0,5);
+        if (!best.length) throw new Error('NO_VISUAL_CANDIDATE');
         const rootRef = {id:String(tempSource.id),name:tempSource.name,handle:chosen,source:source || null,relPath:baseRel};
         for (const candidate of best) {
           candidate.root = rootRef;
@@ -604,8 +500,7 @@
         visualLinkStopRequested = false;
         visualLinkSession = {
           albumId:albums[0].id, roots:[rootRef], results:[{photoId:String(photo.id),candidates:best}],
-          sourceRows:[], status:'ready', origin:'report', filterPhotoId:String(photo.id),
-          manualReviewOnly:true, manualReviewReason:targetSig?'low-confidence':'target-preview-unavailable'
+          sourceRows:[], status:'ready', origin:'report', filterPhotoId:String(photo.id)
         };
         busy = false;
         manualLinkSession.running = false;
@@ -614,11 +509,10 @@
         if (error && (error.name === 'ManualLinkCancelled' || error.message === 'MANUAL_LINK_CANCELLED')) {
           notify('تم إلغاء البحث دون حفظ أي رابط.');
         } else {
-          console.warn('[OsRa R102] source matching did not produce a confirmed link', error);
+          console.warn('[OsRa R99] source matching did not produce a confirmed link', error);
           const message = error && error.message === 'EMPTY_SOURCE' ? 'المجلد لا يحتوي على صور.' :
             error && error.message === 'NO_TARGET_PREVIEW' ? 'تعذر قراءة معاينة الصورة الموجودة في OsRa.' :
-            error && error.message === 'NO_NAMED_CANDIDATE' ? 'لم تتوفر معاينة قابلة للمقارنة، ولم يوجد ملف يحمل الاسم نفسه أو اسمًا قريبًا. لم يتم حفظ أي ربط.' :
-            'لم يظهر مرشح يمكن عرضه للمراجعة. لم يتم حفظ أي رابط أو إضافة أي صورة.';
+            'لم أجد ملفًا مطابقًا بدرجة كافية. لم يتم حفظ أي رابط أو إضافة أي صورة.';
           window.modal(`<h2>لم يتم الربط</h2><p>${esc(message)}</p><p class="meta">لم تتغير المكتبة أو الألبومات. جرّب اختيار المجلد الذي يحتوي على الملف الأصلي مباشرة.</p><div class="actions"><button class="btn primary" data-action="linkSourceAutoAlbum" data-photo-id="${esc(String(focusPhotoId))}">اختيار مجلد آخر</button><button class="btn" data-action="closeModal">إغلاق</button></div>`);
         }
       } finally {
@@ -628,95 +522,119 @@
     };
   }
 
-  /* Make manual-review semantics explicit in the existing preview UI.
-     Scores only rank candidates; they do not prove identity. A selected row
-     is committed only after the user checks the side-by-side preview. */
-  if (typeof originalVisualResultsModal === 'function') {
-    window.visualResultsModal = function visualResultsModalR101(){
-      const result = originalVisualResultsModal.apply(this, arguments);
-      const session = visualLinkSession;
-      if (!session || !session.manualReviewOnly) return result;
-      const note = $('#modalBody .note');
-      if (note) {
-        note.textContent = session.manualReviewReason === 'duplicate-exact'
-          ? 'أكثر من نسخة اجتازت تحقق الهوية. راجع الصورة والمسار واختر النسخة المقصودة فقط.'
-          : 'لم يثبت التطابق الآلي. هذه أفضل المرشحات من المصدر المختار، ودرجة التشابه (إن ظهرت) للترتيب فقط. قارن الصورة الأصلية على اليمين/اليسار بصريًا وحدد مرشحًا واحدًا صحيحًا بنفسك. لن يُحفظ أي ربط قبل ضغط «اعتماد المختارات المحددة».';
-      }
-      const cards = [...($('#modalBody')?.querySelectorAll('.visual-candidate-card') || [])];
-      let index = 0;
-      for (const row of session.results || []) for (const candidate of row.candidates || []) {
-        const score = cards[index]?.querySelector('.visual-candidate-score');
-        if (score) score.textContent = candidate.score == null
-          ? 'درجة التشابه غير متاحة — راجع الصورة بنفسك'
-          : `درجة التشابه للترتيب فقط: ${(candidate.score*100).toFixed(1)}%`;
-        index++;
-      }
-      return result;
-    };
-  }
-
   /* Keep the visual route's accepted handle hashes so later lookups validate
      the chosen original itself. This commits links only; it adds no photo rows. */
-  window.applyVisualLinks = async function applyVisualLinksR101(){
+  window.applyVisualLinks = async function applyVisualLinksR111(){
     const session = visualLinkSession;
-    if (!session) return;
-    const accepted = [...document.querySelectorAll('.visual-link-check:checked')]
+    if (!session || busy || scanLock) { if (busy || scanLock) notify('هناك عملية أخرى تعمل الآن؛ انتظر اكتمالها.'); return; }
+    const chosen = [...document.querySelectorAll('.visual-link-check:checked')]
       .map(input=>({row:Number(input.dataset.row),candidate:Number(input.dataset.candidate)}));
+    const accepted = [...new Map(chosen.filter(x=>Number.isInteger(x.row)&&Number.isInteger(x.candidate)).map(x=>[x.row,x])).values()];
     if (!accepted.length) { notify('لم تعتمد أي نتيجة.'); return; }
     const album = state.memories.find(item=>String(item.id)===String(session.albumId));
-    if (!album) return;
-    let linked = 0;
+    if (!album || album.hidden) { notify('الألبوم غير متاح في القائمة الظاهرة؛ لم يتغير أي شيء.'); return; }
+
+    busy = true;
+    let linked = 0, saved = 0, failed = 0;
     const createdSources = [];
-    for (const pick of accepted) {
-      const result = session.results[pick.row], candidate = result && result.candidates[pick.candidate];
-      if (!result || !candidate) continue;
+    const sourceMap = new Map();
+    const sourceForCandidate = candidate => {
       let source = candidate.root && candidate.root.source;
+      if (source) return source;
+      const root = session.roots.find(item=>String(item.id)===String(candidate.root && candidate.root.id));
+      if (!root || !root.handle) return null;
+      source = root.source;
       if (!source) {
-        const root = session.roots.find(item=>String(item.id)===String(candidate.root && candidate.root.id));
-        if (!root || !root.handle) continue;
-        source = root.source;
-        if (!source) {
-          source = {id:id('src'),name:root.name || 'مجلد بصري',handle:root.handle,asAlbum:false,directAlbumFolder:false,mergeIntoMemoryId:'',createdAt:Date.now()};
-          root.source = source;
-          sources.push(source);
-          createdSources.push(source);
+        source = {id:id('src'),name:root.name || 'مجلد بصري',handle:root.handle,asAlbum:false,directAlbumFolder:false,mergeIntoMemoryId:'',createdAt:Date.now()};
+        root.source = source;
+        createdSources.push(source);
+      }
+      return source;
+    };
+    const updateProgress = (index,total) => {
+      const status = document.querySelector('#visualLinkCommitStatus');
+      const bar = document.querySelector('#visualLinkCommitBar');
+      if (status) status.textContent = `إعادة التحقق والحفظ ${index}/${total} • روابط جديدة ${linked} • محفوظ ${saved} • متعذر ${failed}`;
+      if (bar) bar.style.width = `${total ? Math.round(index*100/total) : 0}%`;
+    };
+    try {
+      /* Resolve and persist every selected source handle before changing any photo row. */
+      for (const pick of accepted) {
+        const result = session.results[pick.row], candidate = result && result.candidates && result.candidates[pick.candidate];
+        if (!candidate) continue;
+        const source = sourceForCandidate(candidate);
+        if (source && source.handle) sourceMap.set(String(source.id),source);
+      }
+      if (!sourceMap.size) { notify('تعذر الوصول إلى مصدر الملفات المختارة؛ لم يتم حفظ أي رابط.'); return; }
+      for (const source of sourceMap.values()) {
+        if (!(await window.ensureSourcePermission(source,true))) throw new Error('READ_PERMISSION');
+        if (!sources.some(item=>String(item.id)===String(source.id))) sources.push(source);
+      }
+      await window.persistSources();
+
+      window.modal(`<h2>⏳ اعتماد المطابقات البصرية</h2><p id="visualLinkCommitStatus">إعادة التحقق من الملفات المختارة…</p><div class="progress"><div id="visualLinkCommitBar" style="width:0%"></div></div><p class="meta">يُحدّث OsRa بيانات رابط الأصل فقط. لا ينشئ صورة أو ألبومًا، ولا يكتب أو ينقل أو يحذف أي ملف من مجلد الهاتف.</p>`);
+      for (let i=0;i<accepted.length;i++) {
+        const pick = accepted[i];
+        const result = session.results[pick.row], candidate = result && result.candidates && result.candidates[pick.candidate];
+        try {
+          if (!result || !candidate) throw new Error('MISSING_CANDIDATE');
+          const source = sourceForCandidate(candidate);
+          const photo = photos.get(String(result.photoId));
+          if (!source || !source.handle || !photo || !window.isPhotoRecord(photo)) throw new Error('MISSING_SOURCE_OR_PHOTO');
+          const file = await candidate.entry.getFile();
+          if (!imageFile(file)) throw new Error('NOT_IMAGE');
+          if (candidate.sig) {
+            const latest = await window.imageSignatureFromThumb(file);
+            if (!latest || window.visualCandidateScore(candidate.sig,latest) < .94) throw new Error('CANDIDATE_CHANGED');
+          }
+          const draft = structuredClone(photo);
+          const key = await safeCall(window.contentKey,file) || '';
+          const fp = await safeCall(window.fingerprint,file) || '';
+          const old = window.photoLocations(draft).some(link=>String(link.sourceId)===String(source.id)&&String(link.relPath)===String(candidate.relPath)&&link.verified===true);
+          window.markPhotoLinkVerified(draft,source.id,candidate.relPath);
+          const link = window.photoLocations(draft).find(item=>String(item.sourceId)===String(source.id)&&String(item.relPath)===String(candidate.relPath));
+          if (!link) throw new Error('LINK_ROW_NOT_CREATED');
+          link.name = file.name || candidate.name || draft.name;
+          link.size = number(file.size); link.lastModified = number(file.lastModified);
+          link.mimeType = file.type || link.mimeType || '';
+          link.contentKey = key || link.contentKey || '';
+          link.fingerprint = fp || link.fingerprint || '';
+          link.verified = true; link.verifiedAt = Date.now();
+          /* Update the in-memory photo only after IndexedDB confirms the cloned write. */
+          await window.savePhotoMetadataOnly(draft);
+          photos.set(String(draft.id),draft);
+          saved++;
+          if (!old) linked++;
+        } catch (error) {
+          failed++;
+          console.warn('[OsRa R111] visual source link skipped safely',error);
         }
+        updateProgress(i+1,accepted.length);
+        if (i%3===0) await new Promise(resolve=>setTimeout(resolve,0));
       }
-      if (!source || !source.handle) continue;
-      const photo = photos.get(String(result.photoId));
-      if (!photo || !window.isPhotoRecord(photo)) continue;
-      let file;
-      try { file = await candidate.entry.getFile(); } catch (_) { continue; }
-      if (!imageFile(file)) continue;
-      if (candidate.sig) {
-        const latest = await window.imageSignatureFromThumb(file);
-        if (!latest || window.visualCandidateScore(candidate.sig, latest) < .94) continue;
+
+      if (saved) {
+        window.refreshLinkReportAfterManual();
       }
-      let key = await safeCall(window.contentKey, file) || '';
-      let fp = await safeCall(window.fingerprint, file) || '';
-      const old = window.photoLocations(photo).some(link=>String(link.sourceId)===String(source.id)&&String(link.relPath)===String(candidate.relPath));
-      window.markPhotoLinkVerified(photo, source.id, candidate.relPath);
-      const link = window.photoLocations(photo).find(item=>String(item.sourceId)===String(source.id)&&String(item.relPath)===String(candidate.relPath));
-      if (link) {
-        link.name = file.name || candidate.name || photo.name;
-        link.size = number(file.size); link.lastModified = number(file.lastModified);
-        link.mimeType = file.type || link.mimeType || '';
-        link.contentKey = key || link.contentKey || '';
-        link.fingerprint = fp || link.fingerprint || '';
-        link.verified = true; link.verifiedAt = Date.now();
+      if (failed) {
+        window.visualResultsModal();
+        notify(`تم حفظ ${linked} رابطًا جديدًا. تعذّر اعتماد ${failed} اختيارًا؛ بقيت للمراجعة وإعادة المحاولة. لم تتغير الملفات الأصلية.`);
+        return;
       }
-      await savePhoto(photo);
-      photos.set(String(photo.id), photo);
-      if (!old) linked++;
+      window.clearVisualPreviewUrls();
+      visualLinkSession = null;
+      window.closeModal();
+      window.renderNoAnim();
+      notify(`تم ربط ${linked} ملفًا بالصورة الموجودة بعد مراجعتك. لم تتم إضافة صور جديدة.`);
+      const remaining = window.remainingPhotoIdsForAlbum(album).length;
+      if (remaining) window.showManualLinkNext(album.id); else window.showAlbumLinkFinalReport(album.id);
+    } catch (error) {
+      console.error('[OsRa R111] visual link commit aborted',error);
+      if (session) window.visualResultsModal();
+      notify(error && error.message==='READ_PERMISSION' ? 'إذن قراءة أحد المصادر غير متاح؛ لم يبدأ حفظ الروابط. راجع الإذن ثم أعد المحاولة.' : 'تعذر إكمال الربط البصري. الروابط التي حُفظت تبقى محفوظة، ويمكنك إعادة محاولة الباقي.');
+    } finally {
+      busy = false;
     }
-    window.normalizeState();
-    if (linked || createdSources.length) { await window.persistSources(); await save(); }
-    window.refreshLinkReportAfterManual();
-    const remaining = window.remainingPhotoIdsForAlbum(album).length;
-    window.clearVisualPreviewUrls(); visualLinkSession = null; window.closeModal();
-    notify(`تم ربط ${linked} ملفًا بالصورة الموجودة بعد مراجعتك. لم تتم إضافة صور جديدة.`);
-    window.renderNoAnim();
-    if (remaining) window.showManualLinkNext(album.id); else window.showAlbumLinkFinalReport(album.id);
   };
 
   /* In reports, the fast action now opens a one-file picker when available.
@@ -806,7 +724,7 @@
               const identity = await window.verifyExactPhotoCandidate(photo, file);
               if (identity && identity.matched === true) hits.push({ row: original, file, identity });
             } catch (error) {
-              console.warn('[OsRa R102] candidate skipped', original.relPath, error);
+              console.warn('[OsRa R99] candidate skipped', original.relPath, error);
             }
           }
           // More than one hit is ambiguous even when partial hashes are equal:
@@ -858,15 +776,8 @@
     onProgress?.({filesSeen,dirsSeen,done:true});
     return {rows,byName,byStem,filesSeen,dirsSeen};
   };
-  window.sourceBatchCandidate = function sourceBatchCandidateR100(photo, index) {
-    /* R86's linkSourceBatchAutoAlbums caller expects an ARRAY and iterates
-       every possible same-name path before deciding whether exactly one file
-       is verified. Returning resolvedCandidateRow() here (R99) returned a
-       single lazy object instead; candidateRows.length was undefined, so the
-       caller skipped every photo without checking any file. Preserve the
-       caller's original array contract and let that caller run its existing
-       multi-candidate identity check. */
-    return candidateRowsForPhoto(photo, index, false);
+  window.sourceBatchCandidate = function sourceBatchCandidateR99(photo, index) {
+    return resolvedCandidateRow(photo, candidateRowsForPhoto(photo, index, false));
   };
 
   /* Both manual/quick and fast-source routes share these indexes. */
@@ -922,7 +833,7 @@
       const identity = row.__osraIdentity || await window.verifyExactPhotoCandidate(target.photo, file);
       return identity?.matched ? {...row,file,identity} : null;
     } catch (error) {
-      if (error?.name === 'AmbiguousPhotoCandidate') console.info('[OsRa R102] ambiguous duplicate paths require review', target?.photo?.name);
+      if (error?.name === 'AmbiguousPhotoCandidate') console.info('[OsRa R99] ambiguous duplicate paths require review', target?.photo?.name);
       return null;
     }
   };
@@ -933,98 +844,6 @@
   window.completeIndexCandidates = function completeIndexCandidatesR99(photo, index) {
     const row = resolvedCandidateRow(photo, candidateRowsForPhoto(photo, index, true));
     return row ? [row] : [];
-  };
-
-  /*
-   * Portable backup design:
-   * Folder IDs/paths and file identity hashes are device/source-bound link state.
-   * The external JSON backup does not transfer FileSystemDirectoryHandle
-   * permissions, so exporting those fields creates orphan links on another
-   * phone. Strip only link state from exported backups; keep photo IDs, names,
-   * album placement, timestamps, size, and thumbnails intact.
-   * Local safety snapshots still use backupPayload() and remain unchanged.
-   */
-  function makePortableRelinkBackup(payload){
-    if (!payload || typeof payload !== 'object') return payload;
-    const clean = {...payload, photoLinksOmitted:true};
-    if (Array.isArray(clean.memories)) {
-      clean.memories = clean.memories.map(memory => {
-        if (!memory || typeof memory !== 'object') return memory;
-        const item = {...memory};
-        delete item.linkSourceId;
-        delete item.linkFolderPath;
-        delete item.linkFolders;
-        return item;
-      });
-    }
-    if (Array.isArray(clean.photoManifest)) {
-      clean.photoManifest = clean.photoManifest.map(photo => {
-        if (!photo || typeof photo !== 'object') return photo;
-        const item = {...photo};
-        delete item.sourceId;
-        delete item.sourceLinks;
-        delete item.relPath;
-        delete item.contentKey;
-        delete item.fingerprint;
-        return item;
-      });
-    }
-    return clean;
-  }
-  if (typeof originalBackupPayloadForExport === 'function') {
-    window.backupPayloadForExport = async function backupPayloadForExportR102(){
-      const payload = await originalBackupPayloadForExport.apply(this, arguments);
-      return makePortableRelinkBackup(payload);
-    };
-  }
-
-  /* Restore the source-first fast workflow from the underlying R86 app.js.
-     R101's focused-photo wrapper walked every file and attempted a visual scan
-     before returning, which made the former quick-link path slower. The base
-     app already performs a recursive name index and verifies only candidates.
-     R101's improved identity verifier and duplicate-safe candidate index stay
-     active; visual review remains available through its separate button. */
-  if (typeof originalLinkSourceAutoAlbum === 'function') {
-    window.linkSourceAutoAlbum = originalLinkSourceAutoAlbum;
-  }
-  /* Keep R102's explicit one-file chooser active. The previous final reset
-     silently replaced it with the older folder-only path, removing the only
-     safe manual recovery route when a legacy hash or file timestamp changed. */
-
-  /* Install this wrapper after the direct-file resolver above so it observes
-     both direct and folder-based lookups. */
-  const findWithDirectFileR104 = window.findOriginalFile;
-  window.findOriginalFile = async function findOriginalFileR105(photo, ask=true){
-    const result = await findWithDirectFileR104.call(this, photo, ask);
-    if (result) {
-      if (result.link && result.source && result.source.handle && result.link.directFile !== true) {
-        persistPhotoLinkState(photo, result.link, {
-          verified:true, verifiedAt:Date.now(), name:result.file?.name||result.link.name||photo.name||'',
-          size:number(result.file?.size), lastModified:number(result.file?.lastModified),
-          mimeType:result.file?.type||result.link.mimeType||'',
-          contentKey:result.link.contentKey||'', fingerprint:result.link.fingerprint||''
-        });
-        await persistPhotoLinkRecord(photo);
-      }
-      return result;
-    }
-    let changed = false;
-    for (const link of window.photoLocations(photo) || []) {
-      if (link.directFile !== true || !link.fileHandle) continue;
-      if (!(await fileHandlePermission(link.fileHandle, false))) continue;
-      try {
-        const file = await link.fileHandle.getFile();
-        const identity = await verifyDirectFileIdentity(link, file);
-        if (!identity || identity.matched !== true) throw new Error('direct file identity mismatch');
-        persistPhotoLinkState(photo, link, {verified:true,verifiedAt:Date.now(),size:number(file.size),lastModified:number(file.lastModified),contentKey:identity.key||link.contentKey||'',fingerprint:identity.fingerprint||link.fingerprint||''});
-      } catch (_) {
-        persistPhotoLinkState(photo, link, {verified:false,verifiedAt:0});
-        changed = true;
-      }
-    }
-    if (changed) await persistPhotoLinkRecord(photo);
-    await window.verifyExistingPhotoLinks(photo);
-    return null;
   };
 
   window.__osraLinkRepairBuild = BUILD;

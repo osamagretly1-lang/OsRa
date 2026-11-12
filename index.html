@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#6c4664">
-<meta name="osra-build" content="OsRa v122 — 2026-11-11 — R105 STALE LINK PERSIST + VERIFIED RELINK RECOVERY">
+<meta name="osra-build" content="OsRa v122 — 2026-11-12 — R111 LINK COMMIT SAFE + EXPLICIT IMPORT">
 <link id="osraManifestLink" rel="manifest" href="manifest.json">
 <link id="osraFavicon" rel="icon" href="icon.svg">
 <link id="osraTouchIcon" rel="apple-touch-icon" href="icon-192.png">
-<link rel="stylesheet" href="style.css?v=osra122-20261111-r105-link-review-center">
+<link rel="stylesheet" href="style.css?v=osra122-20261112-r111-link-commit-safe-explicit-import">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'self' https://accounts.google.com; script-src 'self' https://accounts.google.com/gsi/client; style-src 'self'; style-src-elem 'self'; style-src-attr 'unsafe-inline'; img-src 'self' blob: data: https://*.googleusercontent.com; connect-src 'self' https://www.googleapis.com https://oauth2.googleapis.com https://accounts.google.com; frame-src https://accounts.google.com/gsi/ https://accounts.google.com; worker-src 'self'; font-src 'self'">
 <title>OsRa — Our Story</title>
 <script src="https://accounts.google.com/gsi/client" data-osra-google-identity="1" async defer></script>
@@ -63,8 +63,9 @@
 <dialog id="birthday-dog-dialog" class="birthday-dog-dialog" aria-label="تهنئة عيد ميلاد رانيا">
   <div class="birthday-dog-card">
     <button id="birthdayDogClose" class="birthday-dog-close" type="button" aria-label="إغلاق">×</button>
+    <div class="birthday-dog-title">عيد ميلاد رانيا</div>
     <div class="birthday-dog-wrap">
-      <svg class="birthday-dog-svg" viewBox="0 0 260 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="كلب أبيض جيرمن مبتسم يحمل لافتة تهنئة">
+      <svg id="birthdayDogOldArt" class="birthday-dog-svg" viewBox="0 0 260 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="كلب أبيض جيرمن مبتسم يحمل لافتة تهنئة">
         <defs>
           <filter id="dogShadow" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="8" stdDeviation="7" flood-color="#5a3949" flood-opacity=".18"/></filter>
         </defs>
@@ -88,17 +89,20 @@
             <path d="M183 198 Q214 164 205 119" fill="none" stroke="#dedede" stroke-width="29" stroke-linecap="round" opacity=".65"/>
             <line x1="205" y1="119" x2="205" y2="76" stroke="#8d6e63" stroke-width="6" stroke-linecap="round"/>
             <rect x="28" y="28" width="220" height="58" rx="13" fill="#fff7b8" stroke="#f2bf27" stroke-width="3"/>
-            <text x="138" y="52" font-family="Tahoma, Segoe UI, sans-serif" font-size="14" font-weight="800" fill="#c62828" text-anchor="middle" direction="rtl" unicode-bidi="plaintext">كل سنة وانتي طيبة ياحبيبتي</text>
-            <text x="138" y="75" font-size="17" text-anchor="middle">♥️😍🎂❤️🎉</text>
+            <text x="138" y="52" font-family="Tahoma, Segoe UI, sans-serif" font-size="12.5" font-weight="800" fill="#c62828" text-anchor="middle" direction="rtl" unicode-bidi="plaintext">كل سنة وانتي طيبة يا روحي...</text>
+            <text x="138" y="75" font-size="12.5" font-weight="700" text-anchor="middle">Happy birthday ♥️🎂🎉</text>
           </g>
         </g>
       </svg>
+      <div id="birthdayDogNewSign" class="birthday-dog-new-sign" hidden>كل سنة وانتي طيبة يا روحي... <span>Happy birthday ♥️ 🎂 🎉</span></div>
+      <img id="birthdayDogNewArt" class="birthday-dog-new-art" src="assets/mascots/dog.png" alt="الكلب الألماني الجديد من OsRa" decoding="async" hidden>
+      <img id="birthdayDogHeartArt" class="birthday-dog-new-art birthday-dog-heart-art" src="assets/mascots/white-dog.png" alt="الكلب الأبيض ذو القلب" decoding="async" hidden>
     </div>
   </div>
 </dialog>
 <dialog id="modal" class="modal"><button id="modalClose" class="modal-close">×</button><div id="modalBody"></div></dialog>
 <dialog id="lightbox" class="lightbox"><div class="lbtop"><button id="lbClose" class="round dark" title="إغلاق">×</button><div class="lbtitle-wrap"><span id="lbTitle"></span><small id="lbMeta"></small></div><span id="lbCounter" class="lb-counter"></span><div class="lb-controls"><button id="lbZoomOut" class="round dark" title="تصغير">−</button><button id="lbZoomReset" class="round dark" title="الحجم الطبيعي">1:1</button><button id="lbZoomIn" class="round dark" title="تكبير">＋</button><button id="lbPlay" class="round dark" title="عرض تلقائي">▶</button><button id="lbPrev" class="round dark" title="السابق">‹</button><button id="lbNext" class="round dark" title="التالي">›</button></div></div><div class="lbbody"><div id="lbFrame" class="lb-frame"><img id="lbImage" alt=""><div id="lbFlip" class="lb-flip" aria-hidden="true" hidden></div></div><div id="lbStatus" class="lb-status">جارٍ فتح الصورة…</div></div><div id="lbStrip" class="lb-strip"></div></dialog>
-<script src="app.js?v=osra122-20261111-r105-stale-link-persist-and-confirmed-relink" defer></script>
-<script src="link-fix.js?v=osra122-20261111-r105-stale-link-persist-and-confirmed-relink" defer></script>
+<script src="app.js?v=osra122-20261112-r111-link-commit-safe-explicit-import" defer></script>
+<script src="link-fix.js?v=osra122-20261112-r111-safe-visual-link-commit" defer></script>
 </body>
 </html>
